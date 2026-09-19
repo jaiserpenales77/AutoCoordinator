@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PK030 Packaging Yield Coordinator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>PK030 Packaging Yield Coordinator</h1>
+  <p class="subtitle">Digital replacement for the PK030M [ALL] Final Packaging Yield Sheet (QS017B)</p>
+</header>
+
+<main class="layout">
+  <section class="panel form-panel">
+    <div class="panel-head">
+      <h2>Yield Sheet</h2>
+      <span id="editingBadge" class="badge hidden">Editing saved record</span>
+    </div>
+    <form id="yieldForm" autocomplete="off">
+      <fieldset>
+        <legend>Work Order Information</legend>
+        <div class="field-grid">
+          <label>FG Item
+            <input type="text" id="fgItem" required>
+          </label>
+          <label>WO #
+            <input type="text" id="woNumber" required>
+          </label>
+          <label>Bulk Item
+            <input type="text" id="bulkItem" required>
+          </label>
+          <label>Date Created
+            <input type="date" id="dateCreated">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Bulk Reconciliation</legend>
+        <div class="field-grid">
+          <label>Total Packaged (Bottles)
+            <input type="number" id="totalPackaged" step="any" min="0" value="0">
+          </label>
+          <label>Count (Fill Rate)
+            <input type="number" id="fillRate" step="any" min="0" value="0">
+            <small>Per-bottle fill amount used for Bulk Packaged (TH). Manual entry — not in any source PDF.</small>
+          </label>
+          <label>Bulk Rejected/Returned (TH)
+            <input type="number" id="bulkRejected" step="any" min="0" value="0">
+          </label>
+          <label>Issued Bulk (TH)
+            <input type="number" id="bulkIssued" step="any" min="0" value="0">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Scrap Calculations</legend>
+        <div class="field-grid">
+          <label>Bulk Piece Wt (mg)
+            <input type="number" id="pieceWt" step="any" min="0" value="0">
+            <small>Manual scale reading.</small>
+          </label>
+          <label>Container Tare Weight (Kg)
+            <input type="number" id="tareWeight" step="any" min="0" value="6">
+            <small>Fixed at 6 Kg on the original sheet; editable here.</small>
+          </label>
+        </div>
+        <div class="field-grid scrap-grid">
+          <label>Packaging Scrap #1 (Kg, gross)
+            <input type="number" id="scrap1" step="any" min="0" value="0">
+          </label>
+          <label>Packaging Scrap #2 (Kg, gross)
+            <input type="number" id="scrap2" step="any" min="0" value="0">
+          </label>
+          <label>Packaging Scrap #3 (Kg, gross)
+            <input type="number" id="scrap3" step="any" min="0" value="0">
+          </label>
+          <label>Manufacturing Scrap (Kg, gross)
+            <input type="number" id="mfgScrap" step="any" min="0" value="0">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sign-off (used on the printed sheet)</legend>
+        <div class="field-grid">
+          <label>Yield Sheet Created By
+            <input type="text" id="createdBy">
+          </label>
+          <label>Packaging Review By
+            <input type="text" id="packagingReviewBy">
+          </label>
+          <label>Quality Review By
+            <input type="text" id="qualityReviewBy">
+          </label>
+          <label>Quality Release By
+            <input type="text" id="qualityReleaseBy">
+          </label>
+          <label>VideoJet Count By
+            <input type="text" id="videoJetBy">
+          </label>
+          <label>Partial Pallet Configuration
+            <input type="text" id="partialPalletConfig" placeholder="Describe configuration">
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="primary">Save Yield Sheet</button>
+        <button type="button" id="newBtn">New / Clear</button>
+        <button type="button" id="printBtn">Print Yield Sheet</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel results-panel">
+    <h2>Live Results</h2>
+    <div class="results-grid">
+      <div class="result-card">
+        <span class="label">Net Bulk Issued (TH)</span>
+        <span class="value" id="rBulkIssuedNet">0</span>
+      </div>
+      <div class="result-card">
+        <span class="label">Bulk Packaged (TH)</span>
+        <span class="value" id="rBulkPackaged">0</span>
+      </div>
+      <div class="result-card">
+        <span class="label">Bulk Scrapped (TH)</span>
+        <span class="value" id="rBulkScrapped">0</span>
+      </div>
+      <div class="result-card highlight">
+        <span class="label">Final Yield</span>
+        <span class="value" id="rFinalYield">0%</span>
+      </div>
+    </div>
+
+    <div id="statusBanner" class="status-banner ok">Within range (94.5% – 102.4999%)</div>
+
+    <table class="scrap-table">
+      <thead>
+        <tr><th>Scrap Source</th><th>Gross (Kg)</th><th>Net (Kg)</th><th>Pieces (TH)</th></tr>
+      </thead>
+      <tbody id="scrapTableBody"></tbody>
+    </table>
+
+    <div class="summary-lines">
+      <p id="summaryLine1"></p>
+      <p id="summaryLine2"></p>
+    </div>
+  </section>
+
+  <section class="panel records-panel">
+    <div class="panel-head">
+      <h2>Saved Yield Sheets</h2>
+      <button type="button" id="exportCsvBtn">Export CSV</button>
+    </div>
+    <input type="search" id="searchBox" placeholder="Search by WO#, FG Item, or Bulk Item...">
+    <table class="records-table">
+      <thead>
+        <tr>
+          <th>WO #</th><th>FG Item</th><th>Bulk Item</th><th>Final Yield</th><th>Status</th><th>Date</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="recordsTableBody"></tbody>
+    </table>
+    <p id="noRecordsMsg" class="muted hidden">No saved yield sheets yet.</p>
+  </section>
+</main>
+
+<div id="printSheet" class="print-sheet"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
