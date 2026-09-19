@@ -208,26 +208,149 @@ th, td {
 .print-sheet { display: none; }
 
 @media print {
-  body * { visibility: hidden; }
-  .print-sheet, .print-sheet * { visibility: visible; }
-  .print-sheet {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 24px;
-    font-family: "Segoe UI", Arial, sans-serif;
-    color: #000;
-  }
-  .print-sheet h2 { text-align: center; margin-bottom: 4px; }
-  .print-sheet .page { page-break-after: always; padding-bottom: 20px; }
-  .print-sheet .page:last-child { page-break-after: auto; }
-  .print-sheet table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-  .print-sheet td, .print-sheet th { border: 1px solid #333; padding: 6px 8px; font-size: 12px; }
-  .print-sheet .sig-line { margin: 14px 0 4px; border-bottom: 1px solid #333; padding-bottom: 20px; }
-  .print-sheet .footer-note { font-size: 10px; text-align: center; margin-top: 24px; color: #444; }
-  .print-sheet .flag { font-weight: bold; }
+  .app-header, .layout { display: none !important; }
+  html, body { background: #fff; margin: 0; height: auto; }
+  .print-sheet { display: block; }
+}
+
+/* PK030M [ALL] Final Packaging Yield Sheet print layout */
+.print-sheet .ps-page {
+  position: relative;
+  width: 800px;
+  margin: 0 auto;
+  padding: 36px 50px 28px;
+  font-family: Arial, "Segoe UI", Helvetica, sans-serif;
+  color: #000;
+  page-break-after: always;
+}
+.print-sheet .ps-page:last-child { page-break-after: auto; }
+
+.print-sheet .ps-pagenum {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 11px;
+  color: #333;
+}
+
+.print-sheet .ps-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 6px;
+}
+
+.print-sheet .ps-logo { flex: 0 0 auto; width: 70px; text-align: center; }
+.print-sheet .ps-logo svg { width: 60px; height: 60px; display: block; margin: 0 auto; }
+.print-sheet .ps-logo-text {
+  color: #1c4f8c;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.print-sheet .ps-header-main { flex: 1; }
+
+.print-sheet .ps-title {
+  font-size: 25px;
+  font-weight: 500;
+  color: #111;
+  margin: 2px 0 16px;
+}
+
+.print-sheet .ps-wo-row {
+  font-size: 21px;
+  color: #111;
+  margin: 4px 0;
+}
+.print-sheet .ps-wo-row .ps-label { margin-right: 8px; }
+.print-sheet .ps-wo-row .ps-value { margin-right: 55px; }
+
+.print-sheet .ps-section-title { font-size: 14px; margin: 20px 0 6px; }
+
+.print-sheet .ps-recon-grid {
+  display: grid;
+  grid-template-columns: 230px 120px 80px 1fr;
+  column-gap: 6px;
+  row-gap: 3px;
+  align-items: end;
+}
+.print-sheet .ps-recon-row { display: contents; }
+.print-sheet .ps-recon-cell {
+  font-size: 19px;
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid #000;
+}
+.print-sheet .ps-recon-cell.value,
+.print-sheet .ps-recon-cell.pct { text-align: right; }
+.print-sheet .ps-recon-cell.note {
+  border-bottom: none;
+  font-size: 11px;
+  line-height: 1.35;
+  padding-left: 12px;
+  padding-bottom: 3px;
+  color: #111;
+}
+.print-sheet .ps-recon-row-final .ps-recon-cell.label,
+.print-sheet .ps-recon-row-final .ps-recon-cell.pct {
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.print-sheet .ps-summary {
+  font-size: 11px;
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+
+.print-sheet .ps-flagline {
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 14px;
+  min-height: 16px;
+}
+
+.print-sheet .ps-sig-block { margin-top: 46px; }
+.print-sheet .ps-sig-row {
+  display: flex;
+  align-items: flex-end;
+  margin: 22px 0 0;
+  font-size: 13px;
+}
+.print-sheet .ps-sig-label { white-space: nowrap; }
+.print-sheet .ps-sig-fill {
+  flex: 1;
+  border-bottom: 1px solid #000;
+  margin: 0 6px;
+  height: 15px;
+}
+.print-sheet .ps-sig-date-label { white-space: nowrap; margin-left: 18px; }
+.print-sheet .ps-sig-date-fill {
+  min-width: 150px;
+  border-bottom: 1px solid #000;
+  text-align: center;
+  font-weight: 700;
+  height: 15px;
+}
+
+.print-sheet .ps-line { font-size: 12px; margin-top: 10px; }
+
+.print-sheet .ps-list-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  row-gap: 8px;
+  margin-top: 24px;
+  font-size: 18px;
+}
+.print-sheet .ps-list-grid .ps-recon-cell { border-bottom: 1.5px solid #000; padding-bottom: 3px; }
+
+.print-sheet .ps-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #333;
+  margin-top: 50px;
 }
 
 @media (max-width: 900px) {
