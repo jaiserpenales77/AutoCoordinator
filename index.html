@@ -85,25 +85,11 @@
       </fieldset>
 
       <fieldset>
-        <legend>Sign-off (used on the printed sheet)</legend>
+        <legend>VideoJet Count</legend>
         <div class="field-grid">
-          <label>Yield Sheet Created By
-            <input type="text" id="createdBy">
-          </label>
-          <label>Packaging Review By
-            <input type="text" id="packagingReviewBy">
-          </label>
-          <label>Quality Review By
-            <input type="text" id="qualityReviewBy">
-          </label>
-          <label>Quality Release By
-            <input type="text" id="qualityReleaseBy">
-          </label>
-          <label>VideoJet Count By
-            <input type="text" id="videoJetBy">
-          </label>
-          <label>Partial Pallet Configuration
-            <input type="text" id="partialPalletConfig" placeholder="Describe configuration">
+          <label>VideoJet Count
+            <input type="number" id="videoJetCount" step="any" min="0">
+            <small>Required when Final Yield is outside 94.5% – 102.4999%.</small>
           </label>
         </div>
       </fieldset>

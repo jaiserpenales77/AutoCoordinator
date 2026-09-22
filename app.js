@@ -10,8 +10,7 @@ const fields = [
   "fgItem", "woNumber", "bulkItem", "dateCreated",
   "totalPackaged", "fillRate", "bulkRejected", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
-  "createdBy", "packagingReviewBy", "qualityReviewBy", "qualityReleaseBy",
-  "videoJetBy", "partialPalletConfig"
+  "videoJetCount"
 ];
 
 function el(id) { return document.getElementById(id); }
@@ -102,13 +101,9 @@ function renderResults(r) {
     tbody.appendChild(tr);
   });
 
-  el("summaryLine1").textContent =
-    `Total Bottles Produced = ${fmt(r.totalPackaged, 0)}   Bulk Piece Weight = ${fmt(r.pieceWt, 0)}   ` +
-    `Fill Rate = ${fmt(r.fillRate, 0)}   Bulk Rejected/Returned = ${fmt(r.bulkRejected, 0)}TH   Bulk Issued = ${fmt(r.bulkIssued, 0)}TH`;
-  el("summaryLine2").textContent =
-    `Packaging Scrap #1 = ${fmt(r.scrapInputs[0].gross)} KG    Packaging Scrap #2 = ${fmt(r.scrapInputs[1].gross)} KG    ` +
-    `Packaging Scrap #3 = ${fmt(r.scrapInputs[2].gross)} KG    Manufacturing Scrap = ${fmt(r.scrapInputs[3].gross)} KG    ` +
-    `Container Tare Weight = ${fmt(r.tareWeight, 0)}KG`;
+  const { line1, line2 } = buildSummaryLines(collectFormData());
+  el("summaryLine1").textContent = line1;
+  el("summaryLine2").textContent = line2;
 }
 
 function recalc() {
@@ -175,15 +170,15 @@ function renderRecordsTable() {
       const tr = document.createElement("tr");
       const statusClass = results.videoJetCount ? "yield-warn" : "yield-ok";
       tr.innerHTML = `
-        <td>${rec.woNumber || ""}</td>
-        <td>${rec.fgItem || ""}</td>
-        <td>${rec.bulkItem || ""}</td>
+        <td>${escapeHtml(rec.woNumber)}</td>
+        <td>${escapeHtml(rec.fgItem)}</td>
+        <td>${escapeHtml(rec.bulkItem)}</td>
         <td class="${statusClass}">${fmt(results.finalYieldRatio * 100)}%</td>
         <td class="${statusClass}">${results.statusLabel}</td>
-        <td>${rec.dateCreated || ""}</td>
+        <td>${escapeHtml(rec.dateCreated)}</td>
         <td class="row-actions">
-          <button type="button" data-action="load" data-id="${rec.id}">Load</button>
-          <button type="button" data-action="delete" data-id="${rec.id}">Delete</button>
+          <button type="button" data-action="load" data-id="${escapeHtml(rec.id)}">Load</button>
+          <button type="button" data-action="delete" data-id="${escapeHtml(rec.id)}">Delete</button>
         </td>`;
       tbody.appendChild(tr);
     });
@@ -271,19 +266,32 @@ el("exportCsvBtn").addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-const PHARMAVITE_LOGO_SVG = `
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <path d="M50,8 A42,42 0 1,1 8,50" fill="none" stroke="#f39c12" stroke-width="9" stroke-linecap="round"/>
-  <path d="M50,20 A30,30 0 1,1 20,50" fill="none" stroke="#f7c948" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="50" cy="50" r="7" fill="#f39c12"/>
-</svg>`;
+// Column widths (pt) of the Excel print area PK030!E21:L71, columns E..L.
+const XL_COL_WIDTHS_PT = [48, 65.25, 138.75, 98.25, 123, 37.5, 108.75, 161.25];
+const PARTIAL_PALLET_TEXT =
+  "Partial Pallet Configuration:_________________________________________________ By:___________  Date:_________________";
+const FOOTER_NOTE = "For Pharmavite internal use, only. ";
 
-function fmt3(n) {
-  return Number.isFinite(n) ? n.toFixed(3) : "0.000";
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, ch =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 }
 
-function fmtPct0(ratio) {
-  return Number.isFinite(ratio) ? Math.round(ratio * 100) + "%" : "0%";
+// Mimics how Excel's CONCATENATE renders a cell in General format.
+function excelGeneral(raw) {
+  const t = String(raw ?? "").trim();
+  if (t === "") return "";
+  const n = Number(t);
+  return Number.isFinite(n) ? String(n) : t;
+}
+
+function fmt3(n) {
+  return n.toFixed(3);
+}
+
+function excelPct0(ratio) {
+  const v = Math.sign(ratio) * Math.round(Math.abs(ratio) * 100);
+  return (v === 0 ? 0 : v) + "%";
 }
 
 function formatDateMMDDYY(isoDate) {
@@ -293,136 +301,142 @@ function formatDateMMDDYY(isoDate) {
   return `${m}/${d}/${y.slice(2)}`;
 }
 
-function buildSummaryLines(r) {
+function buildSummaryLines(data) {
+  const g = id => excelGeneral(data[id]);
   const line1 =
-    `Total Bottles Produced =${fmt(r.totalPackaged, 0)}   Bulk Piece Weight =${fmt(r.pieceWt, 0)}` +
-    `   Fill Rate =${fmt(r.fillRate, 0)}   Bulk Rejected/Returned =${fmt(r.bulkRejected, 0)}TH` +
-    `   Bulk Issued=${fmt(r.bulkIssued, 0)}TH`;
+    `Total Bottles Produced =${g("totalPackaged")}   Bulk Piece Weight =${g("pieceWt")}` +
+    `   Fill Rate =${g("fillRate")}   Bulk Rejected/Returned =${g("bulkRejected")}TH` +
+    `   Bulk Issued=${g("bulkIssued")}TH`;
   const line2 =
-    `Packaging Scrap #1 =${fmt(r.scrapInputs[0].gross)} KG    Packaging Scrap #2 =${fmt(r.scrapInputs[1].gross)} KG` +
-    `    Packaging Scrap #3 =${fmt(r.scrapInputs[2].gross)} KG    Manufacturing Scrap =${fmt(r.scrapInputs[3].gross)} KG` +
-    `     Container Tare Weight= ${fmt(r.tareWeight, 0)}KG`;
+    `Packaging Scrap #1 =${g("scrap1")} KG    Packaging Scrap #2 =${g("scrap2")} KG` +
+    `    Packaging Scrap #3 =${g("scrap3")} KG    Manufacturing Scrap =${g("mfgScrap")} KG` +
+    `     Container Tare Weight= ${g("tareWeight")}KG`;
   return { line1, line2 };
+}
+
+function xlCell(text = "", opts = {}) {
+  const style = opts.sz ? ` style="font-size:${opts.sz}pt"` : "";
+  const cls = opts.cls ? ` class="${opts.cls}"` : "";
+  return `<td${cls}${style}${opts.span ? " " + opts.span : ""}>${escapeHtml(text)}</td>`;
+}
+
+function xlEmpty(n = 1) {
+  return "<td></td>".repeat(n);
+}
+
+function xlTable(rows) {
+  const cols = XL_COL_WIDTHS_PT.map(w => `<col style="width:${w}pt">`).join("");
+  const body = rows.map(([h, cells]) => `<tr style="height:${h}pt">${cells}</tr>`).join("");
+  return `<table class="xl"><colgroup>${cols}</colgroup>${body}</table>`;
 }
 
 function buildPrintSheet() {
   const data = collectFormData();
   const r = computeResults();
-  const { line1, line2 } = buildSummaryLines(r);
+  const { line1, line2 } = buildSummaryLines(data);
 
-  const flagText = r.highYield ? "High Yield NCCAPA___________"
+  // Excel's C12..C18 divide by Bulk Piece Wt whenever a scrap weight is entered.
+  const scrapDivError = r.pieceWt === 0 && r.scrapInputs.some(s => s.gross > 0);
+  const netIssuedDenom = (r.bulkIssued * 1000) - (r.bulkRejected * 1000);
+  const DIV0 = "#DIV/0!";
+
+  const i32 = scrapDivError ? DIV0 : fmt3(r.scrapPiecesSum);
+  const k31 = netIssuedDenom === 0 ? DIV0 : excelPct0((r.totalPackaged * r.fillRate) / netIssuedDenom);
+  const k32 = scrapDivError || r.bulkIssued === 0 ? DIV0 : excelPct0(r.scrapPiecesSum / r.bulkIssued);
+  const yieldValid = !scrapDivError && netIssuedDenom !== 0;
+  const k33 = yieldValid ? excelPct0(r.finalYieldRatio) : DIV0;
+  const outOfRange = yieldValid && (r.lowYield || r.highYield);
+
+  const flagText = !yieldValid ? ""
+    : r.highYield ? "High Yield NCCAPA___________"
     : r.lowYield ? "Low Yield NCCAPA____________" : "";
-
-  const videoJetLine = r.videoJetCount
-    ? `VideoJet Count: VideoJet Count &nbsp;&nbsp;&nbsp;&nbsp; By: ${data.videoJetBy || "___________"} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date: _________________`
+  const videoJetText = outOfRange
+    ? `VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:___________          Date:_________________`
     : "";
-  const partialPalletLine = r.videoJetCount
-    ? `Partial Pallet Configuration: ${data.partialPalletConfig || "_________________________________________________"} By: ___________ &nbsp; Date: _________________`
-    : "";
+  const palletText = outOfRange ? PARTIAL_PALLET_TEXT : "";
 
-  const logoBlock = `
-    <div class="ps-logo">
-      ${PHARMAVITE_LOGO_SVG}
-      <div class="ps-logo-text">PHARMAVITE</div>
-    </div>`;
+  // Conditional formatting copied from the workbook.
+  const k33Cf = outOfRange ? " cf-bad" : "";
+  const videoJetCf = Number(data.videoJetCount) ? " cf-yellow" : "";
+  const palletCf = palletText === PARTIAL_PALLET_TEXT ? " cf-yellow-white" : "";
 
-  const reconRow = (label, value, pct) => `
-    <div class="ps-recon-row">
-      <div class="ps-recon-cell label">${label}</div>
-      <div class="ps-recon-cell value">${value}</div>
-      <div class="ps-recon-cell pct">${pct}</div>
-      <div class="ps-recon-cell note"></div>
-    </div>`;
+  const bb = "b-b";
+  const tb = "b-t b-b";
+
+  const page1 = [
+    [15, xlEmpty(2) + xlCell("PK030M [ALL] Final Packaging Yield Sheet ", { sz: 26, cls: "al-c va-m", span: 'colspan="5" rowspan="2"' }) + xlEmpty()],
+    [44.25, xlEmpty(2) + xlCell("Page 1 of 2", { sz: 10, cls: "al-r" })],
+    [18.75, xlEmpty(8)],
+    [33, xlEmpty(2) + xlCell("FG Item:", { sz: 26, cls: "al-r" }) + xlCell(data.fgItem, { sz: 26 }) + xlEmpty()
+      + xlCell("Work Order:", { sz: 26, cls: "al-c", span: 'colspan="2"' }) + xlCell(data.woNumber, { sz: 26 })],
+    [7.5, xlEmpty(8)],
+    [33, xlEmpty(2) + xlCell("Bulk Item:", { sz: 26, cls: "al-r" }) + xlCell(data.bulkItem, { sz: 26 }) + xlEmpty(4)],
+    [9.75, xlEmpty(8)],
+    [14.25, xlEmpty(8)],
+    [23.25, xlCell("Bulk Reconciliation:", { sz: 18 }) + xlEmpty(7)],
+    [30, xlEmpty() + xlCell("Bulk Issued (TH) ", { sz: 24, cls: bb }) + xlCell("", { cls: bb }) + xlCell("", { cls: bb })
+      + xlCell(fmt3(r.bulkIssuedNet), { sz: 24, cls: `al-r ${bb}` }) + xlEmpty(3)],
+    [30, xlEmpty() + xlCell("Bulk Packaged (TH)", { sz: 24, cls: bb }) + xlCell("", { cls: bb }) + xlCell("", { cls: bb })
+      + xlCell(fmt3(r.bulkPackagedTH), { sz: 24, cls: `al-r ${bb}` }) + xlCell("", { cls: bb })
+      + xlCell(k31, { sz: 24, cls: `al-r ${bb}` }) + xlCell("", { cls: bb })],
+    [30, xlEmpty() + xlCell("Bulk Scrapped (TH)", { sz: 24, cls: tb }) + xlCell("", { cls: tb }) + xlCell("", { cls: tb })
+      + xlCell(i32, { sz: 24, cls: `al-r ${tb}` }) + xlCell("", { cls: tb })
+      + xlCell(k32, { sz: 24, cls: `al-r ${tb}` }) + xlCell("", { cls: tb })],
+    [30, xlEmpty() + xlCell("Final Yield", { sz: 24, cls: tb }) + xlCell("", { cls: tb }) + xlCell("", { cls: tb })
+      + xlCell("", { cls: tb }) + xlCell("", { cls: tb })
+      + xlCell(k33, { sz: 24, cls: `al-r ${tb}${k33Cf}` })
+      + xlCell("Range 95% to 102%(In-House)   Range 95% to 110%(PIM)", { sz: 10, cls: `va-m wrap ${tb}` })],
+    [16.5, xlEmpty() + xlCell(line1, { sz: 10 }) + xlEmpty(6)],
+    [16.5, xlEmpty() + xlCell(line2, { sz: 10 }) + xlEmpty(6)],
+    [19.5, xlEmpty(8)],
+    [20.25, xlEmpty(6) + xlCell(formatDateMMDDYY(data.dateCreated), { sz: 11, cls: "bold ul", span: 'rowspan="2"' }) + xlEmpty()],
+    [14.25, xlEmpty() + xlCell("Yield Sheet Created By:_____________________________________________", { sz: 10 }) + xlEmpty(3)
+      + xlCell("    Date:", { sz: 10 }) + xlEmpty()],
+    [15.75, xlEmpty(8)],
+    [14.25, xlEmpty() + xlCell("Packaging Review By:_______________________________________________", { sz: 10 }) + xlEmpty(3)
+      + xlCell("    Date:_________________", { sz: 10 }) + xlEmpty(2)],
+    [14.25, xlEmpty(8)],
+    [14.25, xlEmpty() + xlCell("Quality Review By: _________________________________________________", { sz: 10 }) + xlEmpty(3)
+      + xlCell("    Date:_________________", { sz: 10 }) + xlEmpty(2)],
+    [14.25, xlEmpty(8)],
+    [14.25, xlEmpty() + xlCell("Quality Release By: ________________________________________________", { sz: 10 }) + xlEmpty(3)
+      + xlCell("    Date:_________________", { sz: 10 }) + xlEmpty(2)],
+    [14.25, xlEmpty(8)],
+    [14.25, xlEmpty(7) + xlCell(flagText, { sz: 10, cls: "bold" })],
+    [14.25, xlCell(videoJetText, { sz: 10, cls: `bold${videoJetCf}`, span: 'colspan="5" rowspan="2"' }) + xlEmpty(3)],
+    [14.25, xlEmpty(3)],
+    [12.75, xlEmpty(8)],
+    [12.75, xlCell(palletText, { sz: 10, cls: `bold${palletCf}`, span: 'colspan="7" rowspan="2"' }) + xlEmpty()],
+    [14.25, xlEmpty()],
+    [19.5, xlEmpty() + xlCell("QS017B", { sz: 11 }) + xlEmpty(2) + xlCell(FOOTER_NOTE, { sz: 11 }) + xlEmpty(2)
+      + xlCell("PKGN-0140, PKGN-0154", { sz: 11 })]
+  ];
+
+  const bigRow = (label, labelSz, value) =>
+    [99.75, xlEmpty() + xlCell(label, { sz: labelSz, cls: "al-r va-m", span: 'colspan="2"' })
+      + xlCell(value, { sz: 80, cls: "va-m", span: 'colspan="5"' })];
+
+  const page2 = [
+    [14.25, xlEmpty(2) + xlCell("PK030M [ALL] Final Packaging Yield Sheet", { sz: 10, cls: "bold al-c", span: 'colspan="4"' })
+      + xlEmpty() + xlCell("Page 2 of 2", { sz: 10, cls: "al-r" })],
+    [99, xlEmpty(8)],
+    bigRow("List #  ", 46, data.fgItem),
+    bigRow("Lot #  ", 48, data.woNumber),
+    bigRow("CC #  ", 45, data.bulkItem),
+    ...Array.from({ length: 12 }, () => [14.25, xlEmpty(8)]),
+    [13.5, xlEmpty(8)],
+    [14.25, xlEmpty() + xlCell("QS017B", { sz: 11 }) + xlEmpty(2) + xlCell(FOOTER_NOTE, { sz: 11 }) + xlEmpty(2)
+      + xlCell("PKGN-0140, PKGN-0154", { sz: 11 })]
+  ];
 
   el("printSheet").innerHTML = `
-    <div class="ps-page">
-      <div class="ps-pagenum">Page 1 of 2</div>
-      <div class="ps-header">
-        ${logoBlock}
-        <div class="ps-header-main">
-          <div class="ps-title">PK030M [ALL] Final Packaging Yield Sheet</div>
-          <div class="ps-wo-row"><span class="ps-label">FG Item:</span> <span class="ps-value">${data.fgItem}</span><span class="ps-label">Work Order:</span> <span class="ps-value">${data.woNumber}</span></div>
-          <div class="ps-wo-row"><span class="ps-label">Bulk Item:</span> <span class="ps-value">${data.bulkItem}</span></div>
-        </div>
-      </div>
-
-      <div class="ps-section-title">Bulk Reconciliation:</div>
-      <div class="ps-recon-grid">
-        ${reconRow("Bulk Issued (TH)", fmt3(r.bulkIssuedNet), "")}
-        ${reconRow("Bulk Packaged (TH)", fmt3(r.bulkPackagedTH), fmtPct0(r.bulkIssuedNet !== 0 ? r.bulkPackagedTH / r.bulkIssuedNet : 0))}
-        ${reconRow("Bulk Scrapped (TH)", fmt3(r.bulkScrappedTH), fmtPct0(r.bulkIssued !== 0 ? r.scrapPiecesSum / r.bulkIssued : 0))}
-        <div class="ps-recon-row ps-recon-row-final">
-          <div class="ps-recon-cell label">Final Yield</div>
-          <div class="ps-recon-cell value"></div>
-          <div class="ps-recon-cell pct">${fmtPct0(r.finalYieldRatio)}</div>
-          <div class="ps-recon-cell note">Range 95% to 102%(In-House)<br>Range 95% to 110%(PIM)</div>
-        </div>
-      </div>
-
-      <div class="ps-summary">
-        <div>${line1}</div>
-        <div>${line2}</div>
-      </div>
-
-      <div class="ps-flagline">${flagText}</div>
-
-      <div class="ps-sig-block">
-        <div class="ps-sig-row">
-          <span class="ps-sig-label">Yield Sheet Created By:</span>
-          <span class="ps-sig-fill">${data.createdBy || ""}</span>
-          <span class="ps-sig-date-label">Date:</span>
-          <span class="ps-sig-date-fill">${formatDateMMDDYY(data.dateCreated)}</span>
-        </div>
-        <div class="ps-sig-row">
-          <span class="ps-sig-label">Packaging Review By:</span>
-          <span class="ps-sig-fill">${data.packagingReviewBy || ""}</span>
-          <span class="ps-sig-date-label">Date:</span>
-          <span class="ps-sig-date-fill"></span>
-        </div>
-        <div class="ps-sig-row">
-          <span class="ps-sig-label">Quality Review By:</span>
-          <span class="ps-sig-fill">${data.qualityReviewBy || ""}</span>
-          <span class="ps-sig-date-label">Date:</span>
-          <span class="ps-sig-date-fill"></span>
-        </div>
-        <div class="ps-sig-row">
-          <span class="ps-sig-label">Quality Release By:</span>
-          <span class="ps-sig-fill">${data.qualityReleaseBy || ""}</span>
-          <span class="ps-sig-date-label">Date:</span>
-          <span class="ps-sig-date-fill"></span>
-        </div>
-      </div>
-
-      ${r.videoJetCount ? `<div class="ps-line">${videoJetLine}</div>` : ""}
-      ${r.videoJetCount ? `<div class="ps-line">${partialPalletLine}</div>` : ""}
-
-      <div class="ps-footer">
-        <span>QS017B</span>
-        <span>For Pharmavite internal use, only.</span>
-        <span>PKGN-0140, PKGN-0154</span>
-      </div>
+    <div class="xl-page">
+      <img class="xl-logo" src="assets/pharmavite-logo.png" alt="Pharmavite">
+      ${xlTable(page1)}
     </div>
-
-    <div class="ps-page">
-      <div class="ps-pagenum">Page 2 of 2</div>
-      <div class="ps-header">
-        ${logoBlock}
-        <div class="ps-header-main">
-          <div class="ps-title">PK030M [ALL] Final Packaging Yield Sheet</div>
-        </div>
-      </div>
-      <div class="ps-list-grid">
-        <div class="ps-recon-cell label">List #</div><div class="ps-recon-cell">${data.fgItem}</div>
-        <div class="ps-recon-cell label">Lot #</div><div class="ps-recon-cell">${data.woNumber}</div>
-        <div class="ps-recon-cell label">CC #</div><div class="ps-recon-cell">${data.bulkItem}</div>
-      </div>
-      <div class="ps-footer">
-        <span>QS017B</span>
-        <span>For Pharmavite internal use, only.</span>
-        <span>PKGN-0140, PKGN-0154</span>
-      </div>
-    </div>
-  `;
+    <div class="xl-page">
+      ${xlTable(page2)}
+    </div>`;
 }
 
 el("printBtn").addEventListener("click", () => {

@@ -17,10 +17,15 @@ list for tracking multiple work orders.
 - **Final Yield %** and the same pass/fail thresholds as the source sheet:
   values below 94.5% or above 102.4999% trigger a **VideoJet Count** flag and
   the matching **Low Yield NCCAPA** / **High Yield NCCAPA** label.
-- **Printable sheet** replicating the two-page QS017B layout, including the
-  sign-off lines (Yield Sheet Created By, Packaging Review By, Quality
-  Review By, Quality Release By, VideoJet Count By, Partial Pallet
-  Configuration) and the List #/Lot #/CC # footer page.
+- **VideoJet Count** entry (cell B21 in the workbook), printed on the
+  VideoJet line when the yield is out of range.
+- **Print report** that reproduces the workbook's print area
+  (`PK030!E21:L71`) cell for cell. It uses the same column widths, row
+  heights, Arial font sizes, borders, merged cells, logo placement, number
+  formats and conditional formatting. It prints on Letter landscape at 88%
+  with the workbook's margins and a page break after row 52, so page 1 is
+  the yield sheet and page 2 is the List #/Lot #/CC # label. Sign-off lines
+  stay blank for handwritten signatures, as on the paper form.
 
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) remain manual
@@ -48,7 +53,8 @@ back up or share the saved work orders.
 ## Files
 
 - `index.html` — page structure and form fields.
-- `style.css` — screen layout plus a print stylesheet for the two-page
-  printable sheet.
+- `style.css` — screen layout plus the print stylesheet (page setup and
+  cell styles).
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
-  export, and print-sheet generation.
+  export, and print-report generation.
+- `assets/pharmavite-logo.png` — logo taken from the workbook.
