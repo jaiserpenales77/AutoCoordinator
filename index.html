@@ -105,8 +105,12 @@
             <small>Tablets/softgels per bottle, e.g. 180. Printed as "Fill Rate" on the sheet.</small>
             <small id="fillRateHint" class="hint-ok"></small>
           </label>
-          <label>Bulk Rejected/Returned (TH)
+          <label>Bulk Rejected (TH)
             <input type="number" id="bulkRejected" step="any" min="0" value="0">
+          </label>
+          <label>Bulk Returned (TH)
+            <input type="number" id="bulkReturned" step="any" min="0" value="0">
+            <small>Rejected + Returned is the sheet's Bulk Rejected/Returned.</small>
           </label>
           <label>Issued Bulk (TH)
             <input type="number" id="bulkIssued" step="any" min="0">
@@ -193,6 +197,20 @@
     </div>
 
     <div id="statusBanner" class="status-banner ok">Within range (94.5% – 102.4999%)</div>
+
+    <h3 class="card-heading">Card Preview</h3>
+    <table class="card-preview">
+      <tbody>
+        <tr><th>Total Packed</th><td id="cardTotalPacked"></td><td class="unit">EA</td></tr>
+        <tr><th>Packaging Scrap</th><td id="cardPkgScrap"></td><td class="unit">KG</td></tr>
+        <tr><th>Manufacturing Scrap</th><td id="cardMfgScrap"></td><td class="unit">KG</td></tr>
+        <tr><th>Bulk Piece Weight (if applicable)</th><td id="cardPieceWt"></td><td class="unit">mg</td></tr>
+        <tr><th>Bulk Issued</th><td id="cardBulkIssued"></td><td class="unit">TH</td></tr>
+        <tr><th>Bulk Rejected</th><td id="cardBulkRejected"></td><td class="unit">TH</td></tr>
+        <tr><th>Bulk Returned</th><td id="cardBulkReturned"></td><td class="unit">TH</td></tr>
+        <tr><th>Total Bottles Yielded</th><td id="cardTotalYielded"></td><td class="unit">EA</td></tr>
+      </tbody>
+    </table>
 
     <table class="scrap-table">
       <thead>

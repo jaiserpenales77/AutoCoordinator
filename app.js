@@ -9,7 +9,7 @@ let editingId = null;
 const fields = [
   "fgItem", "woNumber", "bulkItem", "dateCreated", "createdBy",
   "qtyCompleted", "retains", "donations", "stability", "totalPackaged",
-  "fillRate", "bulkRejected", "bulkIssued",
+  "fillRate", "bulkRejected", "bulkReturned", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
   "videoJetCount", "palletLayers", "palletBoxes"
 ];
@@ -48,7 +48,8 @@ function computeResults(input) {
   const totalPackaged = toNum(data.qtyCompleted) + toNum(data.retains)
     + toNum(data.donations) + toNum(data.stability);
   const fillRate = toNum(data.fillRate);
-  const bulkRejected = toNum(data.bulkRejected);
+  // The workbook's single Bulk Rejected/Returned cell (B8).
+  const bulkRejected = toNum(data.bulkRejected) + toNum(data.bulkReturned);
   const bulkIssued = toNum(data.bulkIssued);
   const pieceWt = toNum(data.pieceWt);
   const tareWeight = data.tareWeight === undefined ? 6 : toNum(data.tareWeight);
@@ -135,6 +136,8 @@ function renderResults(r, data) {
     banner.textContent = "Within range (94.5% – 102.4999%)";
   }
 
+  renderCardPreview(data);
+
   const tbody = el("scrapTableBody");
   tbody.innerHTML = "";
   r.scrapInputs.forEach(s => {
@@ -147,6 +150,21 @@ function renderResults(r, data) {
   const { line1, line2 } = buildSummaryLines(data);
   el("summaryLine1").textContent = line1;
   el("summaryLine2").textContent = line2;
+}
+
+// The paper card's values, as entered on the form (scrap weights gross).
+function renderCardPreview(data) {
+  const cells = {
+    cardTotalPacked: excelGeneral(data.qtyCompleted),
+    cardPkgScrap: sumEntered(data, ["scrap1", "scrap2", "scrap3"]),
+    cardMfgScrap: excelGeneral(data.mfgScrap),
+    cardPieceWt: excelGeneral(data.pieceWt),
+    cardBulkIssued: excelGeneral(data.bulkIssued),
+    cardBulkRejected: excelGeneral(data.bulkRejected),
+    cardBulkReturned: excelGeneral(data.bulkReturned),
+    cardTotalYielded: excelGeneral(data.totalPackaged)
+  };
+  Object.entries(cells).forEach(([id, text]) => { el(id).textContent = text; });
 }
 
 function recalc() {
@@ -211,7 +229,7 @@ function applyFormData(record) {
   const data = withBottleBreakdown(record);
   fields.forEach(id => {
     if (id === "createdBy") setCreatedBy(data.createdBy ?? "");
-    else el(id).value = data[id] ?? (id === "tareWeight" ? 6 : "");
+    else el(id).value = data[id] ?? el(id).defaultValue;
   });
   resetAutoFills();
   recalc();
@@ -409,11 +427,18 @@ function formatDateMMDDYY(isoDate) {
   return `${m}/${d}/${y.slice(2)}`;
 }
 
+// Adds entered values without float noise (8.6 + 0.1 is 8.7, not 8.700000000000001);
+// blank when none of them is entered.
+function sumEntered(data, ids) {
+  if (ids.every(id => String(data[id] ?? "").trim() === "")) return "";
+  return String(Number(ids.reduce((sum, id) => sum + toNum(data[id]), 0).toPrecision(15)));
+}
+
 function buildSummaryLines(data) {
   const g = id => excelGeneral(data[id]);
   const line1 =
     `Total Bottles Produced =${g("totalPackaged")}   Bulk Piece Weight =${g("pieceWt")}` +
-    `   Fill Rate =${g("fillRate")}   Bulk Rejected/Returned =${g("bulkRejected")}TH` +
+    `   Fill Rate =${g("fillRate")}   Bulk Rejected/Returned =${excelGeneral(sumEntered(data, ["bulkRejected", "bulkReturned"]))}TH` +
     `   Bulk Issued=${g("bulkIssued")}TH`;
   const line2 =
     `Packaging Scrap #1 =${g("scrap1")} KG    Packaging Scrap #2 =${g("scrap2")} KG` +
@@ -580,7 +605,7 @@ el("printBtn").addEventListener("click", () => {
   window.print();
 });
 
-const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "qtyCompleted", "bulkIssued", "bulkRejected"];
+const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "qtyCompleted", "bulkIssued", "bulkReturned"];
 
 function renderImportLog(log) {
   el("importLog").innerHTML = log

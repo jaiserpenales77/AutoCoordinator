@@ -223,13 +223,13 @@ const PdfImport = (() => {
       if (closeout.bulkItem) {
         values.bulkItem = closeout.bulkItem;
         if (closeout.bulkIssued !== null) values.bulkIssued = closeout.bulkIssued;
-        values.bulkRejected = closeout.bulkReturned;
+        values.bulkReturned = closeout.bulkReturned;
         log.push({ level: "ok", text: `WO Close-out: bulk ${closeout.bulkItem}${closeout.bulkDescription ? ` (${closeout.bulkDescription})` : ""}, issued ${fmtNum(closeout.bulkIssued)}, returned ${fmtNum(closeout.bulkReturned)}.` });
         if (closeout.otherBulkItems.length) {
           log.push({ level: "warn", text: `The Close-out has more than one possible bulk item (${[closeout.bulkItem, ...closeout.otherBulkItems].join(", ")}); used ${closeout.bulkItem}. Saving the right one on the Stored Data tab makes it the one picked.` });
         }
       } else {
-        log.push({ level: "warn", text: `${closeout.file.name}: couldn't tell which Issues row is the bulk item. Enter Bulk Item, Issued Bulk and Bulk Rejected/Returned by hand, or save the bulk item on the Stored Data tab and import again.` });
+        log.push({ level: "warn", text: `${closeout.file.name}: couldn't tell which Issues row is the bulk item. Enter Bulk Item, Issued Bulk and Bulk Returned by hand, or save the bulk item on the Stored Data tab and import again.` });
       }
       if (closeout.completed === null) {
         log.push({ level: "warn", text: `${closeout.file.name}: no Quantity Completed found.` });

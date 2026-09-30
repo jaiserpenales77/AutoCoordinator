@@ -8,7 +8,9 @@ list for tracking multiple work orders.
 
 - **Work order header**: FG Item, WO #, Bulk Item.
 - **Bulk reconciliation**: Total Packaged (Bottles), Count (Fill Rate),
-  Bulk Rejected/Returned (TH), Issued Bulk (TH).
+  Bulk Rejected/Returned (TH), Issued Bulk (TH). Bulk Rejected and Bulk
+  Returned are entered separately; their sum is the workbook's single
+  Bulk Rejected/Returned value, in the yield math and on the printout.
 - **Scrap calculations**: each of the three Packaging Scrap weighings and the
   Manufacturing Scrap weighing are entered as gross scale readings (Kg),
   netted against the container tare weight (fixed at 6 Kg, as in the
@@ -35,6 +37,21 @@ list for tracking multiple work orders.
   VideoJet Count line, By: shows the Created By lead's initials and Date: the
   print date. When both **Layers** and **Boxes** are entered, the
   configuration blank reads e.g. "5 Layers + 2 Boxes".
+
+## Card Preview
+
+The Live Results panel shows the pink paper card's table, filled in as you
+type, ready to copy onto the card:
+
+| Card row | From the form |
+|---|---|
+| Total Packed | Quantity Completed |
+| Packaging Scrap | Packaging Scrap #1 + #2 + #3, as entered (gross) |
+| Manufacturing Scrap | Manufacturing Scrap, as entered (gross) |
+| Bulk Piece Weight | Bulk Piece Wt |
+| Bulk Issued | Issued Bulk |
+| Bulk Rejected / Bulk Returned | Bulk Rejected / Bulk Returned |
+| Total Bottles Yielded | Total Bottles Produced |
 
 ## Stored Data tab
 
@@ -64,7 +81,7 @@ Drop the work order's report PDFs on **Import from JDE Reports** (or use
 | Quantity Completed (Bottles) | WO Close-out (R5504801) — Quantity Completed |
 | Bulk Item | WO Close-out (R5504801) — the bulk row in Issues (see below) |
 | Issued Bulk (TH) | WO Close-out — that row's Issued Quantity |
-| Bulk Rejected/Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
+| Bulk Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
 
 The bulk row is the Issues item saved on the Stored Data tab, else a `BU…`
 item, else the one item that isn't packaging (plain-number shippers/pallets,

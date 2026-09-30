@@ -272,6 +272,35 @@ th, td {
   border-bottom: 1px solid var(--border);
 }
 
+/* Live copy of the pink paper card's table. */
+.card-heading { margin: 0 0 8px; font-size: 1rem; }
+table.card-preview {
+  background: #fbe4e6;
+  border: 1.5px solid #333;
+  font-size: 0.95rem;
+  color: #222;
+}
+table.card-preview th,
+table.card-preview td {
+  border: 1px solid #333;
+  padding: 8px 10px;
+}
+table.card-preview th { width: 50%; font-weight: 400; }
+table.card-preview td {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1f3a93;
+}
+table.card-preview td.unit {
+  width: 3.5em;
+  text-align: center;
+  vertical-align: bottom;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #222;
+}
+
 .summary-lines p {
   white-space: pre-wrap;
   font-size: 0.82rem;
