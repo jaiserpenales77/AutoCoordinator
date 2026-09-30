@@ -457,6 +457,8 @@ table.card-preview td.unit {
   border-bottom: 1px solid var(--border);
 }
 .stored-list button, .stored-layout .row-actions button { padding: 4px 10px; font-size: 0.78rem; }
+.stored-list .lead-name { flex: 1 1 auto; min-width: 0; }
+.stored-list input.lead-user { flex: 0 1 150px; min-width: 0; padding: 4px 8px; font-size: 0.82rem; }
 
 .print-sheet { display: none; }
 

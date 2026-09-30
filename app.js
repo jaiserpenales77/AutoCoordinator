@@ -5,6 +5,10 @@ const HIGH_YIELD_THRESHOLD = 1.024999;
 const form = document.getElementById("yieldForm");
 const editingBadge = document.getElementById("editingBadge");
 let editingId = null;
+// The signed-in username (null when not signed in), and whether someone chose
+// in the Created By dropdown on this sheet (see applyDefaultCreatedBy).
+let currentUser = null;
+let createdByPicked = false;
 // Imported report PDFs as page images (see addImportedReports).
 const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
 let importedReports = [];
@@ -305,6 +309,8 @@ function clearForm() {
   importGen++;
   clearImportedReports();
   resetAutoFills();
+  createdByPicked = false;
+  applyDefaultCreatedBy();
   recalc();
 }
 
@@ -821,13 +827,17 @@ function showMsg(id, text, ok = true) {
 function renderStoredData() {
   const leads = StoredData.leads();
   el("leadList").innerHTML = leads.map(name => `
-    <li><span>${escapeHtml(name)}</span>
+    <li><span class="lead-name">${escapeHtml(name)}</span>
+      <input type="text" class="lead-user" data-lead="${escapeHtml(name)}" value="${escapeHtml(StoredData.usernameForLead(name))}"
+        placeholder="Username" aria-label="Sign-in username for ${escapeHtml(name)}" autocapitalize="none" spellcheck="false">
       <button type="button" data-remove-lead="${escapeHtml(name)}">Remove</button></li>`).join("");
   el("noLeadsMsg").classList.toggle("hidden", leads.length > 0);
 
   ITEM_PANELS.forEach(renderItemPanel);
 
   populateLeads();
+  showSignedInName();
+  applyDefaultCreatedBy();
 }
 
 el("leadForm").addEventListener("submit", e => {
@@ -841,6 +851,28 @@ el("leadForm").addEventListener("submit", e => {
     showMsg("leadMsg", `${name} is already in the list.`, false);
   }
   el("leadName").focus();
+});
+
+// Linking a sign-in username to a lead; saved when the box loses focus or on Enter.
+el("leadList").addEventListener("change", e => {
+  const input = e.target.closest("input.lead-user");
+  if (!input) return;
+  const name = input.dataset.lead;
+  const username = StoredData.normUser(input.value);
+  if (username && !StoredData.validUsername(username)) {
+    showMsg("leadMsg", `"${input.value.trim()}" isn't a username: use letters, numbers, dots, dashes or underscores (no @pk030.local).`, false);
+    input.value = StoredData.usernameForLead(name);
+    return;
+  }
+  const before = StoredData.usernameForLead(name);
+  if (username === before) return;
+  const movedFrom = StoredData.setLeadUsername(name, username);
+  if (!username) showMsg("leadMsg", `${name} is no longer linked to ${before}.`);
+  else showMsg("leadMsg", `${username} now signs in as ${name}.${movedFrom ? ` (Unlinked from ${movedFrom}.)` : ""}`);
+  renderStoredData();
+});
+el("leadList").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("input.lead-user")) e.target.blur();
 });
 
 el("leadList").addEventListener("click", e => {
@@ -1002,10 +1034,30 @@ systemDark?.addEventListener("change", e => {
   if (!savedTheme()) applyTheme(e.matches ? "dark" : "light");
 });
 
+
+function showSignedInName() {
+  if (!currentUser) return;
+  const lead = StoredData.leadForUser(currentUser);
+  el("userName").textContent = lead ?? currentUser;
+  el("userName").title = `Username: ${currentUser}`;
+}
+
+// A new sheet's Created By starts as the signed-in user's lead, unless someone
+// already picked in the dropdown (saved sheets keep their own).
+el("createdBy").addEventListener("change", () => { createdByPicked = true; });
+
+function applyDefaultCreatedBy() {
+  if (!currentUser || editingId || createdByPicked || getCreatedBy()) return;
+  const lead = StoredData.leadForUser(currentUser);
+  if (lead) setCreatedBy(lead);
+}
+
 StoredData.onChange = CloudSync.saveStored;
 CloudSync.start({
   onSignedIn(username) {
-    el("userName").textContent = username;
+    currentUser = username;
+    showSignedInName();
+    applyDefaultCreatedBy();
     document.body.dataset.auth = "signed-in";
   },
   onSignedOut() {
@@ -1021,6 +1073,7 @@ CloudSync.start({
   localSheets: loadRecords,
   localStored: () => ({
     leads: StoredData.leads(),
+    leadUsers: StoredData.leadUsers(),
     bulkItems: StoredData.bulkItems.all(),
     fgItems: StoredData.fgItems.all()
   }),

@@ -1,6 +1,7 @@
 // Signs users in and syncs saved yield sheets and Stored Data through the
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
-// each sheet is a document in `pk030-yield-sheets`, and leads/bulk items/FG
+// each sheet is a document in `pk030-yield-sheets`, and leads (with their
+// linked usernames)/bulk items/FG
 // items are maps in the `pk030/storedData` document. The Firestore rules only
 // let signed-in users reach these. localStorage stays the app's working copy;
 // Firestore's own offline cache (IndexedDB) holds writes made offline and
@@ -87,6 +88,7 @@ const CloudSync = (() => {
   function storedFromRemote(data = {}) {
     return {
       leads: Object.keys(data.leads || {}),
+      leadUsers: { ...(data.leadUsers || {}) },
       bulkItems: Object.entries(data.bulkItems || {}).map(([item, pieceWt]) => ({ item, pieceWt })),
       fgItems: Object.entries(data.fgItems || {}).map(([item, count]) => ({ item, count }))
     };
@@ -104,6 +106,8 @@ const CloudSync = (() => {
     const merge = {};
     const add = (field, key, value) => { (merge[field] ??= {})[key] = value; };
     local.leads.filter(n => !remote.leads.includes(n)).forEach(n => add("leads", n, true));
+    Object.entries(local.leadUsers || {}).filter(([u]) => !(u in remote.leadUsers))
+      .forEach(([u, name]) => add("leadUsers", u, name));
     const missing = (list, remoteList) => list.filter(i => !remoteList.some(r => r.item === i.item));
     missing(local.bulkItems, remote.bulkItems).forEach(i => add("bulkItems", i.item, i.pieceWt));
     missing(local.fgItems, remote.fgItems).forEach(i => add("fgItems", i.item, i.count));
@@ -111,6 +115,7 @@ const CloudSync = (() => {
     localStorage.setItem(MIGRATED.stored, "1");
     return {
       leads: [...remote.leads, ...Object.keys(merge.leads || {})],
+      leadUsers: { ...remote.leadUsers, ...(merge.leadUsers || {}) },
       bulkItems: [...remote.bulkItems, ...missing(local.bulkItems, remote.bulkItems)],
       fgItems: [...remote.fgItems, ...missing(local.fgItems, remote.fgItems)]
     };

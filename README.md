@@ -66,6 +66,11 @@ type, ready to copy onto the card:
   lets someone type a name that isn't listed yet. The chosen name prints on the
   "Yield Sheet Created By:" line; with none chosen, the line prints blank as on
   the paper form.
+  Each lead can be **linked to a sign-in username** (the box next to their
+  name). When that person is signed in, the header shows their name instead
+  of the username, and new sheets start with them as Created By; anyone can
+  still pick someone else in the dropdown, and saved sheets keep their own.
+  A username links to one lead at a time.
 - **Bulk Items & Piece Weights** — when a stored Bulk Item is typed or
   imported on the yield sheet, Bulk Piece Wt fills in.
 - **FG Items & Counts** — when a stored FG Item is typed or imported, Count
@@ -146,7 +151,8 @@ same Firebase Firestore database as the JDE Sched app (project
 `jde-schedule-database`):
 
 - each yield sheet is a document in the `pk030-yield-sheets` collection;
-- leads, bulk piece weights and FG counts are maps in `pk030/storedData`.
+- leads, username links (`leadUsers`, username → lead name), bulk piece
+  weights and FG counts are maps in `pk030/storedData`.
 
 The status under the title shows **Synced**, **Saving…**, **Offline** (changes
 are kept and sent when the connection returns, even across reloads) or a
