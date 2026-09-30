@@ -60,9 +60,13 @@ Drop the work order's report PDFs on **Import from JDE Reports** (or use
 |---|---|
 | FG Item, WO # | Either report |
 | Quantity Completed (Bottles) | WO Close-out (R5504801) — Quantity Completed |
-| Bulk Item | WO Close-out (R5504801) — the `BU…` row in Issues |
+| Bulk Item | WO Close-out (R5504801) — the bulk row in Issues (see below) |
 | Issued Bulk (TH) | WO Close-out — that row's Issued Quantity |
 | Bulk Rejected/Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
+
+The bulk row is the Issues item saved on the Stored Data tab, else a `BU…`
+item, else the one item that isn't packaging (plain-number shippers/pallets,
+`CP…` bottles, `PK…` caps/labels, or a packaging description) — e.g. `A845`.
 
 **Total Bottles Produced** (the workbook's Total Packaged) is calculated as
 Quantity Completed + Retains + Donations + Stability; the last three are

@@ -123,6 +123,25 @@ const PdfImport = (() => {
     };
   }
 
+  const PACKAGING_DESCRIPTION = /^(SHIPPER|PALLET|BOTTLE|CAP|LABEL|CARTON|INSERT|DESICCANT|COTTON|SEAL|LINER|BAG|BOX|TAPE|FILM|SLEEVE|DIVIDER|TRAY|LID|JAR|POUCH|WRAP)\b/i;
+
+  // The bulk row in the Issues table, most certain first: an item saved on the
+  // Stored Data tab, a BU… item, then any item that doesn't look like packaging
+  // (plain-number shippers/pallets, CP… bottles, PK… caps/labels, or a
+  // packaging description).
+  function findBulkRows(issues) {
+    const rows = issues.filter(r => r["Item Number"]);
+    const looksLikeBulk = r => !/^\d+$/.test(r["Item Number"])
+      && !/^(CP|PK)/i.test(r["Item Number"])
+      && !PACKAGING_DESCRIPTION.test(r["Item Description"] || "");
+    const tiers = [
+      rows.filter(r => StoredData.findItem(r["Item Number"])),
+      rows.filter(r => /^BU/i.test(r["Item Number"])),
+      rows.filter(looksLikeBulk)
+    ];
+    return tiers.find(t => t.length) ?? [];
+  }
+
   function parseCloseOut(pages) {
     const yieldRow = readTable(pages,
       ["Order Number", "Order Type", "Item Number", "WO/ UOM", "Expected Quantity", "Quantity Completed", "Yield %"],
@@ -130,7 +149,7 @@ const PdfImport = (() => {
     const issues = readTable(pages,
       ["Item Number", "Item Description", "Quantity Ordered", "MES Quantity", "Return Quantity", "Issued Quantity"],
       /Container Summary|R5504801/);
-    const bulkRows = issues.filter(r => /^BU/i.test(r["Item Number"] || ""));
+    const bulkRows = findBulkRows(issues);
     const bulk = bulkRows[0];
     return {
       woNumber: yieldRow["Order Number"] ?? null,
@@ -142,7 +161,7 @@ const PdfImport = (() => {
       bulkDescription: bulk?.["Item Description"] ?? null,
       bulkIssued: bulk ? toNumber(bulk["Issued Quantity"]) : null,
       bulkReturned: bulk ? (toNumber(bulk["Return Quantity"]) ?? 0) : null,
-      bulkRowCount: bulkRows.length
+      otherBulkItems: bulkRows.slice(1).map(r => r["Item Number"])
     };
   }
 
@@ -206,11 +225,11 @@ const PdfImport = (() => {
         if (closeout.bulkIssued !== null) values.bulkIssued = closeout.bulkIssued;
         values.bulkRejected = closeout.bulkReturned;
         log.push({ level: "ok", text: `WO Close-out: bulk ${closeout.bulkItem}${closeout.bulkDescription ? ` (${closeout.bulkDescription})` : ""}, issued ${fmtNum(closeout.bulkIssued)}, returned ${fmtNum(closeout.bulkReturned)}.` });
-        if (closeout.bulkRowCount > 1) {
-          log.push({ level: "warn", text: `The Close-out lists ${closeout.bulkRowCount} bulk (BU) items; only the first, ${closeout.bulkItem}, was used.` });
+        if (closeout.otherBulkItems.length) {
+          log.push({ level: "warn", text: `The Close-out has more than one possible bulk item (${[closeout.bulkItem, ...closeout.otherBulkItems].join(", ")}); used ${closeout.bulkItem}. Saving the right one on the Stored Data tab makes it the one picked.` });
         }
       } else {
-        log.push({ level: "warn", text: `${closeout.file.name}: no bulk (BU…) item found in the Issues table.` });
+        log.push({ level: "warn", text: `${closeout.file.name}: couldn't tell which Issues row is the bulk item. Enter Bulk Item, Issued Bulk and Bulk Rejected/Returned by hand, or save the bulk item on the Stored Data tab and import again.` });
       }
       if (closeout.completed === null) {
         log.push({ level: "warn", text: `${closeout.file.name}: no Quantity Completed found.` });
