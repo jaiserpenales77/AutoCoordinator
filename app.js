@@ -11,7 +11,7 @@ const fields = [
   "qtyCompleted", "retains", "donations", "totalPackaged",
   "fillRate", "bulkRejected", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
-  "videoJetCount"
+  "videoJetCount", "palletLayers", "palletBoxes"
 ];
 
 const SCRAP_FIELDS = [
@@ -387,6 +387,15 @@ function createdByHtml(name) {
   return name ? CREATED_BY_LABEL + blankHtml(name, CREATED_BY_BLANKS, "xl-fill") : undefined;
 }
 
+// "5 Layers + 2 Boxes"; empty unless both counts are entered.
+function palletConfig(data) {
+  const layers = String(data.palletLayers ?? "").trim();
+  const boxes = String(data.palletBoxes ?? "").trim();
+  if (!layers || !boxes) return "";
+  const count = (n, one, many) => `${excelGeneral(n)} ${Number(n) === 1 ? one : many}`;
+  return `${count(layers, "Layer", "Layers")} + ${count(boxes, "Box", "Boxes")}`;
+}
+
 function initials(name) {
   return (name || "").split(/[\s-]+/).filter(Boolean).map(w => w[0].toUpperCase()).join("");
 }
@@ -424,7 +433,7 @@ function buildPrintSheet() {
     : undefined;
   const palletText = r.outOfRange ? PARTIAL_PALLET_TEXT : "";
   const palletHtml = r.outOfRange
-    ? `Partial Pallet Configuration:${"_".repeat(49)} ` + byAndDate("  ")
+    ? "Partial Pallet Configuration:" + blankHtml(palletConfig(data), 49) + " " + byAndDate("  ")
     : undefined;
 
   // Conditional formatting copied from the workbook.

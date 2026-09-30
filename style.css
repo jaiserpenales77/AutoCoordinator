@@ -134,6 +134,7 @@ label {
 }
 
 label small { color: #94a0ab; font-size: 0.72rem; }
+.fieldset-note { display: block; margin-top: 8px; color: #94a0ab; font-size: 0.72rem; }
 
 input, select {
   font-size: 0.95rem;

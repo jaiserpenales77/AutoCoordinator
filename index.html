@@ -123,6 +123,19 @@
         </div>
       </fieldset>
 
+      <fieldset>
+        <legend>Partial Pallet Configuration</legend>
+        <div class="field-grid">
+          <label>Layers
+            <input type="number" id="palletLayers" step="1" min="0">
+          </label>
+          <label>Boxes
+            <input type="number" id="palletBoxes" step="1" min="0">
+          </label>
+        </div>
+        <small class="fieldset-note">With both filled in, prints as e.g. "5 Layers + 2 Boxes" when Final Yield is outside 94.5% – 102.4999%.</small>
+      </fieldset>
+
       <div class="actions">
         <button type="submit" class="primary">Save Yield Sheet</button>
         <button type="button" id="newBtn">New / Clear</button>

@@ -33,7 +33,8 @@ list for tracking multiple work orders.
   difference: the Partial Pallet Configuration line prints black text on
   yellow instead of the workbook's hard-to-read white. On that line and the
   VideoJet Count line, By: shows the Created By lead's initials and Date: the
-  print date.
+  print date. When both **Layers** and **Boxes** are entered, the
+  configuration blank reads e.g. "5 Layers + 2 Boxes".
 
 ## Leads list
 
