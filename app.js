@@ -8,7 +8,7 @@ let editingId = null;
 
 const fields = [
   "fgItem", "woNumber", "bulkItem", "dateCreated", "createdBy",
-  "qtyCompleted", "retains", "donations", "totalPackaged",
+  "qtyCompleted", "retains", "donations", "stability", "totalPackaged",
   "fillRate", "bulkRejected", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
   "videoJetCount", "palletLayers", "palletBoxes"
@@ -34,16 +34,19 @@ function todayISO() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-// Mirrors the PK030 formulas; `error` is set where Excel would show #DIV/0!.
-// Sheets saved before Retains/Donations existed only stored the total.
+// Sheets saved before the bottle breakdown only stored the total, and ones
+// saved before Stability existed have no stability count.
 function withBottleBreakdown(data) {
-  if (data.qtyCompleted !== undefined) return data;
-  return { ...data, qtyCompleted: data.totalPackaged ?? "0", retains: "0", donations: "0" };
+  const withStability = data.stability === undefined ? { ...data, stability: "0" } : data;
+  if (data.qtyCompleted !== undefined) return withStability;
+  return { ...withStability, qtyCompleted: data.totalPackaged ?? "0", retains: "0", donations: "0" };
 }
 
+// Mirrors the PK030 formulas; `error` is set where Excel would show #DIV/0!.
 function computeResults(input) {
   const data = withBottleBreakdown(input);
-  const totalPackaged = toNum(data.qtyCompleted) + toNum(data.retains) + toNum(data.donations);
+  const totalPackaged = toNum(data.qtyCompleted) + toNum(data.retains)
+    + toNum(data.donations) + toNum(data.stability);
   const fillRate = toNum(data.fillRate);
   const bulkRejected = toNum(data.bulkRejected);
   const bulkIssued = toNum(data.bulkIssued);
@@ -605,7 +608,7 @@ async function importPdfs(fileList) {
     fillPieceWtFromStoredData();
     const pieceWtFilled = el("pieceWt").dataset.fromItem !== undefined;
     if (pieceWtFilled) log.push({ level: "ok", text: `Bulk Piece Wt ${el("pieceWt").value} mg from Stored Data (${el("pieceWt").dataset.fromItem}).` });
-    const todo = ["Retains", "Donations", "Count", ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
+    const todo = ["Retains", "Donations", "Stability", "Count", ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
     log.push({ level: "info", text: `Still to enter by hand: ${todo.join(", ")} and the scrap weights.` });
   }
   renderImportLog(log);

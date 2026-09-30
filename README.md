@@ -65,8 +65,8 @@ Drop the work order's report PDFs on **Import from JDE Reports** (or use
 | Bulk Rejected/Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
 
 **Total Bottles Produced** (the workbook's Total Packaged) is calculated as
-Quantity Completed + Retains + Donations; Retains and Donations are entered by
-hand. If no Close-out is imported, Quantity Completed falls back to the
+Quantity Completed + Retains + Donations + Stability; the last three are
+entered by hand. If no Close-out is imported, Quantity Completed falls back to the
 Packaging Pallet Transfers (R593111FG) `Total Qty.`, and the app flags any
 difference between the two. Reports for different work orders are refused.
 The Charge Report (R593111CV) isn't needed.
