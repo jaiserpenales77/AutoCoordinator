@@ -441,7 +441,8 @@ function buildPrintSheet() {
 
   // Conditional formatting copied from the workbook.
   const k33Cf = r.outOfRange ? " cf-bad" : "";
-  const videoJetCf = Number(data.videoJetCount) ? " cf-yellow" : "";
+  // The workbook highlights whenever B21 has a count, even with the line blank; only highlight a printed line.
+  const videoJetCf = r.outOfRange && Number(data.videoJetCount) ? " cf-yellow" : "";
   const palletCf = palletText === PARTIAL_PALLET_TEXT ? " cf-yellow" : "";
 
   const bb = "b-b";
