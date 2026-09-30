@@ -129,14 +129,14 @@ const PdfImport = (() => {
   // Stored Data tab, a BU… item, then any item that doesn't look like packaging
   // (plain-number shippers/pallets, CP… bottles, PK… caps/labels, or a
   // packaging description).
-  function findBulkRows(issues) {
-    const rows = issues.filter(r => r["Item Number"]);
-    const looksLikeBulk = r => !/^\d+$/.test(r["Item Number"])
-      && !/^(CP|PK)/i.test(r["Item Number"])
-      && !PACKAGING_DESCRIPTION.test(r["Item Description"] || "");
+  function findBulkRows(issues, itemKey = "Item Number", descKey = "Item Description") {
+    const rows = issues.filter(r => r[itemKey]);
+    const looksLikeBulk = r => !/^\d+$/.test(r[itemKey])
+      && !/^(CP|PK)/i.test(r[itemKey])
+      && !PACKAGING_DESCRIPTION.test(r[descKey] || "");
     const tiers = [
-      rows.filter(r => StoredData.bulkItems.find(r["Item Number"])),
-      rows.filter(r => /^BU/i.test(r["Item Number"])),
+      rows.filter(r => StoredData.bulkItems.find(r[itemKey])),
+      rows.filter(r => /^BU/i.test(r[itemKey])),
       rows.filter(looksLikeBulk)
     ];
     return tiers.find(t => t.length) ?? [];
@@ -165,6 +165,28 @@ const PdfImport = (() => {
     };
   }
 
+  // One row per container charged to the work order; the bulk rows are picked
+  // like the Close-out's. PH0001 lists every item, PH0002 only the bulk.
+  function parseCharge(pages) {
+    const text = allText(pages);
+    const header = text.match(/Order Number\s+(\S+)\s+Product\s*:\s*(.*?)\s+Lot\s+\S+\s+Item\s*#\s*(\S+)/);
+    const rows = readTable(pages,
+      ["LOT", "ITEM", "DESCRIPTION", "USER", "CHARGED BY", "DATE", "TIME PT", "CONTAINER ID", "CONTAINER QTY", "UM", "TYPE"],
+      /Total Charged|R593111CV/).filter(r => r.ITEM && r["CONTAINER QTY"] && isNumber(r["CONTAINER QTY"]));
+    const bulkRows = findBulkRows(rows, "ITEM", "DESCRIPTION");
+    const bulkItem = bulkRows[0]?.ITEM ?? null;
+    return {
+      woNumber: header?.[1] ?? null,
+      description: header?.[2] ?? null,
+      fgItem: header?.[3] ?? null,
+      bulkItem,
+      bulkDescription: bulkRows[0]?.DESCRIPTION ?? null,
+      bulkContainers: bulkRows.filter(r => r.ITEM === bulkItem)
+        .map(r => ({ id: r["CONTAINER ID"] ?? `${r.LOT}|${r.DATE}|${r["TIME PT"]}`, qty: toNumber(r["CONTAINER QTY"]) })),
+      otherRows: rows.length - bulkRows.filter(r => r.ITEM === bulkItem).length
+    };
+  }
+
   function detect(pages, fileName) {
     const head = pages.length ? pages[0].slice(0, 6).map(l => l.text).join(" ") : "";
     const probe = `${head} ${fileName}`;
@@ -174,9 +196,34 @@ const PdfImport = (() => {
     return null;
   }
 
+  const REPORT_NAMES = {
+    closeout: "WO Close-out (R5504801)",
+    pallet: "Pallet Transfers (R593111FG)",
+    charge: "Charge Report (R593111CV)"
+  };
+
+  // What the import preview shows for each report.
+  function previewDetails(r) {
+    if (r.type === "closeout") {
+      return [
+        ["Qty Completed", fmtNum(r.completed)],
+        ["Bulk", r.bulkItem ?? "?"],
+        ["Issued", `${fmtNum(r.bulkIssued)} TH`],
+        ["Returned", `${fmtNum(r.bulkReturned)} TH`]
+      ];
+    }
+    if (r.type === "pallet") return [["Total Qty", fmtNum(r.totalPackaged)]];
+    const charged = r.bulkContainers.reduce((sum, c) => sum + (c.qty ?? 0), 0);
+    return [
+      ["Bulk", r.bulkItem ?? "none"],
+      ["Charged", r.bulkItem ? `${fmtNum(charged)} TH (${r.bulkContainers.length} containers)` : "—"],
+      ...(r.otherRows ? [["Other charges", String(r.otherRows)]] : [])
+    ];
+  }
+
   const fmtNum = n => (n === null || n === undefined ? "?" : n.toLocaleString("en-US", { maximumFractionDigits: 3 }));
 
-  // Returns { values, log }; values only holds fields that were found.
+  // Returns { values, log, preview }; values only holds fields that were found.
   async function readReports(files) {
     const log = [];
     const reports = [];
@@ -191,17 +238,36 @@ const PdfImport = (() => {
       const type = detect(pages, file.name);
       if (type === "pallet") reports.push({ type, file, ...parsePalletTransfers(pages) });
       else if (type === "closeout") reports.push({ type, file, ...parseCloseOut(pages) });
-      else if (type === "charge") log.push({ level: "warn", text: `${file.name}: Charge Reports (R593111CV) aren't needed — the WO Close-out already has the bulk issued and returned.` });
-      else log.push({ level: "error", text: `${file.name}: not a WO Close-out (R5504801) or Packaging Pallet Transfers (R593111FG) report.` });
+      else if (type === "charge") reports.push({ type, file, ...parseCharge(pages) });
+      else log.push({ level: "error", text: `${file.name}: not a WO Close-out (R5504801), Packaging Pallet Transfers (R593111FG) or Charge Report (R593111CV).` });
     }
 
     const pallet = reports.find(r => r.type === "pallet");
     const closeout = reports.find(r => r.type === "closeout");
+    const charges = reports.filter(r => r.type === "charge");
 
-    const wos = [...new Set(reports.map(r => r.woNumber).filter(Boolean))];
+    // The work order most reports agree on; the others are flagged.
+    const woCounts = new Map();
+    reports.forEach(r => r.woNumber && woCounts.set(r.woNumber, (woCounts.get(r.woNumber) ?? 0) + 1));
+    const wos = [...woCounts.keys()];
+    wos.sort((a, b) => woCounts.get(b) - woCounts.get(a));
+    // With a tie there's no majority, so every work order is flagged.
+    const mainWo = wos.length > 1 && woCounts.get(wos[0]) === woCounts.get(wos[1]) ? null : wos[0] ?? null;
+    const preview = {
+      sameWo: wos.length <= 1,
+      woNumber: mainWo,
+      rows: reports.map(r => ({
+        file: r.file.name,
+        report: REPORT_NAMES[r.type],
+        woNumber: r.woNumber,
+        woOk: !!r.woNumber && r.woNumber === mainWo,
+        fgItem: r.fgItem,
+        details: previewDetails(r)
+      }))
+    };
     if (wos.length > 1) {
-      log.push({ level: "error", text: `These reports are for different work orders (${wos.join(", ")}). Import one work order at a time.` });
-      return { values: {}, log };
+      log.push({ level: "error", text: `These reports are for different work orders (${wos.join(", ")}). Nothing was filled in; import one work order at a time.` });
+      return { values: {}, log, preview };
     }
     const fgs = [...new Set(reports.map(r => r.fgItem).filter(Boolean))];
     if (fgs.length > 1) {
@@ -239,6 +305,35 @@ const PdfImport = (() => {
       }
     }
 
+    // Charge Reports overlap (PH0001 has every item, PH0002 just the bulk), so
+    // each bulk container counts once.
+    const chargedBulk = charges.map(c => c.bulkItem).find(Boolean) ?? null;
+    let chargedTotal = null;
+    if (chargedBulk) {
+      const containers = new Map();
+      charges.filter(c => c.bulkItem === chargedBulk)
+        .forEach(c => c.bulkContainers.forEach(k => containers.set(k.id, k.qty ?? 0)));
+      chargedTotal = Number([...containers.values()].reduce((a, b) => a + b, 0).toPrecision(15));
+      log.push({ level: "ok", text: `Charge Report${charges.length > 1 ? "s" : ""}: bulk ${chargedBulk}, ${fmtNum(chargedTotal)} TH charged in ${containers.size} containers.` });
+      if (charges.some(c => c.bulkItem && c.bulkItem !== chargedBulk)) {
+        log.push({ level: "warn", text: `The Charge Reports name different bulk items; used ${chargedBulk}.` });
+      }
+    } else if (charges.length) {
+      log.push({ level: "warn", text: "No bulk item found on the Charge Report." });
+    }
+
+    if (closeout?.bulkItem) {
+      if (chargedBulk && chargedBulk !== closeout.bulkItem) {
+        log.push({ level: "warn", text: `Charge Report bulk (${chargedBulk}) differs from the Close-out bulk (${closeout.bulkItem}); used the Close-out.` });
+      } else if (chargedTotal !== null && closeout.bulkIssued !== null && chargedTotal !== closeout.bulkIssued) {
+        log.push({ level: "warn", text: `Bulk charged (${fmtNum(chargedTotal)} TH) doesn't match Close-out Issued (${fmtNum(closeout.bulkIssued)} TH); used the Close-out.` });
+      }
+    } else if (chargedBulk) {
+      values.bulkItem = chargedBulk;
+      values.bulkIssued = chargedTotal;
+      log.push({ level: "warn", text: `No Close-out bulk, so Bulk Item and Issued Bulk come from the Charge Report (${fmtNum(chargedTotal)} TH). Enter Bulk Returned by hand.` });
+    }
+
     const completed = closeout?.completed ?? null;
     const palletTotal = pallet?.totalPackaged ?? null;
     if (completed !== null) {
@@ -251,7 +346,7 @@ const PdfImport = (() => {
       log.push({ level: "warn", text: `No Close-out Quantity Completed, so Quantity Completed uses the Pallet Transfers total (${fmtNum(palletTotal)}).` });
     }
 
-    return { values, log };
+    return { values, log, preview };
   }
 
   return { readReports };

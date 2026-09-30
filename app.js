@@ -294,6 +294,7 @@ function clearForm() {
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
   el("importLog").innerHTML = "";
+  renderImportPreview(null);
   resetAutoFills();
   recalc();
 }
@@ -615,6 +616,30 @@ function renderImportLog(log) {
     .join("");
 }
 
+// A small table of the imported reports, with the same-work-order check.
+function renderImportPreview(preview) {
+  const box = el("importPreview");
+  if (!preview || !preview.rows.length) {
+    box.innerHTML = "";
+    box.classList.add("hidden");
+    return;
+  }
+  const count = preview.rows.length;
+  const check = preview.sameWo
+    ? `<p class="wo-check wo-ok">✓ ${count === 1 ? "Report is" : `All ${count} reports are`} for WO ${escapeHtml(preview.woNumber ?? "?")}</p>`
+    : `<p class="wo-check wo-bad">✗ Reports are for different work orders — nothing was filled in</p>`;
+  const rows = preview.rows.map(r => `<tr>
+      <td><strong>${escapeHtml(r.report)}</strong><br><span class="muted">${escapeHtml(r.file)}</span></td>
+      <td class="${r.woOk ? "wo-ok" : "wo-bad"}">${escapeHtml(r.woNumber ?? "?")}</td>
+      <td>${escapeHtml(r.fgItem ?? "?")}</td>
+      <td>${r.details.map(([k, v]) => `${escapeHtml(k)}: <strong>${escapeHtml(v)}</strong>`).join("<br>")}</td>
+    </tr>`).join("");
+  box.innerHTML = `${check}<div class="table-scroll"><table>
+      <thead><tr><th>Report</th><th>WO #</th><th>FG Item</th><th>Values</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  box.classList.remove("hidden");
+}
+
 function flashField(input) {
   input.classList.remove("imported");
   void input.offsetWidth;
@@ -625,19 +650,22 @@ async function importPdfs(fileList) {
   const files = [...fileList].filter(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
   if (!files.length) {
     renderImportLog([{ level: "error", text: "Choose PDF files." }]);
+    renderImportPreview(null);
     return;
   }
   renderImportLog([{ level: "info", text: `Reading ${files.length} PDF${files.length > 1 ? "s" : ""}…` }]);
+  renderImportPreview(null);
 
   let result;
   try {
     result = await PdfImport.readReports(files);
   } catch (err) {
     renderImportLog([{ level: "error", text: `Import failed: ${err.message}` }]);
+    renderImportPreview(null);
     return;
   }
 
-  const { values, log } = result;
+  const { values, log, preview } = result;
   const found = IMPORT_FIELDS.filter(id => values[id] !== undefined && values[id] !== null);
   if (found.length) {
     const currentWo = el("woNumber").value.trim();
@@ -660,6 +688,7 @@ async function importPdfs(fileList) {
     log.push({ level: "info", text: `Still to enter by hand: ${todo.join(", ")} and the scrap weights.` });
   }
   renderImportLog(log);
+  renderImportPreview(preview);
 }
 
 el("pdfInput").addEventListener("change", e => {

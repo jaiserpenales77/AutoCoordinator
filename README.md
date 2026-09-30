@@ -91,8 +91,17 @@ item, else the one item that isn't packaging (plain-number shippers/pallets,
 Quantity Completed + Retains + Donations + Stability; the last three are
 entered by hand. If no Close-out is imported, Quantity Completed falls back to the
 Packaging Pallet Transfers (R593111FG) `Total Qty.`, and the app flags any
-difference between the two. Reports for different work orders are refused.
-The Charge Report (R593111CV) isn't needed.
+difference between the two.
+
+**Charge Reports** (R593111CV) can be imported too; PH0001 (every item) and
+PH0002 (bulk only) overlap, so each bulk container is counted once. The bulk
+charged total is checked against the Close-out's Issued Quantity. Without a
+Close-out, Bulk Item and Issued Bulk come from the Charge Report instead.
+
+After an import, a small **preview** lists each report with its WO #, FG Item
+and key values, and says whether all reports are for the same work order.
+Reports for different work orders are refused: nothing is filled in and the
+odd work order is shown in red.
 
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) aren't in any
