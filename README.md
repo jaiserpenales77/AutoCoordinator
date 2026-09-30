@@ -31,10 +31,26 @@ list for tracking multiple work orders.
   the yield sheet and page 2 is the List #/Lot #/CC # label. Sign-off lines
   stay blank for handwritten signatures, as on the paper form.
 
+## Importing the JDE report PDFs
+
+Drop the work order's report PDFs on **Import from JDE Reports** (or use
+**Choose PDFs**). The app reads them in the browser, so nothing is uploaded.
+
+| Yield sheet field | Taken from |
+|---|---|
+| FG Item, WO # | Either report |
+| Total Packaged (Bottles) | Packaging Pallet Transfers (R593111FG) — `Total Qty.` |
+| Bulk Item | WO Close-out (R5504801) — the `BU…` row in Issues |
+| Issued Bulk (TH) | WO Close-out — that row's Issued Quantity |
+| Bulk Rejected/Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
+
+If only the Close-out is imported, Total Packaged falls back to its Quantity
+Completed. Reports for different work orders are refused. The Charge Report
+(R593111CV) isn't needed.
+
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) remain manual
-entry here too, since they come from scale readings rather than any source
-PDF.
+entry, since they come from scale readings rather than any source PDF.
 
 ## Running it
 
@@ -46,7 +62,8 @@ python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
 
-Or just open `index.html` directly in a browser.
+Opening `index.html` directly from disk works too, except for PDF import,
+which browsers only allow over `http(s)://`.
 
 ## Data storage
 
@@ -61,4 +78,7 @@ back up or share the saved work orders.
   cell styles).
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
   export, and print-report generation.
+- `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
+- `assets/vendor/pdfjs/` — Mozilla pdf.js 4.10.38 (Apache-2.0), used to read
+  the PDFs.

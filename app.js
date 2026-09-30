@@ -173,6 +173,7 @@ function clearForm() {
   form.reset();
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
+  el("importLog").innerHTML = "";
   recalc();
 }
 
@@ -437,6 +438,76 @@ el("printBtn").addEventListener("click", () => {
   buildPrintSheet();
   window.print();
 });
+
+const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "totalPackaged", "bulkIssued", "bulkRejected"];
+
+function renderImportLog(log) {
+  el("importLog").innerHTML = log
+    .map(m => `<li class="log-${m.level}">${escapeHtml(m.text)}</li>`)
+    .join("");
+}
+
+function flashField(input) {
+  input.classList.remove("imported");
+  void input.offsetWidth;
+  input.classList.add("imported");
+}
+
+async function importPdfs(fileList) {
+  const files = [...fileList].filter(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+  if (!files.length) {
+    renderImportLog([{ level: "error", text: "Choose PDF files." }]);
+    return;
+  }
+  renderImportLog([{ level: "info", text: `Reading ${files.length} PDF${files.length > 1 ? "s" : ""}…` }]);
+
+  let result;
+  try {
+    result = await PdfImport.readReports(files);
+  } catch (err) {
+    renderImportLog([{ level: "error", text: `Import failed: ${err.message}` }]);
+    return;
+  }
+
+  const { values, log } = result;
+  const found = IMPORT_FIELDS.filter(id => values[id] !== undefined && values[id] !== null);
+  if (found.length) {
+    const currentWo = el("woNumber").value.trim();
+    if (currentWo && values.woNumber && currentWo !== values.woNumber) {
+      clearForm();
+      log.push({ level: "info", text: `Started a new sheet, since the form had WO ${currentWo}.` });
+    }
+    found.forEach(id => {
+      el(id).value = String(values[id]);
+      flashField(el(id));
+    });
+    recalc();
+    log.push({ level: "info", text: "Still to enter by hand: Count, Bulk Piece Wt and the scrap weights." });
+  }
+  renderImportLog(log);
+}
+
+el("pdfInput").addEventListener("change", e => {
+  importPdfs(e.target.files);
+  e.target.value = "";
+});
+
+const dropZone = el("dropZone");
+["dragenter", "dragover"].forEach(type => dropZone.addEventListener(type, e => {
+  e.preventDefault();
+  dropZone.classList.add("drag-over");
+}));
+dropZone.addEventListener("dragleave", e => {
+  if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove("drag-over");
+});
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-over");
+  importPdfs(e.dataTransfer.files);
+});
+// A PDF dropped just outside the zone would otherwise open in the tab and lose the form.
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
 
 clearForm();
 renderRecordsTable();

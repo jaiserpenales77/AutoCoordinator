@@ -21,6 +21,17 @@
     </div>
     <form id="yieldForm" autocomplete="off">
       <fieldset>
+        <legend>Import from JDE Reports</legend>
+        <div id="dropZone" class="drop-zone">
+          <p>Drop the <strong>WO Close-out</strong> (R5504801) and <strong>Packaging Pallet Transfers</strong> (R593111FG) PDFs here</p>
+          <label class="file-btn">Choose PDFs
+            <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
+          </label>
+        </div>
+        <ul id="importLog" class="import-log"></ul>
+      </fieldset>
+
+      <fieldset>
         <legend>Work Order Information</legend>
         <div class="field-grid">
           <label>FG Item
@@ -169,6 +180,7 @@
   </div>
 </div>
 
+<script src="pdf-import.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
