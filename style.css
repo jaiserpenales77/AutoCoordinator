@@ -457,7 +457,7 @@ table.card-preview td.unit {
 .tabs ~ .layout:not(#sheetTab) > .panel:first-child { border-top-left-radius: 0; }
 
 .stored-layout { grid-template-columns: 1fr 1fr; align-items: start; padding-top: 0; }
-.unplanned-layout { grid-template-columns: 1fr; padding-top: 0; }
+.single-layout { grid-template-columns: 1fr; padding-top: 0; }
 
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }

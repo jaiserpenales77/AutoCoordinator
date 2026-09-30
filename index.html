@@ -49,6 +49,7 @@
   <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="unplannedTab">Unplanned Issue</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkReturnTab">Bulk Return</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -330,9 +331,15 @@
   </section>
 </div>
 
-<div class="layout unplanned-layout hidden" id="unplannedTab">
+<div class="layout single-layout hidden" id="unplannedTab">
   <section class="panel">
     <h2>Unplanned Issue</h2>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="bulkReturnTab">
+  <section class="panel">
+    <h2>Bulk Return</h2>
   </section>
 </div>
 
