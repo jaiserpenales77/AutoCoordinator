@@ -31,6 +31,14 @@ list for tracking multiple work orders.
   the yield sheet and page 2 is the List #/Lot #/CC # label. Sign-off lines
   stay blank for handwritten signatures, as on the paper form.
 
+## Leads list
+
+**Yield Sheet Created By** is a dropdown of the names in `leads.js`. Edit that
+file (one quoted name per line, e.g. `"Jane Doe",`) to add or remove leads; the
+site redeploys on push. **Other…** lets someone type a name that isn't listed
+yet. The chosen name prints on the "Yield Sheet Created By:" line; with none
+chosen, the line prints blank as on the paper form.
+
 ## Importing the JDE report PDFs
 
 Drop the work order's report PDFs on **Import from JDE Reports** (or use

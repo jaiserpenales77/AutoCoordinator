@@ -7,7 +7,7 @@ const editingBadge = document.getElementById("editingBadge");
 let editingId = null;
 
 const fields = [
-  "fgItem", "woNumber", "bulkItem", "dateCreated",
+  "fgItem", "woNumber", "bulkItem", "dateCreated", "createdBy",
   "qtyCompleted", "retains", "donations", "totalPackaged",
   "fillRate", "bulkRejected", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
@@ -167,22 +167,56 @@ function saveRecords(records) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 }
 
+const OTHER_LEAD = "__other__";
+
+function populateLeads() {
+  const options = [["", "— Select lead —"], ...LEADS.map(name => [name, name]), [OTHER_LEAD, "Other…"]];
+  el("createdBy").innerHTML = options
+    .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+    .join("");
+}
+
+function syncOtherLead() {
+  el("createdByOtherWrap").classList.toggle("hidden", el("createdBy").value !== OTHER_LEAD);
+}
+
+function getCreatedBy() {
+  return el("createdBy").value === OTHER_LEAD ? el("createdByOther").value.trim() : el("createdBy").value;
+}
+
+// Names not in LEADS (typed via "Other…", or a lead since removed) load into the text box.
+function setCreatedBy(name) {
+  const listed = name === "" || LEADS.includes(name);
+  el("createdBy").value = listed ? name : OTHER_LEAD;
+  el("createdByOther").value = listed ? "" : name;
+  syncOtherLead();
+}
+
 function collectFormData() {
   const data = {};
-  fields.forEach(id => { data[id] = el(id).value; });
+  fields.forEach(id => { data[id] = id === "createdBy" ? getCreatedBy() : el(id).value; });
   return data;
 }
 
 function applyFormData(record) {
   const data = withBottleBreakdown(record);
-  fields.forEach(id => { el(id).value = data[id] ?? (id === "tareWeight" ? 6 : ""); });
+  fields.forEach(id => {
+    if (id === "createdBy") setCreatedBy(data.createdBy ?? "");
+    else el(id).value = data[id] ?? (id === "tareWeight" ? 6 : "");
+  });
   recalc();
 }
+
+el("createdBy").addEventListener("change", () => {
+  syncOtherLead();
+  if (el("createdBy").value === OTHER_LEAD) el("createdByOther").focus();
+});
 
 function clearForm() {
   editingId = null;
   editingBadge.classList.add("hidden");
   form.reset();
+  syncOtherLead();
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
   el("importLog").innerHTML = "";
@@ -334,7 +368,20 @@ function buildSummaryLines(data) {
 function xlCell(text = "", opts = {}) {
   const style = opts.sz ? ` style="font-size:${opts.sz}pt"` : "";
   const cls = opts.cls ? ` class="${opts.cls}"` : "";
-  return `<td${cls}${style}${opts.span ? " " + opts.span : ""}>${escapeHtml(text)}</td>`;
+  const content = opts.html ?? escapeHtml(text);
+  return `<td${cls}${style}${opts.span ? " " + opts.span : ""}>${content}</td>`;
+}
+
+const CREATED_BY_LABEL = "Yield Sheet Created By:";
+const CREATED_BY_BLANKS = 45;
+const CREATED_BY_LINE = CREATED_BY_LABEL + "_".repeat(CREATED_BY_BLANKS);
+
+// Puts the lead's name on a rule as wide as the workbook's underscore line
+// (an Arial underscore is 0.556em wide).
+function createdByHtml(name) {
+  if (!name) return undefined;
+  const width = (CREATED_BY_BLANKS * 0.556).toFixed(2);
+  return `${CREATED_BY_LABEL}<span class="xl-fill" style="min-width:${width}em">${escapeHtml(name)}</span>`;
 }
 
 function xlEmpty(n = 1) {
@@ -400,7 +447,7 @@ function buildPrintSheet() {
     [16.5, xlEmpty() + xlCell(line2, { sz: 10 }) + xlEmpty(6)],
     [19.5, xlEmpty(8)],
     [20.25, xlEmpty(6) + xlCell(formatDateMMDDYY(data.dateCreated), { sz: 11, cls: "bold ul", span: 'rowspan="2"' }) + xlEmpty()],
-    [14.25, xlEmpty() + xlCell("Yield Sheet Created By:_____________________________________________", { sz: 10 }) + xlEmpty(3)
+    [14.25, xlEmpty() + xlCell(CREATED_BY_LINE, { sz: 10, html: createdByHtml(data.createdBy) }) + xlEmpty(3)
       + xlCell("    Date:", { sz: 10 }) + xlEmpty()],
     [15.75, xlEmpty(8)],
     [14.25, xlEmpty() + xlCell("Packaging Review By:_______________________________________________", { sz: 10 }) + xlEmpty(3)
@@ -521,5 +568,6 @@ dropZone.addEventListener("drop", e => {
 window.addEventListener("dragover", e => e.preventDefault());
 window.addEventListener("drop", e => e.preventDefault());
 
+populateLeads();
 clearForm();
 renderRecordsTable();

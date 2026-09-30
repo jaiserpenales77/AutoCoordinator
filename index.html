@@ -46,6 +46,12 @@
           <label>Date Created
             <input type="date" id="dateCreated">
           </label>
+          <label>Yield Sheet Created By
+            <select id="createdBy"></select>
+          </label>
+          <label id="createdByOtherWrap" class="hidden">Lead name
+            <input type="text" id="createdByOther" placeholder="Type the lead's name">
+          </label>
         </div>
       </fieldset>
 
@@ -191,6 +197,7 @@
   </div>
 </div>
 
+<script src="leads.js"></script>
 <script src="pdf-import.js"></script>
 <script src="app.js"></script>
 </body>

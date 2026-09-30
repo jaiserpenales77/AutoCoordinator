@@ -135,7 +135,7 @@ label {
 
 label small { color: #94a0ab; font-size: 0.72rem; }
 
-input {
+input, select {
   font-size: 0.95rem;
   padding: 8px 10px;
   border: 1px solid var(--border);
@@ -149,7 +149,7 @@ input[readonly] {
   font-weight: 600;
 }
 
-input:focus {
+input:focus, select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
@@ -318,6 +318,12 @@ table.xl td.bold { font-weight: 700; }
 table.xl td.ul { text-decoration: underline; }
 table.xl td.b-b { border-bottom: 0.75pt solid #000; }
 table.xl td.b-t { border-top: 0.75pt solid #000; }
+table.xl .xl-fill {
+  display: inline-block;
+  padding-left: 3pt;
+  border-bottom: 0.75pt solid #000;
+  line-height: 1.05;
+}
 table.xl td.cf-bad { background: #ffc7ce; color: #9c0006; }
 table.xl td.cf-yellow { background: #ffff00; font-weight: 700; }
 table.xl td.cf-yellow-white { background: #ffff00; color: #fff; font-weight: 700; }
