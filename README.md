@@ -111,17 +111,56 @@ browser's `localStorage` stays the working copy, so the app keeps working
 either way. The first time a browser connects, sheets and Stored Data it had
 saved before the database existed are uploaded.
 
-There is no login: access is controlled only by the Firestore security rules,
-and anyone who can open the site can read and change this data. The rules must
-allow reads and writes on `pk030-yield-sheets/{id}` and `pk030/storedData`,
-for example:
-
-```
-match /pk030-yield-sheets/{id} { allow read, write: if true; }
-match /pk030/{id} { allow read, write: if true; }
-```
-
 **Export CSV** on the records panel still exports the saved sheets.
+
+## Sign-in
+
+People sign in with a **username and password** before the app shows or syncs
+anything. Accounts are Firebase Authentication email/password accounts named
+`username@pk030.local`; the address is never emailed, and the sign-in screen
+only asks for the username. The app remembers the sign-in on that computer.
+**Sign out** clears this computer's copies of the shared data (saved sheets,
+Stored Data and the offline cache); signing in again downloads them. If the
+database library can't load at all (e.g. `index.html` opened from disk), the
+app runs without sign-in on that computer's own copy.
+
+### One-time setup (Firebase console, project `jde-schedule-database`)
+
+1. **Authentication → Sign-in method → Email/Password → Enable** (leave
+   "Email link" off).
+2. **Authentication → Settings → User actions → uncheck "Enable create
+   (sign-up)"**. Without this, anyone could create their own account with the
+   site's public key and get past the rules.
+3. **Authentication → Users → Add user** for each person: email
+   `theirname@pk030.local`, and a password (6+ characters).
+4. **Firestore Database → Rules** → replace them with the rules below →
+   **Publish**. JDE Sched only uses the `jde-sched` collection, which stays
+   open exactly as before; this app's data then needs a signed-in user.
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // JDE Sched: unchanged, no sign-in
+    match /jde-sched/{document=**} {
+      allow read, write: if true;
+    }
+    // PK030 Yield Coordinator: signed-in users only
+    match /pk030-yield-sheets/{id} {
+      allow read, write: if request.auth != null;
+    }
+    match /pk030/{id} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+### Forgotten password / removing someone
+
+The console's "Reset password" sends an email, which can't reach a
+`@pk030.local` address. Instead, **delete the user and add them again** with a
+new password. To remove someone's access, delete (or disable) their user.
 
 ## Files
 
@@ -132,10 +171,10 @@ match /pk030/{id} { allow read, write: if true; }
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
-- `cloud-sync.js` — syncs sheets and Stored Data with Firestore.
+- `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
-- `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app + Firestore
-  (Apache-2.0); the Firestore file imports the local app file instead of
-  Google's CDN.
+- `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth
+  (Apache-2.0); the Firestore and Auth files import the local app file instead
+  of Google's CDN.
 - `assets/vendor/pdfjs/` — Mozilla pdf.js 4.10.38 (Apache-2.0), used to read
   the PDFs.

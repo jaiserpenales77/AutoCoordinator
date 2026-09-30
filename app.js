@@ -786,8 +786,52 @@ renderStoredData();
 clearForm();
 renderRecordsTable();
 
+function showSyncStatus({ state, text }) {
+  el("syncStatus").className = `sync-status sync-${state}`;
+  el("syncStatus").textContent = text;
+}
+
+el("signInForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  el("signInBtn").disabled = true;
+  el("signInMsg").textContent = "";
+  try {
+    await CloudSync.signIn(el("signInUser").value, el("signInPassword").value);
+    el("signInPassword").value = "";
+  } catch (err) {
+    el("signInMsg").textContent = err.message;
+    el("signInPassword").select();
+  } finally {
+    el("signInBtn").disabled = false;
+  }
+});
+
+el("signOutBtn").addEventListener("click", async () => {
+  if (CloudSync.hasUnsyncedChanges() && !confirm(
+    "Some changes haven't reached the database yet, and signing out removes them from this computer. Sign out anyway?")) return;
+  await CloudSync.signOut(() => {
+    saveRecords([]);
+    StoredData.replaceAll({ leads: [], bulkItems: [], fgItems: [] });
+    location.reload();
+  });
+});
+
 StoredData.onChange = CloudSync.saveStored;
 CloudSync.start({
+  onSignedIn(username) {
+    el("userName").textContent = username;
+    document.body.dataset.auth = "signed-in";
+  },
+  onSignedOut() {
+    document.body.dataset.auth = "signed-out";
+    el("signInUser").focus();
+  },
+  // The database library couldn't load (e.g. index.html opened from disk),
+  // so there is nothing to sign in to; the app runs on this computer's copy.
+  onLocalOnly(text) {
+    document.body.dataset.auth = "local";
+    showSyncStatus({ state: "error", text });
+  },
   localSheets: loadRecords,
   localStored: () => ({
     leads: StoredData.leads(),
@@ -803,8 +847,5 @@ CloudSync.start({
     renderStoredData();
     fillFromStoredData();
   },
-  onStatus({ state, text }) {
-    el("syncStatus").className = `sync-status sync-${state}`;
-    el("syncStatus").textContent = text;
-  }
+  onStatus: showSyncStatus
 });

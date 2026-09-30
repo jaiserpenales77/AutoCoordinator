@@ -7,12 +7,31 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-auth="pending">
 <header class="app-header">
   <h1>PK030 Packaging Yield Coordinator</h1>
   <p class="subtitle">Digital replacement for the PK030M [ALL] Final Packaging Yield Sheet (QS017B)</p>
-  <span id="syncStatus" class="sync-status" role="status"></span>
+  <div class="header-status">
+    <span id="syncStatus" class="sync-status" role="status"></span>
+    <span class="user-bar">Signed in as <strong id="userName"></strong>
+      <button type="button" id="signOutBtn">Sign out</button></span>
+  </div>
 </header>
+
+<section id="signInScreen" class="signin">
+  <form id="signInForm" class="panel signin-panel">
+    <h2>Sign in</h2>
+    <label>Username
+      <input type="text" id="signInUser" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    </label>
+    <label>Password
+      <input type="password" id="signInPassword" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="primary" id="signInBtn">Sign in</button>
+    <p id="signInMsg" class="form-msg hint-err" role="alert"></p>
+    <p class="muted">Need an account or forgot your password? Ask the app admin.</p>
+  </form>
+</section>
 
 <nav class="tabs" role="tablist">
   <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>

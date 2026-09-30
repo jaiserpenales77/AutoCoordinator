@@ -1,9 +1,10 @@
-// Syncs saved yield sheets and Stored Data through the Firestore database the
-// JDE Sched app uses (project jde-schedule-database): each sheet is a document
-// in `pk030-yield-sheets`, and leads/bulk items/FG items are maps in the
-// `pk030/storedData` document. localStorage stays the app's working copy, so
-// the app keeps working when the database can't be reached; Firestore's own
-// offline cache (IndexedDB) holds writes made offline and sends them later.
+// Signs users in and syncs saved yield sheets and Stored Data through the
+// Firestore database the JDE Sched app uses (project jde-schedule-database):
+// each sheet is a document in `pk030-yield-sheets`, and leads/bulk items/FG
+// items are maps in the `pk030/storedData` document. The Firestore rules only
+// let signed-in users reach these. localStorage stays the app's working copy;
+// Firestore's own offline cache (IndexedDB) holds writes made offline and
+// sends them later. Signing out clears both copies from this computer.
 const CloudSync = (() => {
   // Public by design: access is governed by the Firestore security rules.
   const FIREBASE_CONFIG = {
@@ -14,6 +15,8 @@ const CloudSync = (() => {
     messagingSenderId: "200523177124",
     appId: "1:200523177124:web:9459478521f146e28d9a31"
   };
+  // Accounts are "username@pk030.local"; the address never receives mail.
+  const USERNAME_DOMAIN = "pk030.local";
   const SHEETS = "pk030-yield-sheets";
   // Set once this browser's pre-sync data has been uploaded; until then a
   // snapshot must not replace the local copy, or that data would be lost.
@@ -21,10 +24,12 @@ const CloudSync = (() => {
 
   let fs = null;
   let db = null;
+  let authMod = null;
+  let auth = null;
   let failed = null;
-  const meta = { sheets: null, stored: null };
-  const queued = [];
-  let reportStatus = () => {};
+  let meta = { sheets: null, stored: null };
+  let unsubscribers = [];
+  let handlers = null;
 
   const clean = obj => JSON.parse(JSON.stringify(obj));
   const sheetRef = id => fs.doc(db, SHEETS, id);
@@ -32,14 +37,13 @@ const CloudSync = (() => {
 
   function status() {
     if (failed) return { state: "error", text: failed };
-    if (!db) return { state: "connecting", text: "Connecting to database…" };
     if (!meta.sheets || !meta.stored) return { state: "connecting", text: "Connecting to database…" };
     if (meta.sheets.fromCache || meta.stored.fromCache) return { state: "offline", text: "Offline — changes will sync when back online" };
     if (meta.sheets.hasPendingWrites || meta.stored.hasPendingWrites) return { state: "saving", text: "Saving…" };
     return { state: "synced", text: "Synced" };
   }
 
-  const report = () => reportStatus(status());
+  const report = () => handlers?.onStatus(status());
 
   function fail(message, err) {
     console.error(message, err);
@@ -49,22 +53,20 @@ const CloudSync = (() => {
     report();
   }
 
-  // Writes wait here until the SDK has loaded; dropped if it never does.
+  // The UI only allows edits once signed in (or in local-only mode, where
+  // there is no database to write to).
   function write(fn) {
-    if (db) run(fn);
-    else if (!failed) queued.push(fn);
-  }
-
-  function run(fn) {
+    if (!db || !auth?.currentUser) return;
     fn().catch(err => fail("Failed to save to the database.", err));
     report();
   }
 
   async function loadSdk() {
     const base = new URL("assets/vendor/firebase/", document.baseURI).href;
-    const [appMod, fsMod] = await Promise.all([
+    const [appMod, fsMod, aMod] = await Promise.all([
       import(base + "firebase-app.js"),
-      import(base + "firebase-firestore.js")
+      import(base + "firebase-firestore.js"),
+      import(base + "firebase-auth.js")
     ]);
     const app = appMod.initializeApp(FIREBASE_CONFIG);
     const settings = { experimentalAutoDetectLongPolling: true };
@@ -78,6 +80,8 @@ const CloudSync = (() => {
       db = fsMod.initializeFirestore(app, settings);
     }
     fs = fsMod;
+    authMod = aMod;
+    auth = aMod.getAuth(app);
   }
 
   function storedFromRemote(data = {}) {
@@ -91,7 +95,7 @@ const CloudSync = (() => {
   function migrateSheets(snap, localRecords) {
     const remoteIds = new Set(snap.docs.map(d => d.id));
     const localOnly = localRecords.filter(r => r.id && !remoteIds.has(r.id));
-    localOnly.forEach(r => run(() => fs.setDoc(sheetRef(r.id), clean(r))));
+    localOnly.forEach(r => write(() => fs.setDoc(sheetRef(r.id), clean(r))));
     localStorage.setItem(MIGRATED.sheets, "1");
     return localOnly;
   }
@@ -103,7 +107,7 @@ const CloudSync = (() => {
     const missing = (list, remoteList) => list.filter(i => !remoteList.some(r => r.item === i.item));
     missing(local.bulkItems, remote.bulkItems).forEach(i => add("bulkItems", i.item, i.pieceWt));
     missing(local.fgItems, remote.fgItems).forEach(i => add("fgItems", i.item, i.count));
-    if (Object.keys(merge).length) run(() => fs.setDoc(storedRef(), merge, { merge: true }));
+    if (Object.keys(merge).length) write(() => fs.setDoc(storedRef(), merge, { merge: true }));
     localStorage.setItem(MIGRATED.stored, "1");
     return {
       leads: [...remote.leads, ...Object.keys(merge.leads || {})],
@@ -112,21 +116,8 @@ const CloudSync = (() => {
     };
   }
 
-  // handlers: onSheets(records), onStoredData({ leads, bulkItems, fgItems }),
-  // onStatus({ state, text }), localSheets(), localStored().
-  async function start(handlers) {
-    reportStatus = handlers.onStatus;
-    report();
-    try {
-      await loadSdk();
-    } catch (err) {
-      fail("Couldn't load the database library; working from this computer only.", err);
-      queued.length = 0;
-      return;
-    }
-    queued.splice(0).forEach(run);
-
-    fs.onSnapshot(fs.collection(db, SHEETS), { includeMetadataChanges: true }, snap => {
+  function listen() {
+    unsubscribers.push(fs.onSnapshot(fs.collection(db, SHEETS), { includeMetadataChanges: true }, snap => {
       meta.sheets = snap.metadata;
       if (!localStorage.getItem(MIGRATED.sheets)) {
         if (snap.metadata.fromCache) return report();
@@ -136,9 +127,9 @@ const CloudSync = (() => {
         handlers.onSheets(snap.docs.map(d => d.data()));
       }
       report();
-    }, err => fail("Yield sheet sync unavailable.", err));
+    }, err => fail("Yield sheet sync unavailable.", err)));
 
-    fs.onSnapshot(storedRef(), { includeMetadataChanges: true }, snap => {
+    unsubscribers.push(fs.onSnapshot(storedRef(), { includeMetadataChanges: true }, snap => {
       meta.stored = snap.metadata;
       const remote = storedFromRemote(snap.data());
       if (!localStorage.getItem(MIGRATED.stored)) {
@@ -148,11 +139,75 @@ const CloudSync = (() => {
         handlers.onStoredData(remote);
       }
       report();
-    }, err => fail("Stored Data sync unavailable.", err));
+    }, err => fail("Stored Data sync unavailable.", err)));
+  }
+
+  function stopListening() {
+    unsubscribers.splice(0).forEach(unsub => unsub());
+    meta = { sheets: null, stored: null };
+    failed = null;
+  }
+
+  // h: onSignedIn(username), onSignedOut(), onLocalOnly(message), onStatus,
+  // onSheets(records), onStoredData(data), localSheets(), localStored().
+  async function start(h) {
+    handlers = h;
+    try {
+      await loadSdk();
+    } catch (err) {
+      console.error("Couldn't load the database library; working from this computer only.", err);
+      handlers.onLocalOnly("Database unavailable — saving on this computer only");
+      return;
+    }
+    authMod.onAuthStateChanged(auth, user => {
+      stopListening();
+      if (user) {
+        handlers.onSignedIn(usernameOf(user));
+        report();
+        listen();
+      } else {
+        handlers.onSignedOut();
+      }
+    });
+  }
+
+  const usernameOf = user => (user.email || "").replace(`@${USERNAME_DOMAIN}`, "");
+
+  function toEmail(username) {
+    const u = username.trim().toLowerCase();
+    return u.includes("@") ? u : `${u}@${USERNAME_DOMAIN}`;
+  }
+
+  async function signIn(username, password) {
+    try {
+      await authMod.signInWithEmailAndPassword(auth, toEmail(username), password);
+    } catch (err) {
+      const wrong = ["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found", "auth/invalid-email"];
+      if (wrong.includes(err.code)) throw new Error("Wrong username or password.");
+      if (err.code === "auth/too-many-requests") throw new Error("Too many attempts. Wait a few minutes and try again.");
+      if (err.code === "auth/network-request-failed") throw new Error("Can't reach the sign-in service. Check the connection.");
+      if (err.code === "auth/user-disabled") throw new Error("This account has been disabled.");
+      throw new Error(`Sign-in failed (${err.code || err.message}).`);
+    }
+  }
+
+  const hasUnsyncedChanges = () => !!(meta.sheets?.hasPendingWrites || meta.stored?.hasPendingWrites);
+
+  // Signs out and removes this computer's copies of the shared data (the
+  // Firestore cache and the app's localStorage copy via onCleared).
+  async function signOut(onCleared) {
+    stopListening();
+    await authMod.signOut(auth);
+    await fs.terminate(db);
+    await fs.clearIndexedDbPersistence(db).catch(err => console.warn("Couldn't clear the offline cache.", err));
+    onCleared();
   }
 
   return {
     start,
+    signIn,
+    signOut,
+    hasUnsyncedChanges,
     saveSheet: record => write(() => fs.setDoc(sheetRef(record.id), clean(record))),
     deleteSheet: id => write(() => fs.deleteDoc(sheetRef(id))),
     saveStored: (field, key, value) => write(() => fs.setDoc(storedRef(),

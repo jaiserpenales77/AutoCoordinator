@@ -46,6 +46,31 @@ body {
   background: currentColor;
 }
 .sync-status:empty { display: none; }
+
+.header-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+.user-bar { display: none; margin-top: 8px; font-size: 0.8rem; color: var(--muted); }
+.user-bar button { margin-left: 8px; padding: 4px 10px; font-size: 0.78rem; }
+body[data-auth="signed-in"] .user-bar { display: inline-block; }
+
+/* Nothing but the header shows until sign-in is resolved. */
+body:not([data-auth="signed-in"]):not([data-auth="local"]) .tabs,
+body:not([data-auth="signed-in"]):not([data-auth="local"]) .layout { display: none !important; }
+
+.signin { display: none; padding: 48px 16px; }
+body[data-auth="signed-out"] .signin { display: block; }
+.signin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.signin-panel h2 { margin: 0; }
 .sync-synced { color: var(--ok-text); }
 .sync-saving, .sync-connecting { color: #7a5b00; }
 .sync-offline, .sync-error { color: var(--warn-text); }
