@@ -300,6 +300,8 @@ th, td {
 
 .table-scroll { overflow-x: auto; }
 
+.stored-search { width: 100%; margin-top: 8px; }
+
 /* Long Stored Data lists scroll inside their panel, headings stay visible. */
 .stored-table {
   max-height: 360px;

@@ -708,23 +708,30 @@ el("leadList").addEventListener("click", e => {
 // The two item lists on the Stored Data tab share the same form/table layout,
 // with element ids prefixed by `prefix`.
 const ITEM_PANELS = [
-  { prefix: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", what: "piece weight", unit: " mg", none: "noBulkItemsMsg" },
-  { prefix: "fgItem", store: StoredData.fgItems, field: "count", what: "count", unit: "", none: "noFgItemsMsg" }
+  { prefix: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", what: "piece weight", unit: " mg", none: "noBulkItemsMsg", label: "bulk items" },
+  { prefix: "fgItem", store: StoredData.fgItems, field: "count", what: "count", unit: "", none: "noFgItemsMsg", label: "FG items" }
 ];
 
 function renderItemPanel(panel) {
-  const items = panel.store.all();
+  const all = panel.store.all();
+  const query = el(`${panel.prefix}Search`).value.trim().toUpperCase();
+  const items = query ? all.filter(i => i.item.toUpperCase().includes(query)) : all;
   el(`${panel.prefix}TableBody`).innerHTML = items.map(i => `
     <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(String(i[panel.field]))}</td>
       <td class="row-actions">
         <button type="button" data-edit="${escapeHtml(i.item)}">Edit</button>
         <button type="button" data-remove="${escapeHtml(i.item)}">Remove</button>
       </td></tr>`).join("");
+  el(panel.none).textContent = all.length
+    ? `No ${panel.label} match "${el(`${panel.prefix}Search`).value.trim()}".`
+    : `No ${panel.label} yet.`;
   el(panel.none).classList.toggle("hidden", items.length > 0);
+  el(`${panel.prefix}Search`).classList.toggle("hidden", all.length === 0);
 }
 
 ITEM_PANELS.forEach(panel => {
   const id = suffix => `${panel.prefix}${suffix}`;
+  el(id("Search")).addEventListener("input", () => renderItemPanel(panel));
   el(id("Form")).addEventListener("submit", e => {
     e.preventDefault();
     const item = el(id("Number")).value.trim().toUpperCase();
