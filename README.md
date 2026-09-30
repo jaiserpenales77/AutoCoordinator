@@ -42,10 +42,13 @@ list for tracking multiple work orders.
   lets someone type a name that isn't listed yet. The chosen name prints on the
   "Yield Sheet Created By:" line; with none chosen, the line prints blank as on
   the paper form.
-- **Items & Piece Weights** — when a stored Bulk Item (or, failing that, FG
-  Item) is typed or imported on the yield sheet, Bulk Piece Wt fills in. A
-  weight typed by hand is never overwritten, and a loaded saved sheet keeps its
-  own weight.
+- **Bulk Items & Piece Weights** — when a stored Bulk Item is typed or
+  imported on the yield sheet, Bulk Piece Wt fills in.
+- **FG Items & Counts** — when a stored FG Item is typed or imported, Count
+  (Fill Rate) fills in.
+
+A value typed by hand is never overwritten, and a loaded saved sheet keeps its
+own values.
 
 Stored Data lives in the browser (localStorage), like saved sheets. **Export
 Stored Data** saves it to a JSON file; **Import Stored Data** merges such a file
@@ -77,8 +80,8 @@ The Charge Report (R593111CV) isn't needed.
 
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) aren't in any
-source PDF. Bulk Piece Wt fills from the Stored Data tab when the item is
-stored there; the rest are entered by hand.
+source PDF. Bulk Piece Wt and Count fill from the Stored Data tab when the
+item is stored there; the rest are entered by hand.
 
 ## Running it
 
@@ -107,7 +110,7 @@ back up or share the saved work orders.
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
-- `stored-data.js` — the Stored Data tab's leads and item piece weights.
+- `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/pdfjs/` — Mozilla pdf.js 4.10.38 (Apache-2.0), used to read
   the PDFs.

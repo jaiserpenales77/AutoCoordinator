@@ -135,7 +135,7 @@ const PdfImport = (() => {
       && !/^(CP|PK)/i.test(r["Item Number"])
       && !PACKAGING_DESCRIPTION.test(r["Item Description"] || "");
     const tiers = [
-      rows.filter(r => StoredData.findItem(r["Item Number"])),
+      rows.filter(r => StoredData.bulkItems.find(r["Item Number"])),
       rows.filter(r => /^BU/i.test(r["Item Number"])),
       rows.filter(looksLikeBulk)
     ];

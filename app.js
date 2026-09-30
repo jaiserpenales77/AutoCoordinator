@@ -212,38 +212,53 @@ function applyFormData(record) {
     if (id === "createdBy") setCreatedBy(data.createdBy ?? "");
     else el(id).value = data[id] ?? (id === "tareWeight" ? 6 : "");
   });
-  markPieceWtManual();
+  resetAutoFills();
   recalc();
 }
 
-// Bulk Piece Wt is filled from Stored Data (Bulk Item first, then FG Item) unless
-// someone typed it; a weight filled for a previous item is replaced or cleared.
-function markPieceWtManual() {
-  delete el("pieceWt").dataset.fromItem;
-  el("pieceWtHint").textContent = "";
+// Fields filled from Stored Data unless someone typed them (a blank or 0 value
+// counts as not typed); a value filled for a previous item is replaced, or
+// cleared if the new item isn't stored.
+const AUTO_FILLS = [
+  { input: "pieceWt", hint: "pieceWtHint", source: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", empty: "" },
+  { input: "fillRate", hint: "fillRateHint", source: "fgItem", store: StoredData.fgItems, field: "count", empty: "0" }
+];
+
+function markManual(fill) {
+  delete el(fill.input).dataset.fromItem;
+  el(fill.hint).textContent = "";
 }
 
-function fillPieceWtFromStoredData() {
-  const input = el("pieceWt");
+function resetAutoFills() {
+  AUTO_FILLS.forEach(markManual);
+}
+
+function applyAutoFill(fill) {
+  const input = el(fill.input);
   const autoFilled = input.dataset.fromItem !== undefined;
-  if (input.value !== "" && !autoFilled) return;
-  const hit = StoredData.findItem(el("bulkItem").value) ?? StoredData.findItem(el("fgItem").value);
+  const blank = input.value === "" || Number(input.value) === 0;
+  if (!blank && !autoFilled) return false;
+  const hit = fill.store.find(el(fill.source).value);
   if (hit) {
-    if (input.value === String(hit.pieceWt) && input.dataset.fromItem === hit.item) return;
-    input.value = String(hit.pieceWt);
+    const value = String(hit[fill.field]);
+    if (input.value === value && input.dataset.fromItem === hit.item) return false;
+    input.value = value;
     input.dataset.fromItem = hit.item;
-    el("pieceWtHint").textContent = `Filled from Stored Data (${hit.item}).`;
-  } else if (autoFilled) {
-    input.value = "";
-    markPieceWtManual();
-  } else {
-    return;
+    el(fill.hint).textContent = `Filled from Stored Data (${hit.item}).`;
+    return true;
   }
-  recalc();
+  if (!autoFilled) return false;
+  input.value = fill.empty;
+  markManual(fill);
+  return true;
 }
 
-["bulkItem", "fgItem"].forEach(id => el(id).addEventListener("input", fillPieceWtFromStoredData));
-el("pieceWt").addEventListener("input", markPieceWtManual);
+function fillFromStoredData() {
+  if (AUTO_FILLS.map(applyAutoFill).some(Boolean)) recalc();
+}
+
+["bulkItem", "fgItem"].forEach(id => el(id).addEventListener("input", fillFromStoredData));
+AUTO_FILLS.forEach(fill => el(fill.input).addEventListener("input", () => markManual(fill)));
 
 el("createdBy").addEventListener("change", () => {
   syncOtherLead();
@@ -258,7 +273,7 @@ function clearForm() {
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
   el("importLog").innerHTML = "";
-  markPieceWtManual();
+  resetAutoFills();
   recalc();
 }
 
@@ -605,10 +620,13 @@ async function importPdfs(fileList) {
       flashField(el(id));
     });
     recalc();
-    fillPieceWtFromStoredData();
-    const pieceWtFilled = el("pieceWt").dataset.fromItem !== undefined;
-    if (pieceWtFilled) log.push({ level: "ok", text: `Bulk Piece Wt ${el("pieceWt").value} mg from Stored Data (${el("pieceWt").dataset.fromItem}).` });
-    const todo = ["Retains", "Donations", "Stability", "Count", ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
+    fillFromStoredData();
+    const fromStore = id => el(id).dataset.fromItem;
+    if (fromStore("fillRate")) log.push({ level: "ok", text: `Count ${el("fillRate").value} from Stored Data (${fromStore("fillRate")}).` });
+    if (fromStore("pieceWt")) log.push({ level: "ok", text: `Bulk Piece Wt ${el("pieceWt").value} mg from Stored Data (${fromStore("pieceWt")}).` });
+    const todo = ["Retains", "Donations", "Stability",
+      ...(Number(el("fillRate").value) ? [] : ["Count"]),
+      ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
     log.push({ level: "info", text: `Still to enter by hand: ${todo.join(", ")} and the scrap weights.` });
   }
   renderImportLog(log);
@@ -643,7 +661,7 @@ document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", (
     t.setAttribute("aria-selected", String(active));
     el(t.dataset.tab).classList.toggle("hidden", !active);
   });
-  if (tab.dataset.tab === "sheetTab") fillPieceWtFromStoredData();
+  if (tab.dataset.tab === "sheetTab") fillFromStoredData();
 }));
 
 function showMsg(id, text, ok = true) {
@@ -658,14 +676,7 @@ function renderStoredData() {
       <button type="button" data-remove-lead="${escapeHtml(name)}">Remove</button></li>`).join("");
   el("noLeadsMsg").classList.toggle("hidden", leads.length > 0);
 
-  const items = StoredData.items();
-  el("itemTableBody").innerHTML = items.map(i => `
-    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(String(i.pieceWt))}</td>
-      <td class="row-actions">
-        <button type="button" data-edit-item="${escapeHtml(i.item)}">Edit</button>
-        <button type="button" data-remove-item="${escapeHtml(i.item)}">Remove</button>
-      </td></tr>`).join("");
-  el("noItemsMsg").classList.toggle("hidden", items.length > 0);
+  ITEM_PANELS.forEach(renderItemPanel);
 
   populateLeads();
 }
@@ -692,36 +703,58 @@ el("leadList").addEventListener("click", e => {
   }
 });
 
-el("itemForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const item = el("itemNumber").value.trim().toUpperCase();
-  if (!(Number(el("itemPieceWt").value) > 0)) {
-    showMsg("itemMsg", "Piece weight must be more than 0.", false);
-    return;
-  }
-  const existed = StoredData.findItem(item) !== null;
-  StoredData.saveItem(item, el("itemPieceWt").value);
-  showMsg("itemMsg", `${existed ? "Updated" : "Added"} ${item}: ${el("itemPieceWt").value} mg.`);
-  el("itemNumber").value = "";
-  el("itemPieceWt").value = "";
-  renderStoredData();
-  el("itemNumber").focus();
-});
+// The two item lists on the Stored Data tab share the same form/table layout,
+// with element ids prefixed by `prefix`.
+const ITEM_PANELS = [
+  { prefix: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", what: "piece weight", unit: " mg", none: "noBulkItemsMsg" },
+  { prefix: "fgItem", store: StoredData.fgItems, field: "count", what: "count", unit: "", none: "noFgItemsMsg" }
+];
 
-el("itemTableBody").addEventListener("click", e => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  if (btn.dataset.editItem) {
-    const hit = StoredData.findItem(btn.dataset.editItem);
-    el("itemNumber").value = hit.item;
-    el("itemPieceWt").value = hit.pieceWt;
-    el("itemPieceWt").focus();
-    showMsg("itemMsg", `Editing ${hit.item} — change the weight and click Save Item.`);
-  } else if (btn.dataset.removeItem && confirm(`Remove ${btn.dataset.removeItem}?`)) {
-    StoredData.removeItem(btn.dataset.removeItem);
-    showMsg("itemMsg", `Removed ${btn.dataset.removeItem}.`);
+function renderItemPanel(panel) {
+  const items = panel.store.all();
+  el(`${panel.prefix}TableBody`).innerHTML = items.map(i => `
+    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(String(i[panel.field]))}</td>
+      <td class="row-actions">
+        <button type="button" data-edit="${escapeHtml(i.item)}">Edit</button>
+        <button type="button" data-remove="${escapeHtml(i.item)}">Remove</button>
+      </td></tr>`).join("");
+  el(panel.none).classList.toggle("hidden", items.length > 0);
+}
+
+ITEM_PANELS.forEach(panel => {
+  const id = suffix => `${panel.prefix}${suffix}`;
+  el(id("Form")).addEventListener("submit", e => {
+    e.preventDefault();
+    const item = el(id("Number")).value.trim().toUpperCase();
+    const value = el(id("Value")).value;
+    if (!(Number(value) > 0)) {
+      showMsg(id("Msg"), `The ${panel.what} must be more than 0.`, false);
+      return;
+    }
+    const existed = panel.store.find(item) !== null;
+    panel.store.save(item, value);
+    showMsg(id("Msg"), `${existed ? "Updated" : "Added"} ${item}: ${value}${panel.unit}.`);
+    el(id("Number")).value = "";
+    el(id("Value")).value = "";
     renderStoredData();
-  }
+    el(id("Number")).focus();
+  });
+
+  el(id("TableBody")).addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.dataset.edit) {
+      const hit = panel.store.find(btn.dataset.edit);
+      el(id("Number")).value = hit.item;
+      el(id("Value")).value = hit[panel.field];
+      el(id("Value")).focus();
+      showMsg(id("Msg"), `Editing ${hit.item} — change the ${panel.what} and click Save Item.`);
+    } else if (btn.dataset.remove && confirm(`Remove ${btn.dataset.remove}?`)) {
+      panel.store.remove(btn.dataset.remove);
+      showMsg(id("Msg"), `Removed ${btn.dataset.remove}.`);
+      renderStoredData();
+    }
+  });
 });
 
 el("exportStoredBtn").addEventListener("click", () => {
@@ -740,7 +773,7 @@ el("importStoredInput").addEventListener("change", async e => {
   if (!file) return;
   try {
     const n = StoredData.importJson(await file.text());
-    showMsg("storedImportMsg", `Imported ${n.leads} lead(s) and ${n.items} item(s) from ${file.name}.`);
+    showMsg("storedImportMsg", `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.`);
     renderStoredData();
   } catch (err) {
     showMsg("storedImportMsg", `${file.name}: ${err.message}.`, false);

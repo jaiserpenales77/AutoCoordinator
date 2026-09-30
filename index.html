@@ -83,6 +83,7 @@
           <label>Count (Fill Rate)
             <input type="number" id="fillRate" step="any" min="0" value="0">
             <small>Tablets/softgels per bottle, e.g. 180. Printed as "Fill Rate" on the sheet.</small>
+            <small id="fillRateHint" class="hint-ok"></small>
           </label>
           <label>Bulk Rejected/Returned (TH)
             <input type="number" id="bulkRejected" step="any" min="0" value="0">
@@ -220,24 +221,42 @@
   </section>
 
   <section class="panel">
-    <h2>Items &amp; Piece Weights</h2>
-    <p class="muted">When a stored Bulk Item (or FG Item) is entered on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
-    <form id="itemForm" class="inline-form" autocomplete="off">
-      <input type="text" id="itemNumber" placeholder="Item number, e.g. BU001565" required>
-      <input type="number" id="itemPieceWt" step="any" min="0" placeholder="Piece wt (mg)" required>
+    <h2>Bulk Items &amp; Piece Weights</h2>
+    <p class="muted">When a stored Bulk Item is entered or imported on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
+    <form id="bulkItemForm" class="inline-form" autocomplete="off">
+      <input type="text" id="bulkItemNumber" placeholder="Bulk item, e.g. BU001565" required>
+      <input type="number" id="bulkItemValue" step="any" min="0" placeholder="Piece wt (mg)" required>
       <button type="submit" class="primary">Save Item</button>
     </form>
-    <p id="itemMsg" class="form-msg"></p>
+    <p id="bulkItemMsg" class="form-msg"></p>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Item Number</th><th>Piece Wt (mg)</th><th></th></tr></thead>
-        <tbody id="itemTableBody"></tbody>
+        <thead><tr><th>Bulk Item</th><th>Piece Wt (mg)</th><th></th></tr></thead>
+        <tbody id="bulkItemTableBody"></tbody>
       </table>
     </div>
-    <p id="noItemsMsg" class="muted">No items yet.</p>
+    <p id="noBulkItemsMsg" class="muted">No bulk items yet.</p>
   </section>
 
-  <section class="panel stored-backup">
+  <section class="panel">
+    <h2>FG Items &amp; Counts</h2>
+    <p class="muted">When a stored FG Item is entered or imported on the yield sheet, its Count (Fill Rate) fills in automatically.</p>
+    <form id="fgItemForm" class="inline-form" autocomplete="off">
+      <input type="text" id="fgItemNumber" placeholder="FG item, e.g. 2676" required>
+      <input type="number" id="fgItemValue" step="any" min="0" placeholder="Count per bottle" required>
+      <button type="submit" class="primary">Save Item</button>
+    </form>
+    <p id="fgItemMsg" class="form-msg"></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>FG Item</th><th>Count</th><th></th></tr></thead>
+        <tbody id="fgItemTableBody"></tbody>
+      </table>
+    </div>
+    <p id="noFgItemsMsg" class="muted">No FG items yet.</p>
+  </section>
+
+  <section class="panel">
     <h2>Back Up / Share</h2>
     <p class="muted">Stored Data is saved in this browser only. Export it to a file to back it up, or import that file on another computer.</p>
     <div class="actions">
