@@ -477,8 +477,21 @@ function blankHtml(value, blanks, cls = "xl-blank") {
   return `<span class="${cls}" style="width:${(blanks * 5.56).toFixed(1)}pt">${escapeHtml(value)}</span>`;
 }
 
+const CREATED_BY_NAME_PT = 18;
+let measureCtx = null;
+
+// The lead's name, as large as CREATED_BY_NAME_PT allows on the line's rule;
+// a long name is shrunk to fit.
 function createdByHtml(name) {
-  return name ? CREATED_BY_LABEL + blankHtml(name, CREATED_BY_BLANKS, "xl-fill") : undefined;
+  if (!name) return undefined;
+  const width = CREATED_BY_BLANKS * 5.56;
+  measureCtx ??= document.createElement("canvas").getContext("2d");
+  measureCtx.font = `700 ${CREATED_BY_NAME_PT}pt Arial, "Liberation Sans", Helvetica, sans-serif`;
+  const textWidth = measureCtx.measureText(name).width * 0.75; // px to pt
+  const size = Math.max(8, Math.min(CREATED_BY_NAME_PT, CREATED_BY_NAME_PT * (width - 6) / textWidth));
+  // The &nbsp; keeps the rule at the same height as a 12pt line of text.
+  return CREATED_BY_LABEL + `<span class="xl-fill" style="width:${width.toFixed(1)}pt">`
+    + `&nbsp;<span class="xl-fill-text" style="font-size:${size.toFixed(1)}pt">${escapeHtml(name)}</span></span>`;
 }
 
 // "5 Layers + 2 Boxes"; empty unless both counts are entered.

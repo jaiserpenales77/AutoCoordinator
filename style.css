@@ -489,7 +489,17 @@ table.xl .xl-blank {
   text-align: center;
   line-height: 1.05;
 }
-table.xl .xl-fill { font-size: 12pt; font-weight: 700; }
+table.xl .xl-fill { position: relative; font-size: 12pt; font-weight: 700; }
+/* Sits on the rule and rises into the empty row above, so the larger name
+   doesn't make the row taller (page 1 has almost no room to spare). */
+table.xl .xl-fill-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1pt;
+  line-height: 1;
+  white-space: nowrap;
+}
 table.xl td.cf-bad { background: #ffc7ce; color: #9c0006; }
 table.xl td.cf-yellow { background: #ffff00; font-weight: 700; }
 
