@@ -60,8 +60,8 @@ const PdfImport = (() => {
     return pages;
   }
 
-  // Each page as a PNG, for printing after the yield sheet.
-  async function renderPages(file, scale = 2) {
+  // Each page as a PNG (216 dpi at actual size), for printing after the yield sheet.
+  async function renderPages(file, scale = 3) {
     const pdfjs = await loadPdfjs();
     const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
     const blobs = [];

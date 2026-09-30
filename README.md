@@ -105,7 +105,8 @@ odd work order is shown in red.
 
 **Printing the reports:** Print Yield Sheet (or Ctrl+P) prints the imported
 reports after the yield sheet's two pages: Close-out, then Pallet Transfers,
-then Charge Reports, one page each, scaled to the Letter landscape page.
+then Charge Reports, one page each at actual size (the report pages print
+without the yield sheet's margins, so they keep the PDFs' own margins).
 Reports dropped in separate imports for the same work order are all kept;
 importing another work order or **New / Clear** drops them. They only print
 while the sheet's WO # matches their work order, and the checkbox under the

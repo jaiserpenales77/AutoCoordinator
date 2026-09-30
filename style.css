@@ -413,16 +413,23 @@ table.card-preview td.unit {
   .print-sheet { display: block; }
 }
 
-/* Imported JDE reports, one page each after the yield sheet, fitted to the
-   printable area of the Letter landscape page. */
-.report-page {
-  break-before: page;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 7.4in;
+/* Imported JDE reports, one page each after the yield sheet, at actual size:
+   no page margins of their own, so the reports keep the margins built into
+   the PDFs (all Letter landscape, like the yield sheet). */
+@page report {
+  size: letter landscape;
+  margin: 0;
 }
-.report-page img { max-width: 100%; max-height: 100%; }
+.report-page {
+  page: report;
+  break-before: page;
+  position: relative;
+  width: 11in;
+  height: 8.5in;
+  overflow: hidden;
+}
+/* Out of flow: an in-flow image this tall makes Chrome add a blank page. */
+.report-page img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 
 /* Replica of the Excel print area PK030!E21:L71 (Letter landscape, 88% scale). */
 .print-sheet {
