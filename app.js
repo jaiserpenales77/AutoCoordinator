@@ -417,13 +417,15 @@ function buildPrintSheet() {
   const videoJetText = r.outOfRange
     ? `VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:___________          Date:_________________`
     : "";
+  const byAndDate = gap => "By:" + blankHtml(initials(data.createdBy), 11)
+    + gap + "Date:" + blankHtml(formatDateMMDDYY(todayISO()), 17);
   const videoJetHtml = r.outOfRange
-    ? escapeHtml(`VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:`)
-      + blankHtml(initials(data.createdBy), 11)
-      + "          Date:"
-      + blankHtml(formatDateMMDDYY(todayISO()), 17)
+    ? escapeHtml(`VideoJet Count:      ${excelGeneral(data.videoJetCount)}       `) + byAndDate("          ")
     : undefined;
   const palletText = r.outOfRange ? PARTIAL_PALLET_TEXT : "";
+  const palletHtml = r.outOfRange
+    ? `Partial Pallet Configuration:${"_".repeat(49)} ` + byAndDate("  ")
+    : undefined;
 
   // Conditional formatting copied from the workbook.
   const k33Cf = r.outOfRange ? " cf-bad" : "";
@@ -476,7 +478,7 @@ function buildPrintSheet() {
     [14.25, xlCell(videoJetText, { sz: 10, cls: `bold${videoJetCf}`, span: 'colspan="5" rowspan="2"', html: videoJetHtml }) + xlEmpty(3)],
     [14.25, xlEmpty(3)],
     [12.75, xlEmpty(8)],
-    [12.75, xlCell(palletText, { sz: 10, cls: `bold${palletCf}`, span: 'colspan="7" rowspan="2"' }) + xlEmpty()],
+    [12.75, xlCell(palletText, { sz: 10, cls: `bold${palletCf}`, span: 'colspan="7" rowspan="2"', html: palletHtml }) + xlEmpty()],
     [14.25, xlEmpty()],
     [19.5, xlEmpty() + xlCell("QS017B", { sz: 11 }) + xlEmpty(2) + xlCell(FOOTER_NOTE, { sz: 11 }) + xlEmpty(2)
       + xlCell("PKGN-0140, PKGN-0154", { sz: 11 })]

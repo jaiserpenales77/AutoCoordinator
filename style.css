@@ -321,7 +321,7 @@ table.xl td.b-t { border-top: 0.75pt solid #000; }
 table.xl .xl-fill,
 table.xl .xl-blank {
   display: inline-block;
-  border-bottom: 0.75pt solid #000;
+  border-bottom: 0.75pt solid currentColor;
   text-align: center;
   line-height: 1.05;
 }
