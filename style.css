@@ -453,14 +453,51 @@ table.card-preview td.unit {
 }
 .tab.active { background: var(--panel-bg); color: var(--accent); }
 .tabs + .layout { padding-top: 0; }
-.tabs + .layout > .sheet-columns > .panel:first-child,
+.tabs ~ .layout > .sheet-columns > .panel:first-child,
 .tabs ~ .layout:not(#sheetTab) > .panel:first-child { border-top-left-radius: 0; }
 
 .stored-layout { grid-template-columns: 1fr 1fr; align-items: start; padding-top: 0; }
 .single-layout { grid-template-columns: 1fr; padding-top: 0; }
-/* The calculator brings its own dark background, so its panel has no padding. */
-.calc-panel { padding: 0; overflow: hidden; background: #0f172a; }
-.calc-frame { display: block; width: 100%; height: 900px; border: 0; }
+#bulkCalcTab { padding-top: 0; }
+
+/* Bulk Calculator */
+.calc-bulk { position: relative; }
+.calc-remove {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+.add-btn {
+  width: 100%;
+  margin-bottom: 16px;
+  border-style: dashed;
+  color: var(--accent);
+  background: transparent;
+}
+.link-btn {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  text-decoration: underline;
+}
+.calc-total { margin-bottom: 16px; }
+.calc-result h3 { margin: 16px 0 6px; font-size: 1rem; color: var(--accent); }
+table.calc-steps { margin-bottom: 8px; }
+table.calc-steps th { font-weight: 400; color: var(--muted); }
+table.calc-steps td { text-align: right; font-variant-numeric: tabular-nums; }
+table.calc-steps tr.strong th, table.calc-steps tr.strong td { font-weight: 700; color: var(--text); }
+table.calc-steps tr.final th, table.calc-steps tr.final td {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.calc-print { display: none; }
 
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }
@@ -489,8 +526,57 @@ table.card-preview td.unit {
   margin: 0.5in 0.17in 0.51in 0.27in;
 }
 
+/* The Bulk Calculator report: one portrait page per bulk, like the original
+   calculator's printout; shown instead of the yield sheet when printing from
+   that tab. */
+@page calc {
+  size: letter portrait;
+  margin: 0.6in;
+}
+.calc-print-page {
+  page: calc;
+  break-after: page;
+  font-family: Arial, "Liberation Sans", Helvetica, sans-serif;
+  color: #000;
+}
+.calc-print-page:last-child { break-after: auto; }
+.calc-print-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #000;
+}
+.calc-print-header h1 { margin: 0; font-size: 24px; }
+.calc-print-header p { margin: 5px 0 0; font-size: 14px; color: #555; }
+.calc-print-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+}
+.calc-print-row.strong { font-weight: 700; background: #f9f9f9; padding: 12px 10px; }
+.calc-print-row.final {
+  margin-top: 10px;
+  padding: 15px 10px;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+  font-weight: 700;
+  font-size: 18px;
+}
+.calc-print-note { font-size: 16px; font-style: italic; }
+.calc-print-sign {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 100px;
+  font-size: 14px;
+}
+.calc-print-sign div { width: 250px; padding-top: 5px; border-top: 1px solid #000; text-align: center; }
+
 @media print {
   .app-header, .tabs, .layout { display: none !important; }
+  body[data-print="calc"] .print-sheet { display: none !important; }
+  body[data-print="calc"] .calc-print { display: block; }
   html, body { background: #fff; margin: 0; height: auto; }
   .print-sheet { display: block; }
 }

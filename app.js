@@ -836,6 +836,8 @@ function renderStoredData() {
   ITEM_PANELS.forEach(renderItemPanel);
 
   populateLeads();
+  // The Bulk Calculator's item suggestions (bulk-calc.js loads after this file).
+  if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();
   showSignedInName();
   applyDefaultCreatedBy();
 }
@@ -1001,52 +1003,6 @@ el("signOutBtn").addEventListener("click", async () => {
     location.reload();
   });
 });
-
-// The Bulk Calculator frame grows and shrinks with its content (bulks added,
-// results shown), so the page scrolls instead of the frame. Its body is at
-// least as tall as the frame (min-height: 100vh), so the height comes from
-// where its content ends.
-function fitBulkCalcFrame() {
-  const frame = el("bulkCalcFrame");
-  const doc = frame.contentDocument;
-  if (!doc?.body || frame.offsetParent === null) return;
-  const bottom = Math.max(0, ...[...doc.body.children]
-    .filter(c => !["SCRIPT", "STYLE"].includes(c.tagName))
-    .map(c => c.getBoundingClientRect().bottom + doc.defaultView.scrollY));
-  if (bottom > 0) frame.style.height = `${Math.ceil(bottom + 60)}px`;
-}
-
-// Added from outside so the calculator file stays as it was: its background
-// glow is wider than a phone and its card padding leaves little room there.
-const BULK_CALC_FIT_CSS = `
-  html { overflow-x: hidden; }
-  @media (max-width: 520px) {
-    body { padding: 16px 8px; }
-    .app-container { padding: 1.5rem 1rem; }
-    .app-header h2 { font-size: 1.6rem; }
-  }`;
-
-// Runs once the calculator page is in the frame. It can finish loading before
-// this script runs, so it's also tried right away.
-function setUpBulkCalcFrame() {
-  const frame = el("bulkCalcFrame");
-  const doc = frame.contentDocument;
-  if (doc?.readyState !== "complete" || !doc.querySelector(".app-container") || frame.dataset.ready) return;
-  frame.dataset.ready = "1";
-  const style = doc.createElement("style");
-  style.textContent = BULK_CALC_FIT_CSS;
-  doc.head.appendChild(style);
-  // The frame's own ResizeObserver, so it follows the frame's layout.
-  const observer = new doc.defaultView.ResizeObserver(fitBulkCalcFrame);
-  [...doc.body.children].forEach(c => observer.observe(c));
-  // Bulk result rows slide in after Calculate; refit once they settle.
-  doc.addEventListener("click", () => setTimeout(fitBulkCalcFrame, 1200));
-  fitBulkCalcFrame();
-}
-
-el("bulkCalcFrame").addEventListener("load", setUpBulkCalcFrame);
-setUpBulkCalcFrame();
-document.querySelector('[data-tab="bulkCalcTab"]').addEventListener("click", () => requestAnimationFrame(fitBulkCalcFrame));
 
 // Light/dark theme. The choice is kept on this computer; until someone picks
 // one, the app follows the computer's setting (index.html applies it early).

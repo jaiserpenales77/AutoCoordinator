@@ -344,13 +344,45 @@
   </section>
 </div>
 
-<!-- Bulk Weighing Calculator v2.5 (bulk-calculator.html), unchanged, in a frame
-     so its own styles, scripts and Print Report stay separate from the app's. -->
-<div class="layout single-layout hidden" id="bulkCalcTab">
-  <section class="panel calc-panel">
-    <iframe id="bulkCalcFrame" class="calc-frame" src="bulk-calculator.html" title="Bulk Weighing Calculator"></iframe>
+<!-- Bulk Weighing Calculator: turns weighed bulk containers into TH (bulk-calc.js). -->
+<main class="layout hidden" id="bulkCalcTab">
+  <div class="sheet-columns">
+  <section class="panel">
+    <h2>Bulk Calculator</h2>
+    <p class="muted">Combine weighed bulk containers into thousand-piece units (TH).</p>
+    <fieldset>
+      <legend>Bulk Item</legend>
+      <div class="field-grid">
+        <label>Bulk Item
+          <input type="text" id="calcBulkItem" list="calcBulkItemList" autocomplete="off" spellcheck="false" placeholder="e.g. BU001565">
+          <datalist id="calcBulkItemList"></datalist>
+        </label>
+        <label>Piece Weight (mg) — applies to all bulks
+          <input type="number" id="calcPieceWt" step="any" min="0">
+          <small id="calcPieceWtHint" class="hint-ok"></small>
+        </label>
+      </div>
+      <button type="button" id="calcSaveItemBtn" class="link-btn hidden"></button>
+    </fieldset>
+    <div id="calcBulks"></div>
+    <button type="button" id="calcAddBulkBtn" class="add-btn">+ Add Another Bulk</button>
+    <div class="actions">
+      <button type="button" id="calcPrintBtn" class="primary">Print Report</button>
+      <button type="button" id="calcClearBtn">Clear</button>
+    </div>
   </section>
-</div>
+
+  <section class="panel results-panel">
+    <h2>Results</h2>
+    <div class="result-card highlight calc-total">
+      <span class="label" id="calcTotalLabel">Total TH, all bulks</span>
+      <span class="value" id="calcTotal">—</span>
+    </div>
+    <div id="calcMsg" class="status-banner info hidden"></div>
+    <div id="calcResults"></div>
+  </section>
+  </div>
+</main>
 
 <div id="printSheet" class="print-sheet">
   <div class="xl-page">
@@ -362,10 +394,12 @@
   </div>
 </div>
 <div id="reportPages" class="print-sheet"></div>
+<div id="calcPrint" class="calc-print"></div>
 
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>
 <script src="pdf-import.js"></script>
 <script src="app.js"></script>
+<script src="bulk-calc.js"></script>
 </body>
 </html>
