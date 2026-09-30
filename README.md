@@ -50,9 +50,8 @@ list for tracking multiple work orders.
 A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
 
-Stored Data lives in the browser (localStorage), like saved sheets. **Export
-Stored Data** saves it to a JSON file; **Import Stored Data** merges such a file
-into another browser or computer.
+Stored Data is shared through the database (see below). **Export Stored Data**
+saves a JSON backup; **Import Stored Data** adds a backup's entries back.
 
 ## Importing the JDE report PDFs
 
@@ -93,14 +92,36 @@ python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
 
-Opening `index.html` directly from disk works too, except for PDF import,
-which browsers only allow over `http(s)://`.
+Opening `index.html` directly from disk works too, except for PDF import and
+database sync, which browsers only allow over `http(s)://`.
 
 ## Data storage
 
-Saved yield sheets are stored in the browser's `localStorage` (per browser,
-per device) — there is no backend. Use **Export CSV** on the records panel to
-back up or share the saved work orders.
+Saved yield sheets and Stored Data sync live between computers through the
+same Firebase Firestore database as the JDE Sched app (project
+`jde-schedule-database`):
+
+- each yield sheet is a document in the `pk030-yield-sheets` collection;
+- leads, bulk piece weights and FG counts are maps in `pk030/storedData`.
+
+The status under the title shows **Synced**, **Saving…**, **Offline** (changes
+are kept and sent when the connection returns, even across reloads) or a
+"saving on this computer only" message when the database can't be used. The
+browser's `localStorage` stays the working copy, so the app keeps working
+either way. The first time a browser connects, sheets and Stored Data it had
+saved before the database existed are uploaded.
+
+There is no login: access is controlled only by the Firestore security rules,
+and anyone who can open the site can read and change this data. The rules must
+allow reads and writes on `pk030-yield-sheets/{id}` and `pk030/storedData`,
+for example:
+
+```
+match /pk030-yield-sheets/{id} { allow read, write: if true; }
+match /pk030/{id} { allow read, write: if true; }
+```
+
+**Export CSV** on the records panel still exports the saved sheets.
 
 ## Files
 
@@ -111,6 +132,10 @@ back up or share the saved work orders.
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
+- `cloud-sync.js` — syncs sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
+- `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app + Firestore
+  (Apache-2.0); the Firestore file imports the local app file instead of
+  Google's CDN.
 - `assets/vendor/pdfjs/` — Mozilla pdf.js 4.10.38 (Apache-2.0), used to read
   the PDFs.

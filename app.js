@@ -322,6 +322,7 @@ form.addEventListener("submit", e => {
   if (idx >= 0) records[idx] = record;
   else records.push(record);
   saveRecords(records);
+  CloudSync.saveSheet(record);
   editingId = id;
   editingBadge.classList.remove("hidden");
   renderRecordsTable();
@@ -347,6 +348,7 @@ el("recordsTableBody").addEventListener("click", e => {
   } else if (btn.dataset.action === "delete") {
     if (confirm("Delete this saved yield sheet?")) {
       saveRecords(records.filter(r => r.id !== id));
+      CloudSync.deleteSheet(id);
       if (editingId === id) clearForm();
       renderRecordsTable();
     }
@@ -783,3 +785,26 @@ el("importStoredInput").addEventListener("change", async e => {
 renderStoredData();
 clearForm();
 renderRecordsTable();
+
+StoredData.onChange = CloudSync.saveStored;
+CloudSync.start({
+  localSheets: loadRecords,
+  localStored: () => ({
+    leads: StoredData.leads(),
+    bulkItems: StoredData.bulkItems.all(),
+    fgItems: StoredData.fgItems.all()
+  }),
+  onSheets(records) {
+    saveRecords(records);
+    renderRecordsTable();
+  },
+  onStoredData(data) {
+    StoredData.replaceAll(data);
+    renderStoredData();
+    fillFromStoredData();
+  },
+  onStatus({ state, text }) {
+    el("syncStatus").className = `sync-status sync-${state}`;
+    el("syncStatus").textContent = text;
+  }
+});

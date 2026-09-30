@@ -11,6 +11,7 @@
 <header class="app-header">
   <h1>PK030 Packaging Yield Coordinator</h1>
   <p class="subtitle">Digital replacement for the PK030M [ALL] Final Packaging Yield Sheet (QS017B)</p>
+  <span id="syncStatus" class="sync-status" role="status"></span>
 </header>
 
 <nav class="tabs" role="tablist">
@@ -258,7 +259,7 @@
 
   <section class="panel">
     <h2>Back Up / Share</h2>
-    <p class="muted">Stored Data is saved in this browser only. Export it to a file to back it up, or import that file on another computer.</p>
+    <p class="muted">Stored Data and saved yield sheets are shared with every computer through the database. Export Stored Data to a file as a backup; importing a file adds its entries back.</p>
     <div class="actions">
       <button type="button" id="exportStoredBtn">Export Stored Data</button>
       <label class="file-btn">Import Stored Data
@@ -280,6 +281,7 @@
 </div>
 
 <script src="stored-data.js"></script>
+<script src="cloud-sync.js"></script>
 <script src="pdf-import.js"></script>
 <script src="app.js"></script>
 </body>
