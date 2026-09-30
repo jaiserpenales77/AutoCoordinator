@@ -5,6 +5,12 @@ const HIGH_YIELD_THRESHOLD = 1.024999;
 const form = document.getElementById("yieldForm");
 const editingBadge = document.getElementById("editingBadge");
 let editingId = null;
+// Imported report PDFs as page images (see addImportedReports).
+const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
+let importedReports = [];
+// Bumped by every import and by New / Clear, so a slower earlier import can
+// tell it was superseded and stop.
+let importGen = 0;
 
 const fields = [
   "fgItem", "woNumber", "bulkItem", "dateCreated", "createdBy",
@@ -176,6 +182,7 @@ function recalc() {
   data.totalPackaged = bottlesEntered ? String(r.totalPackaged) : "";
   el("totalPackaged").value = data.totalPackaged;
   renderResults(r, data);
+  updatePrintReports();
 }
 
 fields.forEach(id => {
@@ -295,6 +302,8 @@ function clearForm() {
   el("tareWeight").value = 6;
   el("importLog").innerHTML = "";
   renderImportPreview(null);
+  importGen++;
+  clearImportedReports();
   resetAutoFills();
   recalc();
 }
@@ -598,15 +607,66 @@ function buildPrintSheet() {
 
   el("xlPage1").innerHTML = xlTable(page1);
   el("xlPage2").innerHTML = xlTable(page2);
+  updatePrintReports();
 }
 
 // Also covers Ctrl+P and the browser's File > Print, not just the button.
 window.addEventListener("beforeprint", buildPrintSheet);
 
-el("printBtn").addEventListener("click", () => {
+el("printBtn").addEventListener("click", async () => {
   buildPrintSheet();
+  await Promise.all([...document.querySelectorAll("#reportPages img")].map(img => img.decode().catch(() => {})));
   window.print();
 });
+
+// Imported report PDFs, rendered to page images at import time so they're
+// ready for any print (the button, Ctrl+P or the browser menu). They print
+// after the yield sheet while its WO # matches the reports' work order.
+function reportsToPrint() {
+  const wo = el("woNumber").value.trim();
+  return importedReports.filter(r => r.woNumber === wo);
+}
+
+function updatePrintReports() {
+  const reports = reportsToPrint();
+  const pages = reports.reduce((n, r) => n + r.urls.length, 0);
+  el("printReportsCount").textContent =
+    `${reports.length} report${reports.length === 1 ? "" : "s"}, ${pages} page${pages === 1 ? "" : "s"}`;
+  el("printReportsWrap").classList.toggle("hidden", reports.length === 0);
+  const shown = el("printReports").checked ? new Set(reports) : new Set();
+  document.querySelectorAll("#reportPages .report-page").forEach(page => {
+    page.classList.toggle("hidden", !shown.has(importedReports[page.dataset.report]));
+  });
+}
+
+function renderReportPages() {
+  el("reportPages").innerHTML = importedReports.flatMap((r, i) => r.urls.map((url, n) =>
+    `<div class="report-page" data-report="${i}"><img src="${url}" alt="${escapeHtml(`${r.name} page ${n + 1}`)}"></div>`)).join("");
+  updatePrintReports();
+}
+
+function clearImportedReports() {
+  importedReports.forEach(r => r.urls.forEach(url => URL.revokeObjectURL(url)));
+  importedReports = [];
+  renderReportPages();
+}
+
+// Adds to the reports already imported for this work order (e.g. the Charge
+// Reports dropped after the Close-out); a file imported twice is kept once.
+async function addImportedReports(accepted, woNumber, isCurrent) {
+  if (importedReports.some(r => r.woNumber !== woNumber)) clearImportedReports();
+  for (const { file, type } of accepted) {
+    const key = `${file.name}|${file.size}|${file.lastModified}`;
+    if (importedReports.some(r => r.key === key)) continue;
+    const blobs = await PdfImport.renderPages(file);
+    if (!isCurrent()) return;
+    importedReports.push({ key, type, name: file.name, woNumber, urls: blobs.map(b => URL.createObjectURL(b)) });
+  }
+  importedReports.sort((a, b) => REPORT_ORDER[a.type] - REPORT_ORDER[b.type]);
+  renderReportPages();
+}
+
+el("printReports").addEventListener("change", updatePrintReports);
 
 const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "qtyCompleted", "bulkIssued", "bulkReturned"];
 
@@ -653,6 +713,7 @@ async function importPdfs(fileList) {
     renderImportPreview(null);
     return;
   }
+  let gen = ++importGen;
   renderImportLog([{ level: "info", text: `Reading ${files.length} PDF${files.length > 1 ? "s" : ""}…` }]);
   renderImportPreview(null);
 
@@ -660,12 +721,14 @@ async function importPdfs(fileList) {
   try {
     result = await PdfImport.readReports(files);
   } catch (err) {
+    if (gen !== importGen) return;
     renderImportLog([{ level: "error", text: `Import failed: ${err.message}` }]);
     renderImportPreview(null);
     return;
   }
 
-  const { values, log, preview } = result;
+  if (gen !== importGen) return;
+  const { values, log, preview, accepted } = result;
   const found = IMPORT_FIELDS.filter(id => values[id] !== undefined && values[id] !== null);
   if (found.length) {
     const currentWo = el("woNumber").value.trim();
@@ -689,6 +752,20 @@ async function importPdfs(fileList) {
   }
   renderImportLog(log);
   renderImportPreview(preview);
+  gen = importGen; // this import's own New Sheet (clearForm) doesn't count
+  const isCurrent = () => gen === importGen;
+  if (accepted.length && preview.woNumber) {
+    try {
+      await addImportedReports(accepted, preview.woNumber, isCurrent);
+      if (!isCurrent()) return;
+      const pages = reportsToPrint().reduce((n, r) => n + r.urls.length, 0);
+      if (pages) log.push({ level: "info", text: `Print Yield Sheet also prints the imported reports (${pages} page${pages === 1 ? "" : "s"}).` });
+    } catch (err) {
+      if (!isCurrent()) return;
+      log.push({ level: "warn", text: `Couldn't prepare the reports for printing (${err.message}).` });
+    }
+    renderImportLog(log);
+  }
 }
 
 el("pdfInput").addEventListener("change", e => {

@@ -60,6 +60,26 @@ const PdfImport = (() => {
     return pages;
   }
 
+  // Each page as a PNG, for printing after the yield sheet.
+  async function renderPages(file, scale = 2) {
+    const pdfjs = await loadPdfjs();
+    const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const blobs = [];
+    for (let n = 1; n <= doc.numPages; n++) {
+      const page = await doc.getPage(n);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      blobs.push(await new Promise(resolve => canvas.toBlob(resolve, "image/png")));
+    }
+    return blobs;
+  }
+
   function findSpan(tokens, label) {
     const words = label.toLowerCase().split(/\s+/);
     for (let i = 0; i + words.length <= tokens.length; i++) {
@@ -223,7 +243,8 @@ const PdfImport = (() => {
 
   const fmtNum = n => (n === null || n === undefined ? "?" : n.toLocaleString("en-US", { maximumFractionDigits: 3 }));
 
-  // Returns { values, log, preview }; values only holds fields that were found.
+  // Returns { values, log, preview, accepted }; values only holds fields that
+  // were found, accepted the reports used (none when work orders differ).
   async function readReports(files) {
     const log = [];
     const reports = [];
@@ -267,7 +288,7 @@ const PdfImport = (() => {
     };
     if (wos.length > 1) {
       log.push({ level: "error", text: `These reports are for different work orders (${wos.join(", ")}). Nothing was filled in; import one work order at a time.` });
-      return { values: {}, log, preview };
+      return { values: {}, log, preview, accepted: [] };
     }
     const fgs = [...new Set(reports.map(r => r.fgItem).filter(Boolean))];
     if (fgs.length > 1) {
@@ -346,8 +367,9 @@ const PdfImport = (() => {
       log.push({ level: "warn", text: `No Close-out Quantity Completed, so Quantity Completed uses the Pallet Transfers total (${fmtNum(palletTotal)}).` });
     }
 
-    return { values, log, preview };
+    const accepted = reports.map(r => ({ file: r.file, type: r.type }));
+    return { values, log, preview, accepted };
   }
 
-  return { readReports };
+  return { readReports, renderPages };
 })();

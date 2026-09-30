@@ -173,6 +173,10 @@
         <button type="button" id="newBtn">New / Clear</button>
         <button type="button" id="printBtn">Print Yield Sheet</button>
       </div>
+      <label id="printReportsWrap" class="check-inline hidden">
+        <input type="checkbox" id="printReports" checked>
+        <span>Print the imported reports after the yield sheet (<span id="printReportsCount"></span>)</span>
+      </label>
     </form>
   </section>
 
@@ -319,6 +323,7 @@
     <div id="xlPage2"></div>
   </div>
 </div>
+<div id="reportPages" class="print-sheet"></div>
 
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>

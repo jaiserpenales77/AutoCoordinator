@@ -103,6 +103,16 @@ and key values, and says whether all reports are for the same work order.
 Reports for different work orders are refused: nothing is filled in and the
 odd work order is shown in red.
 
+**Printing the reports:** Print Yield Sheet (or Ctrl+P) prints the imported
+reports after the yield sheet's two pages: Close-out, then Pallet Transfers,
+then Charge Reports, one page each, scaled to the Letter landscape page.
+Reports dropped in separate imports for the same work order are all kept;
+importing another work order or **New / Clear** drops them. They only print
+while the sheet's WO # matches their work order, and the checkbox under the
+buttons turns them off. The PDFs stay in the browser tab, not in the saved
+sheet, so a sheet loaded later prints without them unless they're imported
+again.
+
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) aren't in any
 source PDF. Bulk Piece Wt and Count fill from the Stored Data tab when the
