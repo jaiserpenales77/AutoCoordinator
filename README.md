@@ -11,8 +11,8 @@ list for tracking multiple work orders.
   Bulk Rejected/Returned (TH), Issued Bulk (TH).
 - **Scrap calculations**: each of the three Packaging Scrap weighings and the
   Manufacturing Scrap weighing are entered as gross scale readings (Kg),
-  netted against a container tare weight (defaults to 6 Kg, matching the
-  spreadsheet's hardcoded value, but editable), then converted to
+  netted against the container tare weight (fixed at 6 Kg, as in the
+  spreadsheet), then converted to
   piece-equivalent thousands (TH) using the Bulk Piece Weight (mg).
 - **Final Yield %** and the same pass/fail thresholds as the source sheet:
   values below 94.5% or above 102.4999% trigger a **VideoJet Count** flag and
