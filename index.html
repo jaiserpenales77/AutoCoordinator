@@ -6,6 +6,17 @@
 <title>PK030 Packaging Yield Coordinator</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
+<script>
+  // Set the theme before the page paints: the saved choice, else the computer's setting.
+  (function () {
+    var theme;
+    try { theme = localStorage.getItem("pk030_theme"); } catch (e) {}
+    if (theme !== "dark" && theme !== "light") {
+      theme = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
 </head>
 <body data-auth="pending">
 <header class="app-header">
@@ -15,6 +26,7 @@
     <span id="syncStatus" class="sync-status" role="status"></span>
     <span class="user-bar">Signed in as <strong id="userName"></strong>
       <button type="button" id="signOutBtn">Sign out</button></span>
+    <button type="button" id="themeToggle" class="theme-toggle"></button>
   </div>
 </header>
 

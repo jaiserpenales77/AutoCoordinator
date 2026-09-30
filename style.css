@@ -1,15 +1,67 @@
 :root {
+  color-scheme: light;
   --bg: #f4f6f8;
   --panel-bg: #ffffff;
   --border: #d7dce1;
   --text: #1f2933;
   --muted: #6b7684;
+  --hint: #94a0ab;
   --accent: #2563eb;
+  --accent-fill: #2563eb;
+  --accent-soft: #eef2ff;
+  --accent-soft-border: #c7d2fe;
+  --focus-ring: rgba(37, 99, 235, 0.15);
   --ok-bg: #e6f6ec;
   --ok-text: #157347;
   --warn-bg: #fdecea;
   --warn-text: #b3261e;
+  --caution-bg: #fff4ce;
+  --caution-text: #7a5b00;
+  --caution-border: #e0b400;
+  --info-bg: #eef1f4;
+  --input-bg: #fbfcfd;
+  --readonly-bg: #eef1f4;
+  --subtle-bg: #f8fafc;
+  --button-bg: #ffffff;
+  --tab-bg: #e8ecf0;
+  /* The pink paper card in Live Results. */
+  --card-bg: #fbe4e6;
+  --card-line: #333333;
+  --card-text: #222222;
+  --card-ink: #1f3a93;
   --radius: 8px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111418;
+  --panel-bg: #1a1f25;
+  --border: #2e3640;
+  --text: #e3e8ee;
+  --muted: #9aa5b1;
+  --hint: #7d8894;
+  --accent: #7aa7ff;
+  --accent-fill: #2f6fe0;
+  --accent-soft: #1e2a44;
+  --accent-soft-border: #34487a;
+  --focus-ring: rgba(122, 167, 255, 0.25);
+  --ok-bg: #16301f;
+  --ok-text: #6fd49a;
+  --warn-bg: #3a1d1b;
+  --warn-text: #ff8a80;
+  --caution-bg: #3a3014;
+  --caution-text: #f0c85a;
+  --caution-border: #b38b00;
+  --info-bg: #232a32;
+  --input-bg: #12161b;
+  --readonly-bg: #232a32;
+  --subtle-bg: #1f252c;
+  --button-bg: #232a32;
+  --tab-bg: #151a1f;
+  --card-bg: #2e2226;
+  --card-line: #8a7a7e;
+  --card-text: #eadfe1;
+  --card-ink: #9dbbff;
 }
 
 * { box-sizing: border-box; }
@@ -53,6 +105,12 @@ body {
   align-items: center;
   gap: 8px 20px;
 }
+.theme-toggle {
+  margin-left: auto;
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
 .user-bar { display: none; margin-top: 8px; font-size: 0.8rem; color: var(--muted); }
 .user-bar button { margin-left: 8px; padding: 4px 10px; font-size: 0.78rem; }
 body[data-auth="signed-in"] .user-bar { display: inline-block; }
@@ -72,7 +130,7 @@ body[data-auth="signed-out"] .signin { display: block; }
 }
 .signin-panel h2 { margin: 0; }
 .sync-synced { color: var(--ok-text); }
-.sync-saving, .sync-connecting { color: #7a5b00; }
+.sync-saving, .sync-connecting { color: var(--caution-text); }
 .sync-offline, .sync-error { color: var(--warn-text); }
 
 .layout {
@@ -104,8 +162,8 @@ body[data-auth="signed-out"] .signin { display: block; }
 }
 
 .badge {
-  background: #fff4ce;
-  color: #7a5b00;
+  background: var(--caution-bg);
+  color: var(--caution-text);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -142,7 +200,7 @@ legend {
   font-size: 0.85rem;
   color: var(--muted);
 }
-.drop-zone.drag-over { border-color: var(--accent); background: #eef2ff; }
+.drop-zone.drag-over { border-color: var(--accent); background: var(--accent-soft); }
 .drop-zone p { margin: 0 0 10px; }
 
 label.file-btn {
@@ -151,7 +209,7 @@ label.file-btn {
   padding: 8px 14px;
   border: 1px solid var(--accent);
   border-radius: 6px;
-  background: #fff;
+  background: var(--button-bg);
   color: var(--accent);
   font-size: 0.9rem;
   font-weight: 600;
@@ -160,9 +218,9 @@ label.file-btn {
 .import-log { list-style: none; margin: 0; padding: 0; font-size: 0.82rem; }
 .import-log li { margin-top: 8px; padding: 6px 10px; border-radius: 6px; }
 .import-log .log-ok { background: var(--ok-bg); color: var(--ok-text); }
-.import-log .log-warn { background: #fff4ce; color: #7a5b00; }
+.import-log .log-warn { background: var(--caution-bg); color: var(--caution-text); }
 .import-log .log-error { background: var(--warn-bg); color: var(--warn-text); }
-.import-log .log-info { background: #eef1f4; color: var(--muted); }
+.import-log .log-info { background: var(--info-bg); color: var(--muted); }
 
 .import-preview { margin-top: 12px; font-size: 0.82rem; }
 label.check-inline { flex-direction: row; align-items: center; gap: 8px; margin-top: 10px; color: var(--text); }
@@ -177,8 +235,8 @@ p.wo-bad { background: var(--warn-bg); }
 
 input.imported { animation: imported-flash 2.5s ease-out; }
 @keyframes imported-flash {
-  from { background: #fff4ce; border-color: #e0b400; }
-  to { background: #fbfcfd; border-color: var(--border); }
+  from { background: var(--caution-bg); border-color: var(--caution-border); }
+  to { background: var(--input-bg); border-color: var(--border); }
 }
 
 label {
@@ -189,8 +247,8 @@ label {
   gap: 4px;
 }
 
-label small { color: #94a0ab; font-size: 0.72rem; }
-.fieldset-note { display: block; margin-top: 8px; color: #94a0ab; font-size: 0.72rem; }
+label small { color: var(--hint); font-size: 0.72rem; }
+.fieldset-note { display: block; margin-top: 8px; color: var(--hint); font-size: 0.72rem; }
 
 input, select {
   font-size: 0.95rem;
@@ -198,18 +256,18 @@ input, select {
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
-  background: #fbfcfd;
+  background: var(--input-bg);
 }
 
 input[readonly] {
-  background: #eef1f4;
+  background: var(--readonly-bg);
   font-weight: 600;
 }
 
 input:focus, select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .actions {
@@ -222,7 +280,7 @@ input:focus, select:focus {
 button {
   cursor: pointer;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--button-bg);
   padding: 10px 16px;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -230,8 +288,8 @@ button {
 }
 
 button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
   color: #fff;
   font-weight: 600;
 }
@@ -246,7 +304,7 @@ button:hover { filter: brightness(0.97); }
 }
 
 .result-card {
-  background: #f8fafc;
+  background: var(--subtle-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
@@ -257,7 +315,7 @@ button:hover { filter: brightness(0.97); }
 
 .result-card .label { font-size: 0.78rem; color: var(--muted); }
 .result-card .value { font-size: 1.4rem; font-weight: 700; }
-.result-card.highlight { background: #eef2ff; border-color: #c7d2fe; }
+.result-card.highlight { background: var(--accent-soft); border-color: var(--accent-soft-border); }
 
 .status-banner {
   padding: 12px 14px;
@@ -268,7 +326,7 @@ button:hover { filter: brightness(0.97); }
 
 .status-banner.ok { background: var(--ok-bg); color: var(--ok-text); }
 .status-banner.warn { background: var(--warn-bg); color: var(--warn-text); }
-.status-banner.info { background: #eef1f4; color: var(--muted); }
+.status-banner.info { background: var(--info-bg); color: var(--muted); }
 
 table {
   width: 100%;
@@ -286,14 +344,14 @@ th, td {
 /* Live copy of the pink paper card's table. */
 .card-heading { margin: 0 0 8px; font-size: 1rem; }
 table.card-preview {
-  background: #fbe4e6;
-  border: 1.5px solid #333;
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-line);
   font-size: 0.95rem;
-  color: #222;
+  color: var(--card-text);
 }
 table.card-preview th,
 table.card-preview td {
-  border: 1px solid #333;
+  border: 1px solid var(--card-line);
   padding: 8px 10px;
 }
 table.card-preview th { width: 50%; font-weight: 400; }
@@ -301,7 +359,7 @@ table.card-preview td {
   text-align: center;
   font-size: 1.3rem;
   font-weight: 600;
-  color: #1f3a93;
+  color: var(--card-ink);
 }
 table.card-preview td.unit {
   width: 3.5em;
@@ -309,14 +367,14 @@ table.card-preview td.unit {
   vertical-align: bottom;
   font-size: 0.85rem;
   font-weight: 400;
-  color: #222;
+  color: var(--card-text);
 }
 
 .summary-lines p {
   white-space: pre-wrap;
   font-size: 0.82rem;
   color: var(--muted);
-  background: #f8fafc;
+  background: var(--subtle-bg);
   padding: 8px 10px;
   border-radius: 6px;
 }
@@ -371,7 +429,7 @@ table.card-preview td.unit {
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  background: #e8ecf0;
+  background: var(--tab-bg);
   color: var(--muted);
   font-weight: 600;
 }

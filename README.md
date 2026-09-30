@@ -38,6 +38,13 @@ list for tracking multiple work orders.
   print date. When both **Layers** and **Boxes** are entered, the
   configuration blank reads e.g. "5 Layers + 2 Boxes".
 
+## Light and dark theme
+
+The **🌙 Dark theme / ☀️ Light theme** button in the header switches the app's
+colors. The choice is remembered on that computer (it survives sign-out);
+until someone picks one, the app follows the computer's own light/dark
+setting. Printouts are always black on white.
+
 ## Card Preview
 
 The Live Results panel shows the pink paper card's table, filled in as you

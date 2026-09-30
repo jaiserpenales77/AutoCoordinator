@@ -970,6 +970,38 @@ el("signOutBtn").addEventListener("click", async () => {
   });
 });
 
+// Light/dark theme. The choice is kept on this computer; until someone picks
+// one, the app follows the computer's setting (index.html applies it early).
+const THEME_KEY = "pk030_theme";
+const systemDark = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+
+function savedTheme() {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    return t === "dark" || t === "light" ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const dark = theme === "dark";
+  const btn = el("themeToggle");
+  btn.textContent = dark ? "☀️ Light theme" : "🌙 Dark theme";
+  btn.title = dark ? "Switch to the light theme" : "Switch to the dark theme";
+}
+
+applyTheme(savedTheme() ?? (systemDark?.matches ? "dark" : "light"));
+el("themeToggle").addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem(THEME_KEY, next); } catch { /* still switches for this visit */ }
+  applyTheme(next);
+});
+systemDark?.addEventListener("change", e => {
+  if (!savedTheme()) applyTheme(e.matches ? "dark" : "light");
+});
+
 StoredData.onChange = CloudSync.saveStored;
 CloudSync.start({
   onSignedIn(username) {
