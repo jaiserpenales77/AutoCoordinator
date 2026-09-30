@@ -376,12 +376,19 @@ const CREATED_BY_LABEL = "Yield Sheet Created By:";
 const CREATED_BY_BLANKS = 45;
 const CREATED_BY_LINE = CREATED_BY_LABEL + "_".repeat(CREATED_BY_BLANKS);
 
-// Puts the lead's name on a rule as wide as the workbook's underscore line
-// (45 Arial underscores at 10pt, each 0.556em wide).
+// Writes `value` on a rule as wide as `blanks` of the workbook's underscores
+// (an Arial underscore at 10pt is 5.56pt wide); no value keeps the underscores.
+function blankHtml(value, blanks, cls = "xl-blank") {
+  if (!value) return "_".repeat(blanks);
+  return `<span class="${cls}" style="width:${(blanks * 5.56).toFixed(1)}pt">${escapeHtml(value)}</span>`;
+}
+
 function createdByHtml(name) {
-  if (!name) return undefined;
-  const width = (CREATED_BY_BLANKS * 0.556 * 10).toFixed(1);
-  return `${CREATED_BY_LABEL}<span class="xl-fill" style="width:${width}pt">${escapeHtml(name)}</span>`;
+  return name ? CREATED_BY_LABEL + blankHtml(name, CREATED_BY_BLANKS, "xl-fill") : undefined;
+}
+
+function initials(name) {
+  return (name || "").split(/[\s-]+/).filter(Boolean).map(w => w[0].toUpperCase()).join("");
 }
 
 function xlEmpty(n = 1) {
@@ -410,6 +417,12 @@ function buildPrintSheet() {
   const videoJetText = r.outOfRange
     ? `VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:___________          Date:_________________`
     : "";
+  const videoJetHtml = r.outOfRange
+    ? escapeHtml(`VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:`)
+      + blankHtml(initials(data.createdBy), 11)
+      + "          Date:"
+      + blankHtml(formatDateMMDDYY(todayISO()), 17)
+    : undefined;
   const palletText = r.outOfRange ? PARTIAL_PALLET_TEXT : "";
 
   // Conditional formatting copied from the workbook.
@@ -460,7 +473,7 @@ function buildPrintSheet() {
       + xlCell("    Date:_________________", { sz: 10 }) + xlEmpty(2)],
     [14.25, xlEmpty(8)],
     [14.25, xlEmpty(7) + xlCell(flagText, { sz: 10, cls: "bold" })],
-    [14.25, xlCell(videoJetText, { sz: 10, cls: `bold${videoJetCf}`, span: 'colspan="5" rowspan="2"' }) + xlEmpty(3)],
+    [14.25, xlCell(videoJetText, { sz: 10, cls: `bold${videoJetCf}`, span: 'colspan="5" rowspan="2"', html: videoJetHtml }) + xlEmpty(3)],
     [14.25, xlEmpty(3)],
     [12.75, xlEmpty(8)],
     [12.75, xlCell(palletText, { sz: 10, cls: `bold${palletCf}`, span: 'colspan="7" rowspan="2"' }) + xlEmpty()],

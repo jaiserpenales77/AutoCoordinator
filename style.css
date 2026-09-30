@@ -318,14 +318,14 @@ table.xl td.bold { font-weight: 700; }
 table.xl td.ul { text-decoration: underline; }
 table.xl td.b-b { border-bottom: 0.75pt solid #000; }
 table.xl td.b-t { border-top: 0.75pt solid #000; }
-table.xl .xl-fill {
+table.xl .xl-fill,
+table.xl .xl-blank {
   display: inline-block;
   border-bottom: 0.75pt solid #000;
-  font-size: 12pt;
-  font-weight: 700;
   text-align: center;
   line-height: 1.05;
 }
+table.xl .xl-fill { font-size: 12pt; font-weight: 700; }
 table.xl td.cf-bad { background: #ffc7ce; color: #9c0006; }
 table.xl td.cf-yellow { background: #ffff00; font-weight: 700; }
 table.xl td.cf-yellow-white { background: #ffff00; color: #fff; font-weight: 700; }
