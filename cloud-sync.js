@@ -1,8 +1,7 @@
 // Signs users in and syncs saved yield sheets and Stored Data through the
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
-// each sheet is a document in `pk030-yield-sheets`, and leads (with their
-// linked usernames)/bulk items/FG
-// items are maps in the `pk030/storedData` document. The Firestore rules only
+// each sheet is a document in `pk030-yield-sheets`, and leads, their linked
+// usernames, bulk items and FG items are maps in the `pk030/storedData` document. The Firestore rules only
 // let signed-in users reach these. localStorage stays the app's working copy;
 // Firestore's own offline cache (IndexedDB) holds writes made offline and
 // sends them later. Signing out clears both copies from this computer.
