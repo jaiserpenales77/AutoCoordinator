@@ -328,7 +328,6 @@ table.xl .xl-blank {
 table.xl .xl-fill { font-size: 12pt; font-weight: 700; }
 table.xl td.cf-bad { background: #ffc7ce; color: #9c0006; }
 table.xl td.cf-yellow { background: #ffff00; font-weight: 700; }
-table.xl td.cf-yellow-white { background: #ffff00; color: #fff; font-weight: 700; }
 
 @media (max-width: 900px) {
   .app-header { padding: 16px; }

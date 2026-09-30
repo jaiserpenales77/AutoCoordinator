@@ -430,7 +430,7 @@ function buildPrintSheet() {
   // Conditional formatting copied from the workbook.
   const k33Cf = r.outOfRange ? " cf-bad" : "";
   const videoJetCf = Number(data.videoJetCount) ? " cf-yellow" : "";
-  const palletCf = palletText === PARTIAL_PALLET_TEXT ? " cf-yellow-white" : "";
+  const palletCf = palletText === PARTIAL_PALLET_TEXT ? " cf-yellow" : "";
 
   const bb = "b-b";
   const tb = "b-t b-b";

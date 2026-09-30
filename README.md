@@ -29,7 +29,11 @@ list for tracking multiple work orders.
   formats and conditional formatting. It prints on Letter landscape at 88%
   with the workbook's margins and a page break after row 52, so page 1 is
   the yield sheet and page 2 is the List #/Lot #/CC # label. Sign-off lines
-  stay blank for handwritten signatures, as on the paper form.
+  stay blank for handwritten signatures, as on the paper form. One deliberate
+  difference: the Partial Pallet Configuration line prints black text on
+  yellow instead of the workbook's hard-to-read white. On that line and the
+  VideoJet Count line, By: shows the Created By lead's initials and Date: the
+  print date.
 
 ## Leads list
 
