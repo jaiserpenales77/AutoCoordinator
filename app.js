@@ -377,11 +377,11 @@ const CREATED_BY_BLANKS = 45;
 const CREATED_BY_LINE = CREATED_BY_LABEL + "_".repeat(CREATED_BY_BLANKS);
 
 // Puts the lead's name on a rule as wide as the workbook's underscore line
-// (an Arial underscore is 0.556em wide).
+// (45 Arial underscores at 10pt, each 0.556em wide).
 function createdByHtml(name) {
   if (!name) return undefined;
-  const width = (CREATED_BY_BLANKS * 0.556).toFixed(2);
-  return `${CREATED_BY_LABEL}<span class="xl-fill" style="min-width:${width}em">${escapeHtml(name)}</span>`;
+  const width = (CREATED_BY_BLANKS * 0.556 * 10).toFixed(1);
+  return `${CREATED_BY_LABEL}<span class="xl-fill" style="width:${width}pt">${escapeHtml(name)}</span>`;
 }
 
 function xlEmpty(n = 1) {

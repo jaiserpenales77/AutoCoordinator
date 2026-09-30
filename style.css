@@ -320,8 +320,10 @@ table.xl td.b-b { border-bottom: 0.75pt solid #000; }
 table.xl td.b-t { border-top: 0.75pt solid #000; }
 table.xl .xl-fill {
   display: inline-block;
-  padding-left: 3pt;
   border-bottom: 0.75pt solid #000;
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
   line-height: 1.05;
 }
 table.xl td.cf-bad { background: #ffc7ce; color: #9c0006; }
