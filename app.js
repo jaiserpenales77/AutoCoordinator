@@ -117,6 +117,9 @@ function renderResults(r, data) {
   el("rBulkScrapped").textContent = r.scrapDivError ? "—" : fmtFixed(r.scrapPiecesSum, 2) + " TH";
   el("rFinalYield").textContent = fmtYield(r, 2);
 
+  document.querySelectorAll(".out-of-range-only")
+    .forEach(section => section.classList.toggle("hidden", !r.outOfRange));
+
   const banner = el("statusBanner");
   if (r.error) {
     banner.className = "status-banner info";
