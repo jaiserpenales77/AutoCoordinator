@@ -37,7 +37,7 @@ function todayISO() {
 // Sheets saved before the bottle breakdown only stored the total, and ones
 // saved before Stability existed have no stability count.
 function withBottleBreakdown(data) {
-  const withStability = data.stability === undefined ? { ...data, stability: "" } : data;
+  const withStability = data.stability === undefined ? { ...data, stability: "0" } : data;
   if (data.qtyCompleted !== undefined) return withStability;
   return { ...withStability, qtyCompleted: data.totalPackaged ?? "", retains: "", donations: "" };
 }
@@ -170,7 +170,9 @@ function renderCardPreview(data) {
 function recalc() {
   const data = collectFormData();
   const r = computeResults(data);
-  const bottlesEntered = ["qtyCompleted", "retains", "donations", "stability"].some(id => data[id] !== "");
+  // Stability starts at 0, so only a nonzero Stability counts as entered.
+  const bottlesEntered = ["qtyCompleted", "retains", "donations"].some(id => data[id] !== "")
+    || toNum(data.stability) !== 0;
   data.totalPackaged = bottlesEntered ? String(r.totalPackaged) : "";
   el("totalPackaged").value = data.totalPackaged;
   renderResults(r, data);
