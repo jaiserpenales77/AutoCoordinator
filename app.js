@@ -1026,18 +1026,26 @@ const BULK_CALC_FIT_CSS = `
     .app-header h2 { font-size: 1.6rem; }
   }`;
 
-el("bulkCalcFrame").addEventListener("load", () => {
-  const doc = el("bulkCalcFrame").contentDocument;
-  if (!doc) return;
+// Runs once the calculator page is in the frame. It can finish loading before
+// this script runs, so it's also tried right away.
+function setUpBulkCalcFrame() {
+  const frame = el("bulkCalcFrame");
+  const doc = frame.contentDocument;
+  if (doc?.readyState !== "complete" || !doc.querySelector(".app-container") || frame.dataset.ready) return;
+  frame.dataset.ready = "1";
   const style = doc.createElement("style");
   style.textContent = BULK_CALC_FIT_CSS;
   doc.head.appendChild(style);
-  const observer = new ResizeObserver(fitBulkCalcFrame);
+  // The frame's own ResizeObserver, so it follows the frame's layout.
+  const observer = new doc.defaultView.ResizeObserver(fitBulkCalcFrame);
   [...doc.body.children].forEach(c => observer.observe(c));
   // Bulk result rows slide in after Calculate; refit once they settle.
   doc.addEventListener("click", () => setTimeout(fitBulkCalcFrame, 1200));
   fitBulkCalcFrame();
-});
+}
+
+el("bulkCalcFrame").addEventListener("load", setUpBulkCalcFrame);
+setUpBulkCalcFrame();
 document.querySelector('[data-tab="bulkCalcTab"]').addEventListener("click", () => requestAnimationFrame(fitBulkCalcFrame));
 
 // Light/dark theme. The choice is kept on this computer; until someone picks
