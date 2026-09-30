@@ -173,10 +173,12 @@ function saveRecords(records) {
 const OTHER_LEAD = "__other__";
 
 function populateLeads() {
-  const options = [["", "— Select lead —"], ...LEADS.map(name => [name, name]), [OTHER_LEAD, "Other…"]];
+  const current = getCreatedBy();
+  const options = [["", "— Select lead —"], ...StoredData.leads().map(name => [name, name]), [OTHER_LEAD, "Other…"]];
   el("createdBy").innerHTML = options
     .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
     .join("");
+  setCreatedBy(current);
 }
 
 function syncOtherLead() {
@@ -187,9 +189,9 @@ function getCreatedBy() {
   return el("createdBy").value === OTHER_LEAD ? el("createdByOther").value.trim() : el("createdBy").value;
 }
 
-// Names not in LEADS (typed via "Other…", or a lead since removed) load into the text box.
+// Names not in Stored Data (typed via "Other…", or a lead since removed) load into the text box.
 function setCreatedBy(name) {
-  const listed = name === "" || LEADS.includes(name);
+  const listed = name === "" || StoredData.leads().includes(name);
   el("createdBy").value = listed ? name : OTHER_LEAD;
   el("createdByOther").value = listed ? "" : name;
   syncOtherLead();
@@ -207,8 +209,38 @@ function applyFormData(record) {
     if (id === "createdBy") setCreatedBy(data.createdBy ?? "");
     else el(id).value = data[id] ?? (id === "tareWeight" ? 6 : "");
   });
+  markPieceWtManual();
   recalc();
 }
+
+// Bulk Piece Wt is filled from Stored Data (Bulk Item first, then FG Item) unless
+// someone typed it; a weight filled for a previous item is replaced or cleared.
+function markPieceWtManual() {
+  delete el("pieceWt").dataset.fromItem;
+  el("pieceWtHint").textContent = "";
+}
+
+function fillPieceWtFromStoredData() {
+  const input = el("pieceWt");
+  const autoFilled = input.dataset.fromItem !== undefined;
+  if (input.value !== "" && !autoFilled) return;
+  const hit = StoredData.findItem(el("bulkItem").value) ?? StoredData.findItem(el("fgItem").value);
+  if (hit) {
+    if (input.value === String(hit.pieceWt) && input.dataset.fromItem === hit.item) return;
+    input.value = String(hit.pieceWt);
+    input.dataset.fromItem = hit.item;
+    el("pieceWtHint").textContent = `Filled from Stored Data (${hit.item}).`;
+  } else if (autoFilled) {
+    input.value = "";
+    markPieceWtManual();
+  } else {
+    return;
+  }
+  recalc();
+}
+
+["bulkItem", "fgItem"].forEach(id => el(id).addEventListener("input", fillPieceWtFromStoredData));
+el("pieceWt").addEventListener("input", markPieceWtManual);
 
 el("createdBy").addEventListener("change", () => {
   syncOtherLead();
@@ -223,6 +255,7 @@ function clearForm() {
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
   el("importLog").innerHTML = "";
+  markPieceWtManual();
   recalc();
 }
 
@@ -569,7 +602,11 @@ async function importPdfs(fileList) {
       flashField(el(id));
     });
     recalc();
-    log.push({ level: "info", text: "Still to enter by hand: Retains, Donations, Count, Bulk Piece Wt and the scrap weights." });
+    fillPieceWtFromStoredData();
+    const pieceWtFilled = el("pieceWt").dataset.fromItem !== undefined;
+    if (pieceWtFilled) log.push({ level: "ok", text: `Bulk Piece Wt ${el("pieceWt").value} mg from Stored Data (${el("pieceWt").dataset.fromItem}).` });
+    const todo = ["Retains", "Donations", "Count", ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
+    log.push({ level: "info", text: `Still to enter by hand: ${todo.join(", ")} and the scrap weights.` });
   }
   renderImportLog(log);
 }
@@ -596,6 +633,117 @@ dropZone.addEventListener("drop", e => {
 window.addEventListener("dragover", e => e.preventDefault());
 window.addEventListener("drop", e => e.preventDefault());
 
-populateLeads();
+document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(t => {
+    const active = t === tab;
+    t.classList.toggle("active", active);
+    t.setAttribute("aria-selected", String(active));
+    el(t.dataset.tab).classList.toggle("hidden", !active);
+  });
+  if (tab.dataset.tab === "sheetTab") fillPieceWtFromStoredData();
+}));
+
+function showMsg(id, text, ok = true) {
+  el(id).textContent = text;
+  el(id).className = `form-msg ${ok ? "hint-ok" : "hint-err"}`;
+}
+
+function renderStoredData() {
+  const leads = StoredData.leads();
+  el("leadList").innerHTML = leads.map(name => `
+    <li><span>${escapeHtml(name)}</span>
+      <button type="button" data-remove-lead="${escapeHtml(name)}">Remove</button></li>`).join("");
+  el("noLeadsMsg").classList.toggle("hidden", leads.length > 0);
+
+  const items = StoredData.items();
+  el("itemTableBody").innerHTML = items.map(i => `
+    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(String(i.pieceWt))}</td>
+      <td class="row-actions">
+        <button type="button" data-edit-item="${escapeHtml(i.item)}">Edit</button>
+        <button type="button" data-remove-item="${escapeHtml(i.item)}">Remove</button>
+      </td></tr>`).join("");
+  el("noItemsMsg").classList.toggle("hidden", items.length > 0);
+
+  populateLeads();
+}
+
+el("leadForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = el("leadName").value.trim();
+  if (StoredData.addLead(name)) {
+    showMsg("leadMsg", `Added ${name}.`);
+    el("leadName").value = "";
+    renderStoredData();
+  } else {
+    showMsg("leadMsg", `${name} is already in the list.`, false);
+  }
+  el("leadName").focus();
+});
+
+el("leadList").addEventListener("click", e => {
+  const name = e.target.closest("button")?.dataset.removeLead;
+  if (name && confirm(`Remove ${name} from the leads list?`)) {
+    StoredData.removeLead(name);
+    showMsg("leadMsg", `Removed ${name}.`);
+    renderStoredData();
+  }
+});
+
+el("itemForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const item = el("itemNumber").value.trim().toUpperCase();
+  if (!(Number(el("itemPieceWt").value) > 0)) {
+    showMsg("itemMsg", "Piece weight must be more than 0.", false);
+    return;
+  }
+  const existed = StoredData.findItem(item) !== null;
+  StoredData.saveItem(item, el("itemPieceWt").value);
+  showMsg("itemMsg", `${existed ? "Updated" : "Added"} ${item}: ${el("itemPieceWt").value} mg.`);
+  el("itemNumber").value = "";
+  el("itemPieceWt").value = "";
+  renderStoredData();
+  el("itemNumber").focus();
+});
+
+el("itemTableBody").addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  if (btn.dataset.editItem) {
+    const hit = StoredData.findItem(btn.dataset.editItem);
+    el("itemNumber").value = hit.item;
+    el("itemPieceWt").value = hit.pieceWt;
+    el("itemPieceWt").focus();
+    showMsg("itemMsg", `Editing ${hit.item} — change the weight and click Save Item.`);
+  } else if (btn.dataset.removeItem && confirm(`Remove ${btn.dataset.removeItem}?`)) {
+    StoredData.removeItem(btn.dataset.removeItem);
+    showMsg("itemMsg", `Removed ${btn.dataset.removeItem}.`);
+    renderStoredData();
+  }
+});
+
+el("exportStoredBtn").addEventListener("click", () => {
+  const blob = new Blob([StoredData.exportJson()], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pk030-stored-data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+el("importStoredInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const n = StoredData.importJson(await file.text());
+    showMsg("storedImportMsg", `Imported ${n.leads} lead(s) and ${n.items} item(s) from ${file.name}.`);
+    renderStoredData();
+  } catch (err) {
+    showMsg("storedImportMsg", `${file.name}: ${err.message}.`, false);
+  }
+});
+
+renderStoredData();
 clearForm();
 renderRecordsTable();

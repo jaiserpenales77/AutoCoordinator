@@ -36,13 +36,20 @@ list for tracking multiple work orders.
   print date. When both **Layers** and **Boxes** are entered, the
   configuration blank reads e.g. "5 Layers + 2 Boxes".
 
-## Leads list
+## Stored Data tab
 
-**Yield Sheet Created By** is a dropdown of the names in `leads.js`. Edit that
-file (one quoted name per line, e.g. `"Jane Doe",`) to add or remove leads; the
-site redeploys on push. **Other…** lets someone type a name that isn't listed
-yet. The chosen name prints on the "Yield Sheet Created By:" line; with none
-chosen, the line prints blank as on the paper form.
+- **Leads** — the names in the **Yield Sheet Created By** dropdown. **Other…**
+  lets someone type a name that isn't listed yet. The chosen name prints on the
+  "Yield Sheet Created By:" line; with none chosen, the line prints blank as on
+  the paper form.
+- **Items & Piece Weights** — when a stored Bulk Item (or, failing that, FG
+  Item) is typed or imported on the yield sheet, Bulk Piece Wt fills in. A
+  weight typed by hand is never overwritten, and a loaded saved sheet keeps its
+  own weight.
+
+Stored Data lives in the browser (localStorage), like saved sheets. **Export
+Stored Data** saves it to a JSON file; **Import Stored Data** merges such a file
+into another browser or computer.
 
 ## Importing the JDE report PDFs
 
@@ -65,8 +72,9 @@ difference between the two. Reports for different work orders are refused.
 The Charge Report (R593111CV) isn't needed.
 
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
-(Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) remain manual
-entry, since they come from scale readings rather than any source PDF.
+(Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) aren't in any
+source PDF. Bulk Piece Wt fills from the Stored Data tab when the item is
+stored there; the rest are entered by hand.
 
 ## Running it
 
@@ -95,6 +103,7 @@ back up or share the saved work orders.
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
+- `stored-data.js` — the Stored Data tab's leads and item piece weights.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/pdfjs/` — Mozilla pdf.js 4.10.38 (Apache-2.0), used to read
   the PDFs.

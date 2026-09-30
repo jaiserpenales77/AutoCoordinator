@@ -13,7 +13,12 @@
   <p class="subtitle">Digital replacement for the PK030M [ALL] Final Packaging Yield Sheet (QS017B)</p>
 </header>
 
-<main class="layout">
+<nav class="tabs" role="tablist">
+  <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
+</nav>
+
+<main class="layout" id="sheetTab">
   <section class="panel form-panel">
     <div class="panel-head">
       <h2>Yield Sheet</h2>
@@ -90,7 +95,8 @@
         <div class="field-grid">
           <label>Bulk Piece Wt (mg)
             <input type="number" id="pieceWt" step="any" min="0">
-            <small>Manual scale reading. Needed whenever a scrap weight is entered.</small>
+            <small>Needed whenever a scrap weight is entered.</small>
+            <small id="pieceWtHint" class="hint-ok"></small>
           </label>
           <label>Container Tare Weight (Kg)
             <input type="number" id="tareWeight" step="any" min="0" value="6">
@@ -200,6 +206,50 @@
   </section>
 </main>
 
+<div class="layout stored-layout hidden" id="storedTab">
+  <section class="panel">
+    <h2>Leads</h2>
+    <p class="muted">Listed in the "Yield Sheet Created By" dropdown.</p>
+    <form id="leadForm" class="inline-form" autocomplete="off">
+      <input type="text" id="leadName" placeholder="Lead name, e.g. Jane Doe" required>
+      <button type="submit" class="primary">Add Lead</button>
+    </form>
+    <p id="leadMsg" class="form-msg"></p>
+    <ul id="leadList" class="stored-list"></ul>
+    <p id="noLeadsMsg" class="muted">No leads yet.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Items &amp; Piece Weights</h2>
+    <p class="muted">When a stored Bulk Item (or FG Item) is entered on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
+    <form id="itemForm" class="inline-form" autocomplete="off">
+      <input type="text" id="itemNumber" placeholder="Item number, e.g. BU001565" required>
+      <input type="number" id="itemPieceWt" step="any" min="0" placeholder="Piece wt (mg)" required>
+      <button type="submit" class="primary">Save Item</button>
+    </form>
+    <p id="itemMsg" class="form-msg"></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Item Number</th><th>Piece Wt (mg)</th><th></th></tr></thead>
+        <tbody id="itemTableBody"></tbody>
+      </table>
+    </div>
+    <p id="noItemsMsg" class="muted">No items yet.</p>
+  </section>
+
+  <section class="panel stored-backup">
+    <h2>Back Up / Share</h2>
+    <p class="muted">Stored Data is saved in this browser only. Export it to a file to back it up, or import that file on another computer.</p>
+    <div class="actions">
+      <button type="button" id="exportStoredBtn">Export Stored Data</button>
+      <label class="file-btn">Import Stored Data
+        <input type="file" id="importStoredInput" accept=".json,application/json" hidden>
+      </label>
+    </div>
+    <p id="storedImportMsg" class="form-msg"></p>
+  </section>
+</div>
+
 <div id="printSheet" class="print-sheet">
   <div class="xl-page">
     <img class="xl-logo" src="assets/pharmavite-logo.png" alt="Pharmavite">
@@ -210,7 +260,7 @@
   </div>
 </div>
 
-<script src="leads.js"></script>
+<script src="stored-data.js"></script>
 <script src="pdf-import.js"></script>
 <script src="app.js"></script>
 </body>
