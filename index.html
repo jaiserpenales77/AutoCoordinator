@@ -50,6 +50,7 @@
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="unplannedTab">Unplanned Issue</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkReturnTab">Bulk Return</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkCalcTab">Bulk Calculator</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -340,6 +341,14 @@
 <div class="layout single-layout hidden" id="bulkReturnTab">
   <section class="panel">
     <h2>Bulk Return</h2>
+  </section>
+</div>
+
+<!-- Bulk Weighing Calculator v2.5 (bulk-calculator.html), unchanged, in a frame
+     so its own styles, scripts and Print Report stay separate from the app's. -->
+<div class="layout single-layout hidden" id="bulkCalcTab">
+  <section class="panel calc-panel">
+    <iframe id="bulkCalcFrame" class="calc-frame" src="bulk-calculator.html" title="Bulk Weighing Calculator"></iframe>
   </section>
 </div>
 

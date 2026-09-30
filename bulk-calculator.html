@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Weighing Calculator</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --primary-light: rgba(99, 102, 241, 0.15);
+            --surface: #1e293b;
+            --background: #0f172a;
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --highlight-bg: rgba(255, 255, 255, 0.04);
+            
+            --shadow-lg: 0 25px 35px -5px rgb(0 0 0 / 0.6), 0 10px 15px -6px rgb(0 0 0 / 0.6);
+            --radius-md: 1rem;
+            --radius-lg: 1.25rem;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(15, 23, 42, 0) 70%);
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseGlow 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+        }
+
+        .app-container {
+            background: var(--surface);
+            width: 100%;
+            max-width: 640px;
+            padding: 3.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+            position: relative;
+            animation: cardFloatEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardFloatEntry {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .app-header {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .app-header h2 {
+            margin: 0;
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        .app-header p {
+            margin: 0.75rem 0 0;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.9rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-hover);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: cardFloatEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .form-group {
+            margin-bottom: 1.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .form-group:focus-within {
+            transform: translateY(-2px);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.025em;
+            transition: color 0.2s ease;
+        }
+
+        .form-group:focus-within .form-label {
+            color: var(--primary-hover);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1.1rem 1.25rem;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color-scheme: dark;
+        }
+
+        .form-input:hover {
+            border-color: #475569;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #162032;
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .form-input::placeholder {
+            color: #475569;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 1.25rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            color: var(--text-main);
+            background-color: var(--border);
+            display: none; /* hidden until results show */
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary.loading {
+            background: var(--border);
+            color: var(--text-secondary);
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--border);
+            margin: 2.5rem 0;
+            border: none;
+            transform: scaleX(0);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .divider.show {
+            transform: scaleX(1);
+        }
+
+        .results-wrapper {
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            opacity: 0;
+            transform: translateY(15px) scale(0.98);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item.animate-in {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 1.15rem;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        .result-item.highlight {
+            background-color: var(--highlight-bg);
+            padding: 1.25rem 1.5rem;
+            margin: 0.75rem -1.5rem;
+            border-radius: var(--radius-md);
+            border-bottom: none;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .result-item.highlight .result-value {
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .result-item.highlight .result-label {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .result-item.final {
+            background-color: var(--primary-light);
+            padding: 1.5rem;
+            margin: 1.5rem -1.5rem -1.5rem -1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-item.final .result-value, 
+        .result-item.final .result-label {
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: #a5b4fc;
+            position: relative;
+            z-index: 1;
+        }
+
+        .error-toast {
+            display: none;
+            background-color: var(--error-bg);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 1.25rem;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: modalShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes modalShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .app-signature {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            opacity: 0.85;
+            letter-spacing: 0.025em;
+            animation: cardFloatEntry 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+        }
+
+        .app-signature span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Multi-bulk entry styles */
+        .bulk-entry {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 1.5rem 0.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .bulk-entry.entry-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+            animation: modalShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        .bulk-entry.entry-error .entry-title {
+            color: #fca5a5;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .entry-title {
+            font-weight: 700;
+            color: var(--primary-hover);
+            font-size: 1.05rem;
+            letter-spacing: 0.025em;
+        }
+
+        .remove-entry-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-entry-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-add:hover {
+            border-color: var(--primary);
+            color: var(--primary-hover);
+            background: var(--primary-light);
+        }
+
+        .vitamin-manager {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .vitamin-manager-header {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .vitamin-add-row {
+            display: flex;
+            gap: 0.6rem;
+            align-items: stretch;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .vitamin-add-row .form-input {
+            padding: 0.75rem 0.9rem;
+            font-size: 1rem;
+        }
+
+        .vitamin-add-row input#newVitaminItemNumber {
+            flex: 0 1 110px;
+        }
+
+        .vitamin-add-row input#newVitaminName {
+            flex: 1.6 1 160px;
+        }
+
+        .vitamin-add-row input#newVitaminWeight {
+            flex: 0 1 110px;
+        }
+
+        .btn-save-vitamin {
+            flex: 0 0 auto;
+            padding: 0 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-save-vitamin:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .vitamin-error {
+            display: none;
+            color: #fca5a5;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .vitamin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.75rem;
+        }
+
+        .vitamin-table th {
+            text-align: left;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vitamin-table td {
+            padding: 0.7rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.98rem;
+            color: var(--text-main);
+        }
+
+        .vitamin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .vitamin-table td:last-child {
+            width: 1%;
+            text-align: right;
+        }
+
+        .vitamin-empty {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .vitamin-search-results {
+            display: none;
+            margin-top: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--background);
+        }
+
+        .vitamin-search-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1.1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
+        }
+
+        .vitamin-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .vitamin-search-item:hover,
+        .vitamin-search-item.selected {
+            background: var(--primary-light);
+        }
+
+        .vitamin-search-item-main {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.98rem;
+        }
+
+        .vitamin-search-item-weight {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .vitamin-search-empty {
+            padding: 0.85rem 1.1rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .entry-result-block {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .entry-result-title {
+            font-weight: 700;
+            color: var(--primary-hover);
+            margin-bottom: 0.25rem;
+            font-size: 1.05rem;
+        }
+
+        /* Print-only layout styling */
+        .print-section {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 20px !important;
+                display: block !important;
+            }
+            body::before {
+                display: none !important;
+            }
+            .app-container, .app-header, .form-group, .btn-container, .error-toast, .app-signature, .results-wrapper {
+                display: none !important;
+            }
+            .print-section {
+                display: block !important;
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                color: #000;
+                padding: 20px;
+            }
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 15px;
+            }
+            .print-header h1 {
+                font-size: 24px;
+                margin: 0;
+            }
+            .print-header p {
+                font-size: 14px;
+                color: #555;
+                margin: 5px 0 0;
+            }
+            .print-body {
+                font-size: 16px;
+                margin-bottom: 40px;
+            }
+            .print-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
+            }
+            .print-row.highlight {
+                font-weight: bold;
+                background-color: #f9f9f9;
+                padding: 12px 10px;
+            }
+            .print-row.final {
+                font-weight: bold;
+                font-size: 18px;
+                border-top: 2px solid #000;
+                border-bottom: 2px solid #000;
+                margin-top: 10px;
+                padding: 15px 10px;
+            }
+            .print-footer {
+                margin-top: 60px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+            }
+            .print-signature-line {
+                width: 250px;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+                text-align: center;
+            }
+            .print-creator {
+                text-align: center;
+                margin-top: 40px;
+                font-size: 12px;
+                color: #666;
+            }
+            .print-page {
+                page-break-after: always;
+            }
+            .print-page:last-child {
+                page-break-after: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="app-header">
+        <h2>Bulk Weighing Calculator</h2>
+        <p>Combine multiple bulks into total thousand-piece units (TH)</p>
+    </div>
+
+    <div class="tabs">
+        <button type="button" class="tab-btn active" id="tabBtnCalculator" onclick="switchTab('calculator')">Calculator</button>
+        <button type="button" class="tab-btn" id="tabBtnVitamins" onclick="switchTab('vitamins')">Manage Vitamins</button>
+    </div>
+
+    <div id="calculatorTab" class="tab-panel active">
+        <div id="entriesContainer"></div>
+
+        <button type="button" class="btn-add" onclick="addEntry()">+ Add Another Bulk</button>
+
+        <div class="form-group">
+            <label class="form-label" for="pieceWeight">Piece Weight (p/w) — applies to all bulks</label>
+            <input type="number" id="pieceWeight" class="form-input" placeholder="0.0" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="vitaminSearch">Search by Item # or Name</label>
+            <input type="text" id="vitaminSearch" class="form-input" placeholder="Type to search..." oninput="handleVitaminSearch()" autocomplete="off">
+            <div id="vitaminSearchResults" class="vitamin-search-results"></div>
+        </div>
+
+        <div class="btn-container">
+            <button id="calcBtn" onclick="processCalculation()" class="btn-primary">Calculate</button>
+            <button id="printBtn" onclick="triggerPrint()" class="btn-secondary">Print Report</button>
+        </div>
+        <div id="errorMsg" class="error-toast">Please enter valid positive numbers.</div>
+
+        <div id="resultsWrapper" class="results-wrapper">
+            <hr id="dividerLine" class="divider">
+
+            <div id="resultsList"></div>
+        </div>
+    </div>
+
+    <div id="vitaminsTab" class="tab-panel">
+        <div class="vitamin-manager">
+            <div class="vitamin-manager-header">Manage Vitamin Piece Weights</div>
+            <div class="vitamin-add-row">
+                <input type="text" id="newVitaminItemNumber" class="form-input" placeholder="Item #">
+                <input type="text" id="newVitaminName" class="form-input" placeholder="Vitamin name">
+                <input type="number" id="newVitaminWeight" class="form-input" placeholder="p/w" step="0.01">
+                <button type="button" class="btn-save-vitamin" onclick="saveVitamin()">Save</button>
+            </div>
+            <div id="vitaminError" class="vitamin-error"></div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <input type="text" id="vitaminManageSearch" class="form-input" placeholder="Search by item #..." oninput="renderVitaminListUI()" autocomplete="off">
+            </div>
+            <div id="vitaminList"></div>
+        </div>
+    </div>
+</div>
+
+<div class="app-signature">
+    Created by <span>Jaiser Penales</span>
+</div>
+
+<!-- Clean Print Document Template -->
+<div class="print-section" id="printSection">
+    <div id="printBody"></div>
+</div>
+
+<script>
+    let entryCount = 0;
+    const entriesContainer = document.getElementById('entriesContainer');
+    const tareOptionsHTML = `
+        <option value="23.9">Big Blue Pallet - 23.9 kg</option>
+        <option value="18.5">Small Blue Pallet - 18.5 kg</option>
+        <option value="17.5" selected>Grey Tote - 17.5 kg</option>
+        <option value="16.9">Blue Tote - 16.9 kg</option>
+    `;
+
+    function addEntry() {
+        entryCount++;
+        const div = document.createElement('div');
+        div.className = 'bulk-entry';
+        div.dataset.id = entryCount;
+        div.innerHTML = `
+            <div class="entry-header">
+                <span class="entry-title">Bulk</span>
+                <button type="button" class="remove-entry-btn" onclick="removeEntry(${entryCount})" title="Remove this bulk">✕</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bulk Weight (kg)</label>
+                <input type="number" class="form-input entry-bagWeight" placeholder="0.0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pallet Tare Weight</label>
+                <select class="form-input entry-tare">${tareOptionsHTML}</select>
+            </div>
+        `;
+        entriesContainer.appendChild(div);
+        renumberEntries();
+    }
+
+    function removeEntry(id) {
+        const el = entriesContainer.querySelector(`.bulk-entry[data-id="${id}"]`);
+        if (el) el.remove();
+        renumberEntries();
+    }
+
+    function renumberEntries() {
+        const entries = entriesContainer.querySelectorAll('.bulk-entry');
+        entries.forEach((entry, index) => {
+            entry.querySelector('.entry-title').innerText = 'Bulk #' + (index + 1);
+            const btn = entry.querySelector('.remove-entry-btn');
+            btn.style.visibility = entries.length > 1 ? 'visible' : 'hidden';
+        });
+    }
+
+    entriesContainer.addEventListener('input', (e) => {
+        const entry = e.target.closest('.bulk-entry');
+        if (entry) entry.classList.remove('entry-error');
+    });
+    entriesContainer.addEventListener('change', (e) => {
+        const entry = e.target.closest('.bulk-entry');
+        if (entry) entry.classList.remove('entry-error');
+    });
+
+    function switchTab(tab) {
+        const isCalc = tab === 'calculator';
+        document.getElementById('calculatorTab').classList.toggle('active', isCalc);
+        document.getElementById('vitaminsTab').classList.toggle('active', !isCalc);
+        document.getElementById('tabBtnCalculator').classList.toggle('active', isCalc);
+        document.getElementById('tabBtnVitamins').classList.toggle('active', !isCalc);
+    }
+
+    // Vitamin piece-weight category (kept in memory for this session)
+    let vitaminList = [];
+
+    function handleVitaminSearch() {
+        const searchInput = document.getElementById('vitaminSearch');
+        const resultsContainer = document.getElementById('vitaminSearchResults');
+        const query = searchInput.value.trim().toLowerCase();
+
+        if (!query) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        const matches = vitaminList.filter(v =>
+            v.itemNumber.toLowerCase().includes(query) || v.name.toLowerCase().includes(query)
+        );
+
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = '<div class="vitamin-search-empty">No matches found.</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+
+        resultsContainer.innerHTML = matches.map(v => `
+            <div class="vitamin-search-item" data-item-number="${v.itemNumber}">
+                <span class="vitamin-search-item-main">${v.itemNumber} — ${v.name}</span>
+                <span class="vitamin-search-item-weight">${v.weight} p/w</span>
+            </div>
+        `).join('');
+        resultsContainer.style.display = 'block';
+    }
+
+    document.getElementById('vitaminSearchResults').addEventListener('click', (e) => {
+        const item = e.target.closest('.vitamin-search-item');
+        if (!item) return;
+        const match = vitaminList.find(v => v.itemNumber === item.dataset.itemNumber);
+        if (match) {
+            document.getElementById('pieceWeight').value = match.weight;
+            document.getElementById('vitaminSearch').value = `${match.itemNumber} — ${match.name}`;
+            document.getElementById('vitaminSearchResults').style.display = 'none';
+        }
+    });
+
+    function renderVitaminListUI() {
+        const container = document.getElementById('vitaminList');
+        const searchInput = document.getElementById('vitaminManageSearch');
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+        const filtered = query
+            ? vitaminList.filter(v => v.itemNumber.toLowerCase().includes(query) || v.name.toLowerCase().includes(query))
+            : vitaminList;
+
+        if (vitaminList.length === 0) {
+            container.innerHTML = '<div class="vitamin-empty">No saved vitamins yet.</div>';
+            return;
+        }
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="vitamin-empty">No vitamins match that search.</div>';
+            return;
+        }
+
+        const rows = filtered.map(v => `
+            <tr>
+                <td>${v.itemNumber}</td>
+                <td>${v.name}</td>
+                <td>${v.weight} p/w</td>
+                <td><button type="button" class="remove-entry-btn" data-item-number="${v.itemNumber}" title="Delete">✕</button></td>
+            </tr>
+        `).join('');
+        container.innerHTML = `
+            <table class="vitamin-table">
+                <thead>
+                    <tr>
+                        <th>Item #</th>
+                        <th>Vitamin Name</th>
+                        <th>Piece Weight</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    document.getElementById('vitaminList').addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-entry-btn');
+        if (btn) deleteVitamin(btn.dataset.itemNumber);
+    });
+
+    function showVitaminError(message) {
+        const errEl = document.getElementById('vitaminError');
+        errEl.innerText = message;
+        errEl.style.display = 'block';
+    }
+
+    function saveVitamin() {
+        const itemNumberInput = document.getElementById('newVitaminItemNumber');
+        const nameInput = document.getElementById('newVitaminName');
+        const weightInput = document.getElementById('newVitaminWeight');
+        const errEl = document.getElementById('vitaminError');
+        errEl.style.display = 'none';
+
+        const itemNumber = itemNumberInput.value.trim();
+        const name = nameInput.value.trim();
+        const weight = parseFloat(weightInput.value);
+
+        if (!itemNumber) {
+            showVitaminError('Enter an item number.');
+            return;
+        }
+        if (!name) {
+            showVitaminError('Enter a vitamin name.');
+            return;
+        }
+        if (isNaN(weight) || weight <= 0) {
+            showVitaminError('Enter a valid positive piece weight.');
+            return;
+        }
+
+        const existingIndex = vitaminList.findIndex(v => v.itemNumber.toLowerCase() === itemNumber.toLowerCase());
+        if (existingIndex >= 0) {
+            vitaminList[existingIndex] = { itemNumber, name, weight };
+        } else {
+            vitaminList.push({ itemNumber, name, weight });
+        }
+
+        renderVitaminListUI();
+        itemNumberInput.value = '';
+        nameInput.value = '';
+        weightInput.value = '';
+    }
+
+    function deleteVitamin(itemNumber) {
+        const idx = vitaminList.findIndex(v => v.itemNumber === itemNumber);
+        if (idx >= 0) vitaminList.splice(idx, 1);
+        renderVitaminListUI();
+        handleVitaminSearch();
+    }
+
+    renderVitaminListUI();
+
+    function processCalculation() {
+        const btn = document.getElementById('calcBtn');
+        const printBtn = document.getElementById('printBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultsWrapper = document.getElementById('resultsWrapper');
+        const dividerLine = document.getElementById('dividerLine');
+        const resultsList = document.getElementById('resultsList');
+        const printBody = document.getElementById('printBody');
+
+        const entries = entriesContainer.querySelectorAll('.bulk-entry');
+        const pieceWeightInput = document.getElementById('pieceWeight');
+        const pieceWeight = parseFloat(pieceWeightInput.value);
+
+        function showError(message) {
+            errorMsg.innerText = message;
+            errorMsg.style.display = 'block';
+            resultsWrapper.style.display = 'none';
+            printBtn.style.display = 'none';
+            dividerLine.classList.remove('show');
+        }
+
+        entries.forEach(entry => entry.classList.remove('entry-error'));
+
+        if (entries.length === 0) {
+            showError('Add at least one bulk to calculate.');
+            return;
+        }
+
+        if (isNaN(pieceWeight) || pieceWeight <= 0) {
+            showError('Please enter a valid positive piece weight.');
+            return;
+        }
+
+        const parsed = [];
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            const bulkNum = i + 1;
+            const bagWeight = parseFloat(entry.querySelector('.entry-bagWeight').value);
+            const tareSelect = entry.querySelector('.entry-tare');
+            const tareWeight = parseFloat(tareSelect.value);
+            const tareText = tareSelect.options[tareSelect.selectedIndex].text.split('-')[0].trim();
+
+            if (isNaN(bagWeight) || bagWeight <= 0) {
+                entry.classList.add('entry-error');
+                entry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showError(`Bulk #${bulkNum}: please enter a valid positive bulk weight.`);
+                return;
+            }
+
+            const totalKg = bagWeight - tareWeight;
+            if (totalKg < 0) {
+                entry.classList.add('entry-error');
+                entry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showError(`Bulk #${bulkNum}: bulk weight cannot be less than its tare weight!`);
+                return;
+            }
+
+            const totalGrams = Math.round(totalKg * 1000);
+            const totalPieces = totalGrams / pieceWeight;
+            const roundedTH = Math.round(totalPieces);
+
+            parsed.push({ bagWeight, tareWeight, tareText, totalKg, totalGrams, totalPieces, roundedTH });
+        }
+
+        errorMsg.style.display = 'none';
+        btn.classList.add('loading');
+        btn.innerText = 'Calculating...';
+        resultsWrapper.style.display = 'none';
+        printBtn.style.display = 'none';
+        dividerLine.classList.remove('show');
+
+        setTimeout(() => {
+            let resultsHTML = '';
+            let printHTML = '';
+
+            parsed.forEach((r, index) => {
+                const num = index + 1;
+                const tareLabelStr = r.tareText + (r.tareText.includes('Tote') ? ' Weight' : ' Tare Weight');
+                const piecesDisplay = (r.totalPieces % 1 === 0) ? r.totalPieces : r.totalPieces.toFixed(3);
+
+                resultsHTML += `
+                    <div class="entry-result-block">
+                        <div class="entry-result-title">Bulk #${num}</div>
+                        <div class="result-item">
+                            <span class="result-value">${r.bagWeight.toFixed(1)} kg</span>
+                            <span class="result-label">Bulk Weight</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-value">-${r.tareWeight.toFixed(1)} kg</span>
+                            <span class="result-label">${tareLabelStr}</span>
+                        </div>
+                        <div class="result-item highlight">
+                            <span class="result-value">${r.totalKg.toFixed(1)} kg</span>
+                            <span class="result-label">Net Weight</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-value">X 1000</span>
+                            <span class="result-label">Multiply by 1000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-value">${r.totalGrams.toLocaleString()}</span>
+                            <span class="result-label">Total Grams</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-value">/${pieceWeight}</span>
+                            <span class="result-label">Divide Piece Weight</span>
+                        </div>
+                        <div class="result-item highlight">
+                            <span class="result-value">${piecesDisplay}</span>
+                            <span class="result-label">Total Pieces</span>
+                        </div>
+                        <div class="result-item final">
+                            <span class="result-value">${r.roundedTH} TH</span>
+                            <span class="result-label">Bulk #${num} Total TH Rounded</span>
+                        </div>
+                    </div>
+                `;
+
+                printHTML += `
+                    <div class="print-page">
+                        <div class="print-header">
+                            <h1>Bulk Weighing Calculation Report</h1>
+                            <p>Bulk #${num} of ${parsed.length} — Standardized Thousand-Piece Units (TH)</p>
+                        </div>
+                        <div class="print-body">
+                            <div class="print-row">
+                                <span>Bulk Weight</span>
+                                <span>${r.bagWeight.toFixed(1)} kg</span>
+                            </div>
+                            <div class="print-row">
+                                <span>${tareLabelStr}</span>
+                                <span>-${r.tareWeight.toFixed(1)} kg</span>
+                            </div>
+                            <div class="print-row highlight">
+                                <span>Net Weight</span>
+                                <span>${r.totalKg.toFixed(1)} kg</span>
+                            </div>
+                            <div class="print-row">
+                                <span>Multiply by 1000</span>
+                                <span>X 1000</span>
+                            </div>
+                            <div class="print-row highlight">
+                                <span>Total Grams</span>
+                                <span>${r.totalGrams.toLocaleString()}</span>
+                            </div>
+                            <div class="print-row">
+                                <span>Divide Piece Weight</span>
+                                <span>/${pieceWeight}</span>
+                            </div>
+                            <div class="print-row highlight">
+                                <span>Total Pieces</span>
+                                <span>${piecesDisplay}</span>
+                            </div>
+                            <div class="print-row final">
+                                <span>Total TH Rounded</span>
+                                <span>${r.roundedTH} TH</span>
+                            </div>
+                        </div>
+                        <div class="print-footer">
+                            <div class="print-signature-line">Initial</div>
+                            <div class="print-signature-line">Date</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsList.innerHTML = resultsHTML;
+            printBody.innerHTML = printHTML;
+
+            resultsWrapper.style.display = 'block';
+            printBtn.style.display = 'block';
+            void dividerLine.offsetWidth;
+            dividerLine.classList.add('show');
+
+            const resultItems = document.querySelectorAll('.result-item');
+            resultItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('animate-in');
+                }, 60 + (index * 45));
+            });
+
+            btn.classList.remove('loading');
+            btn.innerText = 'Calculate';
+
+        }, 250);
+    }
+
+    function triggerPrint() {
+        window.print();
+    }
+
+    // Start with one bulk entry
+    addEntry();
+</script>
+
+</body>
+</html>

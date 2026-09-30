@@ -60,6 +60,17 @@ type, ready to copy onto the card:
 | Bulk Rejected / Bulk Returned | Bulk Rejected / Bulk Returned |
 | Total Bottles Yielded | Total Bottles Produced |
 
+## Other tabs
+
+- **Unplanned Issue** and **Bulk Return** — placeholders for now.
+- **Bulk Calculator** — the Bulk Weighing Calculator v2.5 (by Jaiser
+  Penales), `bulk-calculator.html`, shown unchanged inside the tab. It works as
+  on its own: add bulks, pick each pallet/tote tare, enter the piece weight,
+  Calculate, and **Print Report** prints just the calculator's report. Its
+  Manage Vitamins list is kept only until the page is reloaded, as in the
+  original file. The app only resizes the frame to fit and adds a few phone
+  layout styles from outside.
+
 ## Stored Data tab
 
 - **Leads** — the names in the **Yield Sheet Created By** dropdown. **Other…**
@@ -220,6 +231,7 @@ new password. To remove someone's access, delete (or disable) their user.
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
+- `bulk-calculator.html` — the Bulk Calculator tab (embedded as is).
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
 - `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
