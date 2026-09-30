@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PK030 Packaging Yield Coordinator</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -45,7 +46,7 @@
           </label>
           <label>Count (Fill Rate)
             <input type="number" id="fillRate" step="any" min="0" value="0">
-            <small>Per-bottle fill amount used for Bulk Packaged (TH). Manual entry — not in any source PDF.</small>
+            <small>Tablets/softgels per bottle, e.g. 180. Printed as "Fill Rate" on the sheet.</small>
           </label>
           <label>Bulk Rejected/Returned (TH)
             <input type="number" id="bulkRejected" step="any" min="0" value="0">
@@ -60,8 +61,8 @@
         <legend>Scrap Calculations</legend>
         <div class="field-grid">
           <label>Bulk Piece Wt (mg)
-            <input type="number" id="pieceWt" step="any" min="0" value="0">
-            <small>Manual scale reading.</small>
+            <input type="number" id="pieceWt" step="any" min="0">
+            <small>Manual scale reading. Needed whenever a scrap weight is entered.</small>
           </label>
           <label>Container Tare Weight (Kg)
             <input type="number" id="tareWeight" step="any" min="0" value="6">
@@ -144,19 +145,29 @@
       <button type="button" id="exportCsvBtn">Export CSV</button>
     </div>
     <input type="search" id="searchBox" placeholder="Search by WO#, FG Item, or Bulk Item...">
-    <table class="records-table">
-      <thead>
-        <tr>
-          <th>WO #</th><th>FG Item</th><th>Bulk Item</th><th>Final Yield</th><th>Status</th><th>Date</th><th></th>
-        </tr>
-      </thead>
-      <tbody id="recordsTableBody"></tbody>
-    </table>
+    <div class="table-scroll">
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>WO #</th><th>FG Item</th><th>Bulk Item</th><th>Final Yield</th><th>Status</th><th>Date</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="recordsTableBody"></tbody>
+      </table>
+    </div>
     <p id="noRecordsMsg" class="muted hidden">No saved yield sheets yet.</p>
   </section>
 </main>
 
-<div id="printSheet" class="print-sheet"></div>
+<div id="printSheet" class="print-sheet">
+  <div class="xl-page">
+    <img class="xl-logo" src="assets/pharmavite-logo.png" alt="Pharmavite">
+    <div id="xlPage1"></div>
+  </div>
+  <div class="xl-page">
+    <div id="xlPage2"></div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

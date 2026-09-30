@@ -13,79 +13,107 @@ const fields = [
   "videoJetCount"
 ];
 
+const SCRAP_FIELDS = [
+  { id: "scrap1", key: "Packaging Scrap #1" },
+  { id: "scrap2", key: "Packaging Scrap #2" },
+  { id: "scrap3", key: "Packaging Scrap #3" },
+  { id: "mfgScrap", key: "Manufacturing Scrap" }
+];
+
 function el(id) { return document.getElementById(id); }
 
-function num(id) {
-  const v = parseFloat(el(id).value);
-  return isNaN(v) ? 0 : v;
+function toNum(v) {
+  const n = parseFloat(v);
+  return Number.isNaN(n) ? 0 : n;
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-el("dateCreated").value = todayISO();
+// Mirrors the PK030 formulas; `error` is set where Excel would show #DIV/0!.
+function computeResults(data) {
+  const totalPackaged = toNum(data.totalPackaged);
+  const fillRate = toNum(data.fillRate);
+  const bulkRejected = toNum(data.bulkRejected);
+  const bulkIssued = toNum(data.bulkIssued);
+  const pieceWt = toNum(data.pieceWt);
+  const tareWeight = data.tareWeight === undefined ? 6 : toNum(data.tareWeight);
 
-function scrapConversion(grossKg, tareKg, pieceWtMg) {
-  if (grossKg <= 0) return { net: 0, pieces: 0 };
-  const net = grossKg - tareKg;
-  const pieces = pieceWtMg > 0 ? (net * 1000) / pieceWtMg : 0;
-  return { net, pieces };
-}
-
-function computeResults() {
-  const totalPackaged = num("totalPackaged");
-  const fillRate = num("fillRate");
-  const bulkRejected = num("bulkRejected");
-  const bulkIssued = num("bulkIssued");
-  const pieceWt = num("pieceWt");
-  const tareWeight = num("tareWeight");
-
-  const scrapInputs = [
-    { key: "Packaging Scrap #1", gross: num("scrap1") },
-    { key: "Packaging Scrap #2", gross: num("scrap2") },
-    { key: "Packaging Scrap #3", gross: num("scrap3") },
-    { key: "Manufacturing Scrap", gross: num("mfgScrap") }
-  ].map(s => ({ ...s, ...scrapConversion(s.gross, tareWeight, pieceWt) }));
-
+  const scrapInputs = SCRAP_FIELDS.map(({ id, key }) => {
+    const gross = toNum(data[id]);
+    const net = gross > 0 ? gross - tareWeight : 0;
+    const pieces = gross > 0 && pieceWt !== 0 ? (net * 1000) / pieceWt : 0;
+    return { key, gross, net, pieces };
+  });
+  const scrapDivError = pieceWt === 0 && scrapInputs.some(s => s.gross > 0);
   const scrapPiecesSum = scrapInputs.reduce((sum, s) => sum + s.pieces, 0);
 
   const bulkIssuedNet = bulkIssued - bulkRejected;
   const bulkPackagedTH = (totalPackaged * fillRate) / 1000;
-  const bulkScrappedTH = scrapPiecesSum;
+  const netIssuedDenom = (bulkIssued * 1000) - (bulkRejected * 1000);
 
-  const denominator = (bulkIssued * 1000) - (bulkRejected * 1000);
-  const finalYieldRatio = denominator !== 0
-    ? ((totalPackaged * fillRate) + scrapPiecesSum * 1000) / denominator
-    : 0;
+  let error = "";
+  if (netIssuedDenom === 0) {
+    error = bulkIssued === 0
+      ? "Enter Issued Bulk (TH) to calculate the yield."
+      : "Issued Bulk equals Bulk Rejected/Returned, so the yield can't be calculated.";
+  } else if (scrapDivError) {
+    error = "Enter Bulk Piece Wt (mg) to convert the scrap weights.";
+  }
 
-  const lowYield = finalYieldRatio < LOW_YIELD_THRESHOLD;
-  const highYield = finalYieldRatio > HIGH_YIELD_THRESHOLD;
-  const videoJetCount = lowYield || highYield;
+  const finalYieldRatio = error ? null
+    : ((totalPackaged * fillRate) + scrapPiecesSum * 1000) / netIssuedDenom;
+  const lowYield = !error && finalYieldRatio < LOW_YIELD_THRESHOLD;
+  const highYield = !error && finalYieldRatio > HIGH_YIELD_THRESHOLD;
+  const outOfRange = lowYield || highYield;
 
   let statusLabel = "Within range";
-  if (highYield) statusLabel = "High Yield NCCAPA";
+  if (error) statusLabel = "Incomplete";
+  else if (highYield) statusLabel = "High Yield NCCAPA";
   else if (lowYield) statusLabel = "Low Yield NCCAPA";
 
   return {
     totalPackaged, fillRate, bulkRejected, bulkIssued, pieceWt, tareWeight,
-    scrapInputs, scrapPiecesSum, bulkIssuedNet, bulkPackagedTH, bulkScrappedTH,
-    finalYieldRatio, lowYield, highYield, videoJetCount, statusLabel
+    scrapInputs, scrapDivError, scrapPiecesSum, bulkIssuedNet, bulkPackagedTH,
+    netIssuedDenom, finalYieldRatio, lowYield, highYield, outOfRange, statusLabel, error
   };
 }
 
-function fmt(n, digits = 2) {
-  return Number.isFinite(n) ? n.toFixed(digits) : "0";
+// Rounds half away from zero on the displayed digits, as Excel does
+// (plain toFixed/Math.round misround values like 1.0005 or 28.5%).
+function excelRound(n, digits) {
+  const scaled = Number((Math.abs(n) * 10 ** digits).toPrecision(15));
+  const r = Math.sign(n) * Math.round(scaled) / 10 ** digits;
+  return r === 0 ? 0 : r;
 }
 
-function renderResults(r) {
-  el("rBulkIssuedNet").textContent = fmt(r.bulkIssuedNet) + " TH";
-  el("rBulkPackaged").textContent = fmt(r.bulkPackagedTH) + " TH";
-  el("rBulkScrapped").textContent = fmt(r.bulkScrappedTH) + " TH";
-  el("rFinalYield").textContent = fmt(r.finalYieldRatio * 100) + "%";
+function fmtFixed(n, digits) {
+  return excelRound(n, digits).toFixed(digits);
+}
+
+function fmtYield(r, digits) {
+  return r.error ? "—" : fmtFixed(r.finalYieldRatio * 100, digits) + "%";
+}
+
+function statusClass(r) {
+  if (r.error) return "yield-na";
+  return r.outOfRange ? "yield-warn" : "yield-ok";
+}
+
+function renderResults(r, data) {
+  el("rBulkIssuedNet").textContent = fmtFixed(r.bulkIssuedNet, 2) + " TH";
+  el("rBulkPackaged").textContent = fmtFixed(r.bulkPackagedTH, 2) + " TH";
+  el("rBulkScrapped").textContent = r.scrapDivError ? "—" : fmtFixed(r.scrapPiecesSum, 2) + " TH";
+  el("rFinalYield").textContent = fmtYield(r, 2);
 
   const banner = el("statusBanner");
-  if (r.videoJetCount) {
+  if (r.error) {
+    banner.className = "status-banner info";
+    banner.textContent = r.error;
+  } else if (r.outOfRange) {
     banner.className = "status-banner warn";
     banner.textContent = `${r.statusLabel} — VideoJet Count required (outside 94.5%–102.4999%)`;
   } else {
@@ -96,20 +124,20 @@ function renderResults(r) {
   const tbody = el("scrapTableBody");
   tbody.innerHTML = "";
   r.scrapInputs.forEach(s => {
+    const pieces = s.gross > 0 && r.scrapDivError ? "—" : fmtFixed(s.pieces, 2);
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${s.key}</td><td>${fmt(s.gross)}</td><td>${fmt(s.net)}</td><td>${fmt(s.pieces)}</td>`;
+    tr.innerHTML = `<td>${s.key}</td><td>${fmtFixed(s.gross, 2)}</td><td>${fmtFixed(s.net, 2)}</td><td>${pieces}</td>`;
     tbody.appendChild(tr);
   });
 
-  const { line1, line2 } = buildSummaryLines(collectFormData());
+  const { line1, line2 } = buildSummaryLines(data);
   el("summaryLine1").textContent = line1;
   el("summaryLine2").textContent = line2;
 }
 
 function recalc() {
-  const r = computeResults();
-  renderResults(r);
-  return r;
+  const data = collectFormData();
+  renderResults(computeResults(data), data);
 }
 
 fields.forEach(id => {
@@ -166,15 +194,15 @@ function renderRecordsTable() {
     .slice()
     .sort((a, b) => (b.dateCreated || "").localeCompare(a.dateCreated || ""))
     .forEach(rec => {
-      const results = computeFromData(rec);
+      const results = computeResults(rec);
       const tr = document.createElement("tr");
-      const statusClass = results.videoJetCount ? "yield-warn" : "yield-ok";
+      const cls = statusClass(results);
       tr.innerHTML = `
         <td>${escapeHtml(rec.woNumber)}</td>
         <td>${escapeHtml(rec.fgItem)}</td>
         <td>${escapeHtml(rec.bulkItem)}</td>
-        <td class="${statusClass}">${fmt(results.finalYieldRatio * 100)}%</td>
-        <td class="${statusClass}">${results.statusLabel}</td>
+        <td class="${cls}">${fmtYield(results, 2)}</td>
+        <td class="${cls}">${results.statusLabel}</td>
         <td>${escapeHtml(rec.dateCreated)}</td>
         <td class="row-actions">
           <button type="button" data-action="load" data-id="${escapeHtml(rec.id)}">Load</button>
@@ -184,36 +212,17 @@ function renderRecordsTable() {
     });
 }
 
-function computeFromData(data) {
-  const snapshot = collectFormData();
-  applyFormDataSilently(data);
-  const r = computeResults();
-  applyFormDataSilently(snapshot);
-  return r;
-}
-
-function applyFormDataSilently(data) {
-  fields.forEach(id => { el(id).value = data[id] ?? (id === "tareWeight" ? 6 : ""); });
-}
-
 form.addEventListener("submit", e => {
   e.preventDefault();
-  const data = collectFormData();
-  if (!data.woNumber) {
-    alert("WO # is required.");
-    return;
-  }
+  const id = editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const record = { ...collectFormData(), id };
   const records = loadRecords();
-  if (editingId) {
-    const idx = records.findIndex(r => r.id === editingId);
-    if (idx >= 0) records[idx] = { ...data, id: editingId };
-  } else {
-    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-    records.push(data);
-    editingId = data.id;
-    editingBadge.classList.remove("hidden");
-  }
+  const idx = records.findIndex(r => r.id === id);
+  if (idx >= 0) records[idx] = record;
+  else records.push(record);
   saveRecords(records);
+  editingId = id;
+  editingBadge.classList.remove("hidden");
   renderRecordsTable();
 });
 
@@ -251,8 +260,8 @@ el("exportCsvBtn").addEventListener("click", () => {
   }
   const header = [...fields, "finalYieldPercent", "status"];
   const rows = records.map(rec => {
-    const r = computeFromData(rec);
-    return [...fields.map(f => rec[f] ?? ""), fmt(r.finalYieldRatio * 100), r.statusLabel];
+    const r = computeResults(rec);
+    return [...fields.map(f => rec[f] ?? ""), r.error ? "" : fmtFixed(r.finalYieldRatio * 100, 2), r.statusLabel];
   });
   const csv = [header, ...rows]
     .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
@@ -285,13 +294,8 @@ function excelGeneral(raw) {
   return Number.isFinite(n) ? String(n) : t;
 }
 
-function fmt3(n) {
-  return n.toFixed(3);
-}
-
 function excelPct0(ratio) {
-  const v = Math.sign(ratio) * Math.round(Math.abs(ratio) * 100);
-  return (v === 0 ? 0 : v) + "%";
+  return excelRound(ratio * 100, 0) + "%";
 }
 
 function formatDateMMDDYY(isoDate) {
@@ -332,31 +336,24 @@ function xlTable(rows) {
 
 function buildPrintSheet() {
   const data = collectFormData();
-  const r = computeResults();
+  const r = computeResults(data);
   const { line1, line2 } = buildSummaryLines(data);
 
-  // Excel's C12..C18 divide by Bulk Piece Wt whenever a scrap weight is entered.
-  const scrapDivError = r.pieceWt === 0 && r.scrapInputs.some(s => s.gross > 0);
-  const netIssuedDenom = (r.bulkIssued * 1000) - (r.bulkRejected * 1000);
   const DIV0 = "#DIV/0!";
+  const i32 = r.scrapDivError ? DIV0 : fmtFixed(r.scrapPiecesSum, 3);
+  const k31 = r.netIssuedDenom === 0 ? DIV0 : excelPct0((r.totalPackaged * r.fillRate) / r.netIssuedDenom);
+  const k32 = r.scrapDivError || r.bulkIssued === 0 ? DIV0 : excelPct0(r.scrapPiecesSum / r.bulkIssued);
+  const k33 = r.error ? DIV0 : excelPct0(r.finalYieldRatio);
 
-  const i32 = scrapDivError ? DIV0 : fmt3(r.scrapPiecesSum);
-  const k31 = netIssuedDenom === 0 ? DIV0 : excelPct0((r.totalPackaged * r.fillRate) / netIssuedDenom);
-  const k32 = scrapDivError || r.bulkIssued === 0 ? DIV0 : excelPct0(r.scrapPiecesSum / r.bulkIssued);
-  const yieldValid = !scrapDivError && netIssuedDenom !== 0;
-  const k33 = yieldValid ? excelPct0(r.finalYieldRatio) : DIV0;
-  const outOfRange = yieldValid && (r.lowYield || r.highYield);
-
-  const flagText = !yieldValid ? ""
-    : r.highYield ? "High Yield NCCAPA___________"
+  const flagText = r.highYield ? "High Yield NCCAPA___________"
     : r.lowYield ? "Low Yield NCCAPA____________" : "";
-  const videoJetText = outOfRange
+  const videoJetText = r.outOfRange
     ? `VideoJet Count:      ${excelGeneral(data.videoJetCount)}       By:___________          Date:_________________`
     : "";
-  const palletText = outOfRange ? PARTIAL_PALLET_TEXT : "";
+  const palletText = r.outOfRange ? PARTIAL_PALLET_TEXT : "";
 
   // Conditional formatting copied from the workbook.
-  const k33Cf = outOfRange ? " cf-bad" : "";
+  const k33Cf = r.outOfRange ? " cf-bad" : "";
   const videoJetCf = Number(data.videoJetCount) ? " cf-yellow" : "";
   const palletCf = palletText === PARTIAL_PALLET_TEXT ? " cf-yellow-white" : "";
 
@@ -375,9 +372,9 @@ function buildPrintSheet() {
     [14.25, xlEmpty(8)],
     [23.25, xlCell("Bulk Reconciliation:", { sz: 18 }) + xlEmpty(7)],
     [30, xlEmpty() + xlCell("Bulk Issued (TH) ", { sz: 24, cls: bb }) + xlCell("", { cls: bb }) + xlCell("", { cls: bb })
-      + xlCell(fmt3(r.bulkIssuedNet), { sz: 24, cls: `al-r ${bb}` }) + xlEmpty(3)],
+      + xlCell(fmtFixed(r.bulkIssuedNet, 3), { sz: 24, cls: `al-r ${bb}` }) + xlEmpty(3)],
     [30, xlEmpty() + xlCell("Bulk Packaged (TH)", { sz: 24, cls: bb }) + xlCell("", { cls: bb }) + xlCell("", { cls: bb })
-      + xlCell(fmt3(r.bulkPackagedTH), { sz: 24, cls: `al-r ${bb}` }) + xlCell("", { cls: bb })
+      + xlCell(fmtFixed(r.bulkPackagedTH, 3), { sz: 24, cls: `al-r ${bb}` }) + xlCell("", { cls: bb })
       + xlCell(k31, { sz: 24, cls: `al-r ${bb}` }) + xlCell("", { cls: bb })],
     [30, xlEmpty() + xlCell("Bulk Scrapped (TH)", { sz: 24, cls: tb }) + xlCell("", { cls: tb }) + xlCell("", { cls: tb })
       + xlCell(i32, { sz: 24, cls: `al-r ${tb}` }) + xlCell("", { cls: tb })
@@ -429,15 +426,12 @@ function buildPrintSheet() {
       + xlCell("PKGN-0140, PKGN-0154", { sz: 11 })]
   ];
 
-  el("printSheet").innerHTML = `
-    <div class="xl-page">
-      <img class="xl-logo" src="assets/pharmavite-logo.png" alt="Pharmavite">
-      ${xlTable(page1)}
-    </div>
-    <div class="xl-page">
-      ${xlTable(page2)}
-    </div>`;
+  el("xlPage1").innerHTML = xlTable(page1);
+  el("xlPage2").innerHTML = xlTable(page2);
 }
+
+// Also covers Ctrl+P and the browser's File > Print, not just the button.
+window.addEventListener("beforeprint", buildPrintSheet);
 
 el("printBtn").addEventListener("click", () => {
   buildPrintSheet();

@@ -17,6 +17,10 @@ list for tracking multiple work orders.
 - **Final Yield %** and the same pass/fail thresholds as the source sheet:
   values below 94.5% or above 102.4999% trigger a **VideoJet Count** flag and
   the matching **Low Yield NCCAPA** / **High Yield NCCAPA** label.
+- **Incomplete sheets** (no Issued Bulk yet, or scrap entered without a Bulk
+  Piece Wt) show a prompt instead of a yield status, where the workbook would
+  show `#DIV/0!`. The printout still shows `#DIV/0!` in those cells, like the
+  workbook.
 - **VideoJet Count** entry (cell B21 in the workbook), printed on the
   VideoJet line when the yield is out of range.
 - **Print report** that reproduces the workbook's print area

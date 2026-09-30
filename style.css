@@ -42,6 +42,7 @@ body {
 .records-panel { grid-column: 1 / -1; }
 
 .panel {
+  min-width: 0;
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -67,6 +68,7 @@ body {
 .hidden { display: none !important; }
 
 fieldset {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   margin-bottom: 16px;
@@ -114,6 +116,7 @@ input:focus {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
 }
@@ -167,6 +170,7 @@ button:hover { filter: brightness(0.97); }
 
 .status-banner.ok { background: var(--ok-bg); color: var(--ok-text); }
 .status-banner.warn { background: var(--warn-bg); color: var(--warn-text); }
+.status-banner.info { background: #eef1f4; color: var(--muted); }
 
 table {
   width: 100%;
@@ -182,6 +186,7 @@ th, td {
 }
 
 .summary-lines p {
+  white-space: pre-wrap;
   font-size: 0.82rem;
   color: var(--muted);
   background: #f8fafc;
@@ -204,6 +209,9 @@ th, td {
 
 .yield-ok { color: var(--ok-text); font-weight: 700; }
 .yield-warn { color: var(--warn-text); font-weight: 700; }
+.yield-na { color: var(--muted); }
+
+.table-scroll { overflow-x: auto; }
 
 .print-sheet { display: none; }
 
@@ -274,6 +282,8 @@ table.xl td.cf-yellow { background: #ffff00; font-weight: 700; }
 table.xl td.cf-yellow-white { background: #ffff00; color: #fff; font-weight: 700; }
 
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
+  .app-header { padding: 16px; }
+  .layout { grid-template-columns: 1fr; padding: 16px; }
+  .panel { padding: 16px; }
   .field-grid { grid-template-columns: 1fr; }
 }
