@@ -37,9 +37,9 @@ function todayISO() {
 // Sheets saved before the bottle breakdown only stored the total, and ones
 // saved before Stability existed have no stability count.
 function withBottleBreakdown(data) {
-  const withStability = data.stability === undefined ? { ...data, stability: "0" } : data;
+  const withStability = data.stability === undefined ? { ...data, stability: "" } : data;
   if (data.qtyCompleted !== undefined) return withStability;
-  return { ...withStability, qtyCompleted: data.totalPackaged ?? "0", retains: "0", donations: "0" };
+  return { ...withStability, qtyCompleted: data.totalPackaged ?? "", retains: "", donations: "" };
 }
 
 // Mirrors the PK030 formulas; `error` is set where Excel would show #DIV/0!.
@@ -152,7 +152,8 @@ function renderResults(r, data) {
 function recalc() {
   const data = collectFormData();
   const r = computeResults(data);
-  data.totalPackaged = String(r.totalPackaged);
+  const bottlesEntered = ["qtyCompleted", "retains", "donations", "stability"].some(id => data[id] !== "");
+  data.totalPackaged = bottlesEntered ? String(r.totalPackaged) : "";
   el("totalPackaged").value = data.totalPackaged;
   renderResults(r, data);
 }
@@ -221,7 +222,7 @@ function applyFormData(record) {
 // cleared if the new item isn't stored.
 const AUTO_FILLS = [
   { input: "pieceWt", hint: "pieceWtHint", source: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", empty: "" },
-  { input: "fillRate", hint: "fillRateHint", source: "fgItem", store: StoredData.fgItems, field: "count", empty: "0" }
+  { input: "fillRate", hint: "fillRateHint", source: "fgItem", store: StoredData.fgItems, field: "count", empty: "" }
 ];
 
 function markManual(fill) {
