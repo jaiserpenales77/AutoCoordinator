@@ -8,7 +8,8 @@ let editingId = null;
 
 const fields = [
   "fgItem", "woNumber", "bulkItem", "dateCreated",
-  "totalPackaged", "fillRate", "bulkRejected", "bulkIssued",
+  "qtyCompleted", "retains", "donations", "totalPackaged",
+  "fillRate", "bulkRejected", "bulkIssued",
   "pieceWt", "tareWeight", "scrap1", "scrap2", "scrap3", "mfgScrap",
   "videoJetCount"
 ];
@@ -34,8 +35,15 @@ function todayISO() {
 }
 
 // Mirrors the PK030 formulas; `error` is set where Excel would show #DIV/0!.
-function computeResults(data) {
-  const totalPackaged = toNum(data.totalPackaged);
+// Sheets saved before Retains/Donations existed only stored the total.
+function withBottleBreakdown(data) {
+  if (data.qtyCompleted !== undefined) return data;
+  return { ...data, qtyCompleted: data.totalPackaged ?? "0", retains: "0", donations: "0" };
+}
+
+function computeResults(input) {
+  const data = withBottleBreakdown(input);
+  const totalPackaged = toNum(data.qtyCompleted) + toNum(data.retains) + toNum(data.donations);
   const fillRate = toNum(data.fillRate);
   const bulkRejected = toNum(data.bulkRejected);
   const bulkIssued = toNum(data.bulkIssued);
@@ -137,7 +145,10 @@ function renderResults(r, data) {
 
 function recalc() {
   const data = collectFormData();
-  renderResults(computeResults(data), data);
+  const r = computeResults(data);
+  data.totalPackaged = String(r.totalPackaged);
+  el("totalPackaged").value = data.totalPackaged;
+  renderResults(r, data);
 }
 
 fields.forEach(id => {
@@ -162,7 +173,8 @@ function collectFormData() {
   return data;
 }
 
-function applyFormData(data) {
+function applyFormData(record) {
+  const data = withBottleBreakdown(record);
   fields.forEach(id => { el(id).value = data[id] ?? (id === "tareWeight" ? 6 : ""); });
   recalc();
 }
@@ -439,7 +451,7 @@ el("printBtn").addEventListener("click", () => {
   window.print();
 });
 
-const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "totalPackaged", "bulkIssued", "bulkRejected"];
+const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "qtyCompleted", "bulkIssued", "bulkRejected"];
 
 function renderImportLog(log) {
   el("importLog").innerHTML = log
@@ -482,7 +494,7 @@ async function importPdfs(fileList) {
       flashField(el(id));
     });
     recalc();
-    log.push({ level: "info", text: "Still to enter by hand: Count, Bulk Piece Wt and the scrap weights." });
+    log.push({ level: "info", text: "Still to enter by hand: Retains, Donations, Count, Bulk Piece Wt and the scrap weights." });
   }
   renderImportLog(log);
 }

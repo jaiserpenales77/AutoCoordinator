@@ -39,14 +39,17 @@ Drop the work order's report PDFs on **Import from JDE Reports** (or use
 | Yield sheet field | Taken from |
 |---|---|
 | FG Item, WO # | Either report |
-| Total Packaged (Bottles) | Packaging Pallet Transfers (R593111FG) — `Total Qty.` |
+| Quantity Completed (Bottles) | WO Close-out (R5504801) — Quantity Completed |
 | Bulk Item | WO Close-out (R5504801) — the `BU…` row in Issues |
 | Issued Bulk (TH) | WO Close-out — that row's Issued Quantity |
 | Bulk Rejected/Returned (TH) | WO Close-out — that row's Return Quantity (blank = 0) |
 
-If only the Close-out is imported, Total Packaged falls back to its Quantity
-Completed. Reports for different work orders are refused. The Charge Report
-(R593111CV) isn't needed.
+**Total Bottles Produced** (the workbook's Total Packaged) is calculated as
+Quantity Completed + Retains + Donations; Retains and Donations are entered by
+hand. If no Close-out is imported, Quantity Completed falls back to the
+Packaging Pallet Transfers (R593111FG) `Total Qty.`, and the app flags any
+difference between the two. Reports for different work orders are refused.
+The Charge Report (R593111CV) isn't needed.
 
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) remain manual

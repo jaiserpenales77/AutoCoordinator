@@ -144,6 +144,11 @@ input {
   background: #fbfcfd;
 }
 
+input[readonly] {
+  background: #eef1f4;
+  font-weight: 600;
+}
+
 input:focus {
   outline: none;
   border-color: var(--accent);

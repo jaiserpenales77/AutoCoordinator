@@ -52,8 +52,19 @@
       <fieldset>
         <legend>Bulk Reconciliation</legend>
         <div class="field-grid">
-          <label>Total Packaged (Bottles)
-            <input type="number" id="totalPackaged" step="any" min="0" value="0">
+          <label>Quantity Completed (Bottles)
+            <input type="number" id="qtyCompleted" step="any" min="0" value="0">
+            <small>From the WO Close-out.</small>
+          </label>
+          <label>Retains (Bottles)
+            <input type="number" id="retains" step="any" min="0" value="0">
+          </label>
+          <label>Donations (Bottles)
+            <input type="number" id="donations" step="any" min="0" value="0">
+          </label>
+          <label>Total Bottles Produced
+            <input type="number" id="totalPackaged" readonly tabindex="-1">
+            <small>Quantity Completed + Retains + Donations.</small>
           </label>
           <label>Count (Fill Rate)
             <input type="number" id="fillRate" step="any" min="0" value="0">

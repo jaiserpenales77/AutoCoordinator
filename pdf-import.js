@@ -196,8 +196,6 @@ const PdfImport = (() => {
     if (pallet) {
       if (pallet.totalPackaged === null) {
         log.push({ level: "warn", text: `${pallet.file.name}: no "Total Qty." found.` });
-      } else {
-        values.totalPackaged = pallet.totalPackaged;
       }
       log.push({ level: "ok", text: `Packaging Pallet Transfers: WO ${pallet.woNumber ?? "?"}, FG ${pallet.fgItem ?? "?"}${pallet.description ? ` (${pallet.description})` : ""}, Total Qty ${fmtNum(pallet.totalPackaged)}.` });
     }
@@ -214,16 +212,24 @@ const PdfImport = (() => {
       } else {
         log.push({ level: "warn", text: `${closeout.file.name}: no bulk (BU…) item found in the Issues table.` });
       }
-      if (values.totalPackaged === undefined && closeout.completed !== null) {
-        values.totalPackaged = closeout.completed;
-        log.push({ level: "warn", text: `No Pallet Transfers report, so Total Packaged uses the Close-out Quantity Completed (${fmtNum(closeout.completed)}).` });
-      } else if (pallet && pallet.totalPackaged !== null && closeout.completed !== null
-        && pallet.totalPackaged !== closeout.completed) {
-        log.push({ level: "warn", text: `Pallet Transfers total (${fmtNum(pallet.totalPackaged)}) doesn't match Close-out Quantity Completed (${fmtNum(closeout.completed)}); used the Pallet Transfers total.` });
+      if (closeout.completed === null) {
+        log.push({ level: "warn", text: `${closeout.file.name}: no Quantity Completed found.` });
       }
       if (closeout.jdeYield !== null) {
         log.push({ level: "info", text: `JDE WO yield: ${fmtNum(closeout.jdeYield)}% (expected ${fmtNum(closeout.expected)}, completed ${fmtNum(closeout.completed)}).` });
       }
+    }
+
+    const completed = closeout?.completed ?? null;
+    const palletTotal = pallet?.totalPackaged ?? null;
+    if (completed !== null) {
+      values.qtyCompleted = completed;
+      if (palletTotal !== null && palletTotal !== completed) {
+        log.push({ level: "warn", text: `Pallet Transfers total (${fmtNum(palletTotal)}) doesn't match Close-out Quantity Completed (${fmtNum(completed)}); used the Close-out.` });
+      }
+    } else if (palletTotal !== null) {
+      values.qtyCompleted = palletTotal;
+      log.push({ level: "warn", text: `No Close-out Quantity Completed, so Quantity Completed uses the Pallet Transfers total (${fmtNum(palletTotal)}).` });
     }
 
     return { values, log };
