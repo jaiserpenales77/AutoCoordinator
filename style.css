@@ -562,7 +562,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .br-input.hold-input:focus { outline: 2px solid #000; background: rgba(255, 255, 255, 0.3); }
 .br-input.hold-input::placeholder { color: rgba(0, 0, 0, 0.45); }
-.br-input.hold-multi { resize: none; overflow: hidden; line-height: 26pt; padding-top: 2pt; }
+.br-input.hold-multi { resize: none; overflow: hidden; padding-bottom: 0; text-align: center; }
 .hold-print { display: none; }
 .hold-print .br-print-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 

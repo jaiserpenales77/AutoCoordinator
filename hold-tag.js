@@ -53,7 +53,11 @@ const HoldTag = (() => {
     dlInit: [645.5, 757.5, 441.9, 492.2, 467.88, 1, "DL Init"]
   };
   const VALUE_SIZE = 20;
-  const LINE_GAP = 26;
+  // Work Order/Lot #, Tote/Pallet # and Reason/Comment: large text, centred
+  // in the box, shrinking only as much as needed to fit.
+  const BIG_SIZE = 40;
+  const BIG_LEADING = 1.15;
+  const PAD = 3; // pt each side, as on the screen boxes
 
   const state = { values: {} };
 
@@ -83,31 +87,58 @@ const HoldTag = (() => {
 
   // Word-wraps an entry to the field's width, shrinking it until it fits the
   // field's lines.
-  function layout(text, room, maxLines) {
-    for (let size = VALUE_SIZE; ; size -= 1) {
-      const lines = [];
-      for (const para of text.split("\n")) {
-        let line = "";
-        for (const word of para.split(/\s+/).filter(Boolean)) {
-          const next = line ? `${line} ${word}` : word;
-          if (line && widthPt(next, size) > room) { lines.push(line); line = word; } else line = next;
-        }
-        lines.push(line);
+  function wrap(text, size, room) {
+    const lines = [];
+    for (const para of text.split("\n")) {
+      let line = "";
+      for (const word of para.split(/\s+/).filter(Boolean)) {
+        const next = line ? `${line} ${word}` : word;
+        if (line && widthPt(next, size) > room) { lines.push(line); line = word; } else line = next;
       }
-      const fits = lines.length <= maxLines && lines.every(l => widthPt(l, size) <= room);
-      if (fits || size <= 8) return { size, lines: lines.slice(0, maxLines) };
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  // A one-line entry, shrunk if it's wider than its box.
+  function layoutLine(text, room) {
+    for (let size = VALUE_SIZE; ; size -= 1) {
+      if (widthPt(text, size) <= room || size <= 8) return size;
     }
   }
 
+  // A multi-line entry: the largest size whose wrapped lines fit the box.
+  function layoutBig(text, room, height) {
+    for (let size = BIG_SIZE; ; size -= 1) {
+      const lines = wrap(text, size, room);
+      const gap = size * BIG_LEADING;
+      const fits = lines.length * gap <= height && lines.every(l => widthPt(l, size) <= room);
+      if (fits || size <= 8) return { size, gap, lines };
+    }
+  }
+
+  const isBig = id => FIELDS[id][5] > 1;
+  const bigBox = id => {
+    const [x0, x1, top, bottom] = FIELDS[id];
+    return { room: x1 - x0 - 2 * PAD, height: bottom - top - 4 };
+  };
+
   // The entries, written onto the tag (printout only; on screen they're inputs).
   function valuesSvg() {
-    return Object.entries(FIELDS).map(([id, [x0, x1, , , base, maxLines]]) => {
+    return Object.entries(FIELDS).map(([id, [x0, x1, top, bottom, base]]) => {
       const text = String(state.values[id] ?? "").trim();
       if (!text) return "";
-      const { size, lines } = layout(text, x1 - x0, maxLines);
-      const gap = Math.min(LINE_GAP, size * 1.3);
+      if (!isBig(id)) {
+        const size = layoutLine(text, x1 - x0 - PAD);
+        return `<text x="${x0 + PAD}" y="${base}" font-size="${size}">${escapeHtml(text)}</text>`;
+      }
+      // Centred: each line's middle on its slot, the block in the middle of the box.
+      const { room, height } = bigBox(id);
+      const { size, gap, lines } = layoutBig(text, room, height);
+      const cx = (x0 + x1) / 2;
+      const first = (top + bottom) / 2 - (lines.length * gap) / 2;
       return lines.map((line, i) => line
-        ? `<text x="${x0}" y="${(base + i * gap).toFixed(2)}" font-size="${size}">${escapeHtml(line)}</text>`
+        ? `<text x="${cx.toFixed(2)}" y="${(first + gap * (i + 0.5) + size * 0.32).toFixed(2)}" font-size="${size}" text-anchor="middle">${escapeHtml(line)}</text>`
         : "").join("");
     }).join("");
   }
@@ -131,7 +162,20 @@ const HoldTag = (() => {
 
   // The printed copy is kept up to date as the tag is filled in, so it's ready
   // (logo loaded) whenever printing starts.
+  // On screen the multi-line boxes use the printout's size, line spacing and
+  // centring, so what's typed looks as it will print.
+  function fitBigInput(input) {
+    const id = input.dataset.field;
+    const text = input.value.trim();
+    const { height } = bigBox(id);
+    const { size, gap, lines } = text ? layoutBig(text, bigBox(id).room, height) : { size: BIG_SIZE, gap: BIG_SIZE * BIG_LEADING, lines: [""] };
+    input.style.fontSize = `${size}pt`;
+    input.style.lineHeight = `${gap.toFixed(2)}pt`;
+    input.style.paddingTop = `${Math.max(0, (height + 4 - lines.length * gap) / 2).toFixed(2)}pt`;
+  }
+
   function renderValues() {
+    tab.querySelectorAll(".hold-multi").forEach(fitBigInput);
     copy.querySelector(".hold-values").innerHTML = valuesSvg();
   }
 
