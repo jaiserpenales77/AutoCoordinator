@@ -55,7 +55,7 @@ const HoldTag = (() => {
   const VALUE_SIZE = 20;
   // Work Order/Lot #, Tote/Pallet # and Reason/Comment: large text, centred
   // in the box, shrinking only as much as needed to fit.
-  const BIG_SIZE = 40;
+  const BIG_SIZE = 34;
   const BIG_LEADING = 1.15;
   const PAD = 3; // pt each side, as on the screen boxes
 

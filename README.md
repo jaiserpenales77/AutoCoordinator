@@ -82,7 +82,7 @@ type, ready to copy onto the card:
 - **HOLD TAG** — the QA263C [ALL] QA Hold Tag, drawn to the tag PDF's exact
   measurements (red page, Calibri text, table, logo, footer). Type in the value
   boxes; Work Order/Lot #, Tote/Pallet # and Reason/Comment print large (up to
-  40 pt) and centred in their box, taking several lines and shrinking only as
+  34 pt) and centred in their box, taking several lines and shrinking only as
   much as needed to fit. An empty Date starts with today. **Fill from Yield Sheet**
   copies the FG Item (as Item #) and W.O. # (as Work Order/Lot #). **Print
   Hold Tag** (or printing while on this tab) prints the tag with its red
