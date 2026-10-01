@@ -538,6 +538,20 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .br-choice:hover, .br-choice:focus-visible { border-color: #2563eb; filter: none; outline: none; }
 .br-print { display: none; }
 
+/* Unplanned Issue: two paper pages, using the Bulk Return sheet styles. */
+.sheet-page-label { margin: 12px 0 4px; font-size: 0.8rem; color: var(--muted); text-align: center; }
+.br-input.up-left { text-align: left; font-size: 10pt; }
+.br-input.up-cell { font-size: 9.5pt; padding: 0 1pt; }
+.up-rownum {
+  position: absolute;
+  left: 38pt;
+  width: 12pt;
+  font: 8pt Arial, "Liberation Sans", Helvetica, sans-serif;
+  color: #9aa5b1;
+  text-align: right;
+}
+.up-print { display: none; }
+
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }
 
@@ -578,6 +592,8 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   height: 8.5in;
   overflow: hidden;
 }
+.up-print .br-print-page { break-after: page; }
+.up-print .br-print-page:last-child { break-after: auto; }
 .br-print-page .br-svg { position: absolute; inset: 0; width: 11in; height: 8.5in; }
 
 /* The Bulk Calculator report: one portrait page per bulk, like the original
@@ -630,7 +646,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 @media print {
   .app-header, .tabs, .layout { display: none !important; }
   body[data-print="calc"] .print-sheet,
-  body[data-print="bulkReturn"] .print-sheet { display: none !important; }
+  body[data-print="bulkReturn"] .print-sheet,
+  body[data-print="unplanned"] .print-sheet { display: none !important; }
+  body[data-print="unplanned"] .up-print { display: block; }
   body[data-print="calc"] .calc-print { display: block; }
   body[data-print="bulkReturn"] .br-print { display: block; }
   html, body { background: #fff; margin: 0; height: auto; }

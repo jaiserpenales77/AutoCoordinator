@@ -62,7 +62,15 @@ type, ready to copy onto the card:
 
 ## Other tabs
 
-- **Unplanned Issue** — placeholder for now.
+- **Unplanned Issue** — the [VALA] Unplanned Issue Request Form (PK007B),
+  drawn to the form PDF's exact measurements on its two Letter landscape pages
+  (the Comments box continues on page 2, as the spreadsheet prints). Type in
+  the header blanks, the 10-line table and the comment lines, and click the
+  line next to "Unplanned Issue" or "Unplanned Issue to Work Order" to mark it
+  with an X. An empty Date starts with today; long table entries print on two
+  lines in their cell. **Fill from Yield Sheet** puts the yield sheet's W.O. #
+  in Work Order # on every line with a Part No. **Print Unplanned Issue** (or
+  printing while on this tab) prints both pages.
 - **Bulk Return** — the PK120A [VALA] Packaging - Bulk Return form (QS106A),
   drawn to the paper form's exact measurements (logo, fonts, table, blanks,
   footer). Type in the blanks and click a reason to circle it; an empty Date
@@ -242,7 +250,9 @@ new password. To remove someone's access, delete (or disable) their user.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `bulk-calc.js` — the Bulk Calculator tab.
 - `bulk-return.js` — the Bulk Return tab's form.
+- `unplanned-issue.js` — the Unplanned Issue tab's form.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
+- `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
 - `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
