@@ -86,7 +86,8 @@ type, ready to copy onto the card:
   much as needed to fit. An empty Date starts with today. **Fill from Yield Sheet**
   copies the FG Item (as Item #) and W.O. # (as Work Order/Lot #). **Print
   Hold Tag** (or printing while on this tab) prints the tag with its red
-  background.
+  background; turn off **Red background** to print it black on a clear page,
+  for red paper (remembered on that computer).
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,

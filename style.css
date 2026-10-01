@@ -564,6 +564,12 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .br-input.hold-input::placeholder { color: rgba(0, 0, 0, 0.45); }
 .br-input.hold-multi { resize: none; overflow: hidden; padding-bottom: 0; text-align: center; }
 .hold-print { display: none; }
+.hold-red-toggle { margin-top: 0; }
+/* Red background off: black on a clear page, for printing on red paper. */
+.hold-plain .hold-bg { display: none; }
+.hold-plain .hold-sheet { background: #fff; }
+.hold-plain .br-input.hold-input { background: rgba(37, 99, 235, 0.07); }
+.hold-plain .br-input.hold-input:focus { background: rgba(37, 99, 235, 0.12); }
 .hold-print .br-print-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }

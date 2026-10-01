@@ -68,7 +68,7 @@ const HoldTag = (() => {
 
   function tagSvg() {
     return `<svg class="br-svg" viewBox="0 0 792 612" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect width="792" height="612" fill="${RED}"/>
+      <rect class="hold-bg" width="792" height="612" fill="${RED}"/>
       <image href="assets/pharmavite-logo-qa263c.png" x="59.65" y="41.66" width="88.95" height="88.95"/>
       <g fill="#000" font-family='${CALIBRI}'>${TEXT.map(svgText).join("")}</g>
       <g fill="#000">
@@ -232,6 +232,21 @@ const HoldTag = (() => {
   });
 
   el("holdPrintBtn").addEventListener("click", () => window.print());
+
+  // Red background on (the tag as designed) or off, to print on red paper.
+  // The choice is kept on this computer.
+  const RED_KEY = "pk030_hold_red_background";
+  function applyRed(on) {
+    el("holdRedToggle").checked = on;
+    [tab, el("holdPrint")].forEach(e => e.classList.toggle("hold-plain", !on));
+  }
+  let redOn = true;
+  try { redOn = localStorage.getItem(RED_KEY) !== "off"; } catch { /* default: red */ }
+  applyRed(redOn);
+  el("holdRedToggle").addEventListener("change", e => {
+    applyRed(e.target.checked);
+    try { localStorage.setItem(RED_KEY, e.target.checked ? "on" : "off"); } catch { /* still applies for this visit */ }
+  });
 
   // Printing from this tab (the button, Ctrl+P or the browser menu) prints
   // the tag instead of the yield sheet.

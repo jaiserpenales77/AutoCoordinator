@@ -375,11 +375,15 @@
       <h2>HOLD TAG</h2>
       <div class="actions br-actions">
         <button type="button" id="holdFillBtn">Fill from Yield Sheet</button>
+        <label class="check-inline hold-red-toggle">
+          <input type="checkbox" id="holdRedToggle" checked>
+          <span>Red background</span>
+        </label>
         <button type="button" id="holdClearBtn">Clear</button>
         <button type="button" id="holdPrintBtn" class="primary">Print Hold Tag</button>
       </div>
     </div>
-    <p class="muted">QA263C [ALL] QA Hold Tag. Type in the boxes; Work Order/Lot #, Tote/Pallet # and Reason/Comment take several lines. It prints like the paper tag, red page included.</p>
+    <p class="muted">QA263C [ALL] QA Hold Tag. Type in the boxes; Work Order/Lot #, Tote/Pallet # and Reason/Comment take several lines. It prints like the paper tag, red page included; turn off Red background to print on red paper.</p>
     <p id="holdMsg" class="form-msg"></p>
     <div id="holdSheetWrap" class="br-sheet-wrap">
       <div id="holdSheet" class="br-sheet hold-sheet"></div>
