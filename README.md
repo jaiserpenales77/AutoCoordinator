@@ -63,14 +63,15 @@ type, ready to copy onto the card:
 ## Other tabs
 
 - **Unplanned Issue** — the [VALA] Unplanned Issue Request Form (PK007B),
-  drawn to the form PDF's exact measurements on its two Letter landscape pages
-  (the Comments box continues on page 2, as the spreadsheet prints). Type in
+  drawn to the form PDF's exact measurements on one Letter landscape page (the
+  spreadsheet's PDF spills the end of its Comments box onto a second page; here
+  it's joined back on and the form sits 0.5 in higher). Type in
   the header blanks, the 10-line table and the comment lines, and click the
   line next to "Unplanned Issue" or "Unplanned Issue to Work Order" to mark it
   with an X. An empty Date starts with today; long table entries print on two
   lines in their cell. **Fill from Yield Sheet** puts the yield sheet's W.O. #
   in Work Order # on every line with a Part No. **Print Unplanned Issue** (or
-  printing while on this tab) prints both pages.
+  printing while on this tab) prints the page.
 - **Bulk Return** — the PK120A [VALA] Packaging - Bulk Return form (QS106A),
   drawn to the paper form's exact measurements (logo, fonts, table, blanks,
   footer). Type in the blanks and click a reason to circle it; an empty Date

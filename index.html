@@ -342,13 +342,10 @@
         <button type="button" id="upPrintBtn" class="primary">Print Unplanned Issue</button>
       </div>
     </div>
-    <p class="muted">[VALA] Unplanned Issue Request Form (PK007B). Type in the blanks and table, and click a line next to the issue type to mark it with an X; it prints on two pages exactly like the paper form (the Comments box continues on page 2).</p>
+    <p class="muted">[VALA] Unplanned Issue Request Form (PK007B). Type in the blanks and table, and click a line next to the issue type to mark it with an X; it prints on one page like the paper form.</p>
     <p id="upMsg" class="form-msg"></p>
     <div id="upSheetWrap" class="br-sheet-wrap">
-      <p class="sheet-page-label">Page 1</p>
-      <div id="upSheet1" class="br-sheet"></div>
-      <p class="sheet-page-label">Page 2</p>
-      <div id="upSheet2" class="br-sheet"></div>
+      <div id="upSheet" class="br-sheet"></div>
     </div>
   </section>
 </div>
@@ -424,8 +421,7 @@
 <div id="calcPrint" class="calc-print"></div>
 <div id="brPrint" class="br-print"></div>
 <div id="upPrint" class="up-print">
-  <div id="upPrint1" class="br-print-page"></div>
-  <div id="upPrint2" class="br-print-page"></div>
+  <div id="upPrintPage" class="br-print-page"></div>
 </div>
 
 <script src="stored-data.js"></script>

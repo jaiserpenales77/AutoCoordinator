@@ -1,8 +1,9 @@
 // Unplanned Issue tab: the [VALA] Unplanned Issue Request Form (PK007B), drawn
-// to the same measurements as the form's PDF (an Excel sheet printed on two
-// Letter landscape pages, in pt from the top-left of each page; its Comments
-// box runs onto page 2). On screen the blanks and table cells are fillable;
-// printing gives both pages with the entries filled in.
+// to the same measurements as the form's PDF (an Excel sheet printed on Letter
+// landscape, in pt from the top-left of the page), fitted onto one page: the
+// PDF's page 2 holds the rest of its Comments box, which is joined back on.
+// On screen the blanks and table cells are fillable; printing gives the page
+// with the entries filled in.
 // Uses el, escapeHtml, showMsg, todayISO and formatDateMMDDYY from app.js.
 const UnplannedIssue = (() => {
   const SANS = `Arial, "Liberation Sans", Helvetica, sans-serif`;
@@ -91,6 +92,27 @@ const UnplannedIssue = (() => {
   const PAGE1_DASHES = [[131.28, 730.56, 538.56]];
   const PAGE2_DASHES = [[131.04, 730.32, 72], [131.04, 730.32, 90.48]];
 
+  // One page: the PDF's page 2 joins page 1 where the Comments box continues
+  // (page 2's top dashed line is page 1's last one, and its x positions run
+  // 0.24 pt left), and everything but the "Page 1" footer moves up 36 pt into
+  // the top margin to make room. Sizes are unchanged.
+  const UP = 36;
+  const P2_DOWN = 538.56 - 72, P2_RIGHT = 0.24;
+  const up = y => +(y - UP).toFixed(2);
+  const p2 = y => up(y + P2_DOWN);
+  const TEXT = [
+    ...PAGE1_TEXT.map(([s, x, b, ...rest]) => [s, x, s === "Page 1" ? b : up(b), ...rest]),
+    ...PAGE2_TEXT.filter(t => t[0] !== "Page 2").map(([s, x, b, size, font, end]) => [s, x + P2_RIGHT, p2(b), size, font, end + P2_RIGHT])
+  ];
+  const LINES = [
+    ...PAGE1_LINES.map(([x, y, w, h]) => [x, up(y), w, h]),
+    ...PAGE2_LINES.map(([x, y, w, h]) => [+(x + P2_RIGHT).toFixed(2), p2(y), w, h])
+  ];
+  const DASHES = [
+    ...PAGE1_DASHES.map(([x0, x1, y]) => [x0, x1, up(y)]),
+    ...PAGE2_DASHES.slice(1).map(([x0, x1, y]) => [x0 + P2_RIGHT, x1 + P2_RIGHT, p2(y)])
+  ];
+
   // Header blanks: id -> [x from, x to, baseline] of their underscores.
   const BLANKS = {
     date: [81.48, 263.78, 181.92],
@@ -100,6 +122,7 @@ const UnplannedIssue = (() => {
     timePulled: [344.59, 478.04, 200.64],
     inputBy: [328.34, 478.08, 221.04]
   };
+  Object.values(BLANKS).forEach(b => { b[2] = up(b[2]); });
   const BLANK_LABELS = {
     date: "Date", originatedBy: "Originated By", receivedBy: "Received By",
     pulledBy: "Pulled By", timePulled: "Time Pulled", inputBy: "Input By"
@@ -109,6 +132,7 @@ const UnplannedIssue = (() => {
     ["Unplanned Issue", 507.36, 571.68, 654.23, 181.92],
     ["Unplanned Issue to Work Order", 507.36, 571.68, 724.71, 221.04]
   ];
+  TYPES.forEach(t => { t[4] = up(t[4]); });
 
   // The table: 10 columns between these lines, 10 rows of 25.44 pt.
   const COLS = [
@@ -118,12 +142,16 @@ const UnplannedIssue = (() => {
     ["location", "Location From"], ["workOrder", "Work Order #"]
   ];
   const COL_X = [54.24, 129.84, 226.8, 282.72, 338.64, 394.56, 450.48, 506.4, 570.96, 635.52, 730.08];
-  const ROW_Y = [265.68, 291.12, 316.56, 342, 367.44, 392.88, 418.32, 443.76, 469.2, 494.64, 519.6];
+  const ROW_Y = [265.68, 291.12, 316.56, 342, 367.44, 392.88, 418.32, 443.76, 469.2, 494.64, 519.6].map(up);
   const ROWS = ROW_Y.length - 1;
   const WORK_ORDER_COL = 9;
 
-  // Comment lines: [page, x from, x to, top, bottom].
-  const COMMENTS = [[1, 131.28, 729.6, 521.52, 538.56], [2, 131.04, 729.6, 72.96, 90.48], [2, 131.04, 729.6, 91.44, 108.96]];
+  // Comment lines: [x from, x to, top, bottom]; the last two from the PDF's page 2.
+  const COMMENTS = [
+    [131.28, 729.6, up(521.52), up(538.56)],
+    [131.28, 729.6, p2(72.96), p2(90.48)],
+    [131.28, 729.6, p2(91.44), p2(108.96)]
+  ];
 
   const state = { values: {}, type: "" };
   const cellId = (row, col) => `r${row}_${COLS[col][0]}`;
@@ -133,18 +161,12 @@ const UnplannedIssue = (() => {
       + ` textLength="${(end - x).toFixed(2)}" lengthAdjust="spacingAndGlyphs">${escapeHtml(text)}</text>`;
   }
 
-  function pageSvg(page) {
-    const [text, lines, dashes] = page === 1
-      ? [PAGE1_TEXT, PAGE1_LINES, PAGE1_DASHES]
-      : [PAGE2_TEXT, PAGE2_LINES, PAGE2_DASHES];
-    const logo = page === 1
-      ? `<image href="assets/pharmavite-logo-pk007b.jpg" x="54" y="79.44" width="133.92" height="68.88" preserveAspectRatio="none"/>`
-      : "";
+  function pageSvg() {
     return `<svg class="br-svg" viewBox="0 0 792 612" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      ${logo}
-      <g fill="#000" font-family='${SANS}'>${text.map(svgText).join("")}</g>
-      <g fill="#000">${lines.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`).join("")}</g>
-      <g stroke="#000" stroke-width="0.96" stroke-dasharray="2.88 0.96">${dashes.map(([x0, x1, y]) =>
+      <image href="assets/pharmavite-logo-pk007b.jpg" x="54" y="${up(79.44)}" width="133.92" height="68.88" preserveAspectRatio="none"/>
+      <g fill="#000" font-family='${SANS}'>${TEXT.map(svgText).join("")}</g>
+      <g fill="#000">${LINES.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`).join("")}</g>
+      <g stroke="#000" stroke-width="0.96" stroke-dasharray="2.88 0.96">${DASHES.map(([x0, x1, y]) =>
         `<line x1="${x0}" y1="${y + 0.48}" x2="${x1}" y2="${y + 0.48}"/>`).join("")}</g>
       <g class="up-values" fill="#000" font-family='${SANS}' font-weight="700"></g>
     </svg>`;
@@ -187,61 +209,54 @@ const UnplannedIssue = (() => {
   const typeMark = () => TYPES.filter(t => t[0] === state.type)
     .map(([, x0, x1, , base]) => textAt("X", (x0 + x1) / 2, base, 11, "middle", 60)).join("");
 
-  // The entries, written onto a page (printout only; on screen they're inputs).
-  function valuesSvg(page) {
+  // The entries, written onto the form (printout only; on screen they're inputs).
+  function valuesSvg() {
     const v = id => String(state.values[id] ?? "").trim();
-    let out = "";
-    if (page === 1) {
-      out += Object.entries(BLANKS).map(([id, [x0, x1, base]]) => textAt(v(id), x0 + 4, base - 1.5, 10, "start", x1 - x0 - 6)).join("");
-      out += typeMark();
-      for (let row = 0; row < ROWS; row++) {
-        COLS.forEach((c, col) => {
-          const x0 = COL_X[col] + 0.96, x1 = COL_X[col + 1];
-          out += cellText(v(cellId(row, col)), (x0 + x1) / 2, ROW_Y[row] + 0.96, ROW_Y[row + 1], x1 - x0 - 4);
-        });
-      }
+    let out = Object.entries(BLANKS).map(([id, [x0, x1, base]]) => textAt(v(id), x0 + 4, base - 1.5, 10, "start", x1 - x0 - 6)).join("");
+    out += typeMark();
+    for (let row = 0; row < ROWS; row++) {
+      COLS.forEach((c, col) => {
+        const x0 = COL_X[col] + 0.96, x1 = COL_X[col + 1];
+        out += cellText(v(cellId(row, col)), (x0 + x1) / 2, ROW_Y[row] + 0.96, ROW_Y[row + 1], x1 - x0 - 4);
+      });
     }
-    out += COMMENTS.map(([p, x0, x1, , bottom], i) =>
-      p === page ? textAt(v(`comment${i}`), x0 + 3, bottom - 4, 10, "start", x1 - x0 - 6) : "").join("");
+    out += COMMENTS.map(([x0, x1, , bottom], i) => textAt(v(`comment${i}`), x0 + 3, bottom - 4, 10, "start", x1 - x0 - 6)).join("");
     return out;
   }
 
-  // The fillable layer for a page on screen.
-  function inputsHtml(page) {
+  // The fillable layer on screen.
+  function inputsHtml() {
     const box = (id, label, x0, x1, top, height, cls) =>
       `<input type="text" class="br-input ${cls}" data-field="${id}" autocomplete="off" spellcheck="false"
         style="left:${x0.toFixed(2)}pt;width:${(x1 - x0).toFixed(2)}pt;top:${top.toFixed(2)}pt;height:${height.toFixed(2)}pt"
         aria-label="${escapeHtml(label)}"${id === "date" ? ' placeholder="MM/DD/YY"' : ""}>`;
-    let out = "";
-    if (page === 1) {
-      out += Object.entries(BLANKS).map(([id, [x0, x1, base]]) => box(id, BLANK_LABELS[id], x0, x1, base - 12.5, 14, "up-left")).join("");
-      out += TYPES.map(([label, x0, , end, base]) =>
-        `<button type="button" class="br-choice up-type" data-type="${escapeHtml(label)}"
-          style="left:${(x0 - 2).toFixed(2)}pt;width:${(end - x0 + 6).toFixed(2)}pt;top:${(base - 13).toFixed(2)}pt;height:17pt"
-          title="Mark ${escapeHtml(label)}" aria-pressed="false"></button>`).join("");
-      for (let row = 0; row < ROWS; row++) {
-        const top = ROW_Y[row] + 3, height = ROW_Y[row + 1] - ROW_Y[row] - 5;
-        out += `<span class="up-rownum" style="top:${(top + 5).toFixed(2)}pt">${row + 1}</span>`;
-        COLS.forEach(([, label], col) => {
-          out += box(cellId(row, col), `Line ${row + 1} ${label}`, COL_X[col] + 3, COL_X[col + 1] - 2, top, height, "up-cell");
-        });
-      }
+    let out = Object.entries(BLANKS).map(([id, [x0, x1, base]]) => box(id, BLANK_LABELS[id], x0, x1, base - 12.5, 14, "up-left")).join("");
+    out += TYPES.map(([label, x0, , end, base]) =>
+      `<button type="button" class="br-choice up-type" data-type="${escapeHtml(label)}"
+        style="left:${(x0 - 2).toFixed(2)}pt;width:${(end - x0 + 6).toFixed(2)}pt;top:${(base - 13).toFixed(2)}pt;height:17pt"
+        title="Mark ${escapeHtml(label)}" aria-pressed="false"></button>`).join("");
+    for (let row = 0; row < ROWS; row++) {
+      const top = ROW_Y[row] + 3, height = ROW_Y[row + 1] - ROW_Y[row] - 5;
+      out += `<span class="up-rownum" style="top:${(top + 5).toFixed(2)}pt">${row + 1}</span>`;
+      COLS.forEach(([, label], col) => {
+        out += box(cellId(row, col), `Line ${row + 1} ${label}`, COL_X[col] + 3, COL_X[col + 1] - 2, top, height, "up-cell");
+      });
     }
-    out += COMMENTS.map(([p, x0, x1, top, bottom], i) =>
-      p === page ? box(`comment${i}`, `Comments line ${i + 1}`, x0, x1, top + 1, bottom - top - 2, "up-left") : "").join("");
+    out += COMMENTS.map(([x0, x1, top, bottom], i) =>
+      box(`comment${i}`, `Comments line ${i + 1}`, x0, x1, top + 1, bottom - top - 2, "up-left")).join("");
     return out;
   }
 
   const tab = el("unplannedTab");
-  const sheets = [el("upSheet1"), el("upSheet2")];
-  const copies = [el("upPrint1"), el("upPrint2")];
+  const sheet = el("upSheet");
+  const copy = el("upPrintPage");
 
   // The printed copy is kept up to date as the form is filled in (not built
   // when printing starts), so its logo has already loaded by then.
   function renderValues() {
-    copies.forEach((copy, i) => { copy.querySelector(".up-values").innerHTML = valuesSvg(i + 1); });
-    sheets[0].querySelector(".up-values").innerHTML = typeMark();
-    sheets[0].querySelectorAll(".up-type").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.type === state.type)));
+    copy.querySelector(".up-values").innerHTML = valuesSvg();
+    sheet.querySelector(".up-values").innerHTML = typeMark();
+    sheet.querySelectorAll(".up-type").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.type === state.type)));
   }
 
   function setValue(id, value) {
@@ -250,16 +265,16 @@ const UnplannedIssue = (() => {
     if (input) input.value = value;
   }
 
-  // The sheets keep the paper form's proportions and shrink to fit the panel.
+  // The sheet keeps the paper form's proportions and shrinks to fit the panel.
   function fitSheets() {
     const wrap = el("upSheetWrap");
     if (!wrap.clientWidth) return;
     const zoom = String(Math.max(0.55, Math.min(1, wrap.clientWidth / (792 * 96 / 72))));
-    sheets.forEach(s => { s.style.zoom = zoom; });
+    sheet.style.zoom = zoom;
   }
 
-  sheets.forEach((s, i) => { s.innerHTML = pageSvg(i + 1) + inputsHtml(i + 1); });
-  copies.forEach((c, i) => { c.innerHTML = pageSvg(i + 1); });
+  sheet.innerHTML = pageSvg() + inputsHtml();
+  copy.innerHTML = pageSvg();
   new ResizeObserver(fitSheets).observe(el("upSheetWrap"));
 
   tab.addEventListener("input", e => {
