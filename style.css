@@ -541,6 +541,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 /* Unplanned Issue: a paper page, using the Bulk Return sheet styles. */
 .br-input.up-left { text-align: left; font-size: 10pt; }
 .br-input.up-cell { font-size: 9.5pt; padding: 0 1pt; }
+.br-input.up-line { font-size: 10pt; border: 1px solid #9aa5b1; }
 .up-rownum {
   position: absolute;
   left: 38pt;

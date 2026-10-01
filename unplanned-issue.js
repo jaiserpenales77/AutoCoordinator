@@ -152,6 +152,8 @@ const UnplannedIssue = (() => {
     [131.28, 729.6, p2(72.96), p2(90.48)],
     [131.28, 729.6, p2(91.44), p2(108.96)]
   ];
+  // The line number(s) the comments refer to, under "(Line #)": [x from, x to, top, bottom].
+  const COMMENT_LINE = [62, 123, p2(90.5), p2(106.5)];
 
   const state = { values: {}, type: "" };
   const cellId = (row, col) => `r${row}_${COLS[col][0]}`;
@@ -221,6 +223,8 @@ const UnplannedIssue = (() => {
       });
     }
     out += COMMENTS.map(([x0, x1, , bottom], i) => textAt(v(`comment${i}`), x0 + 3, bottom - 4, 10, "start", x1 - x0 - 6)).join("");
+    const [lx0, lx1, , lBottom] = COMMENT_LINE;
+    out += textAt(v("commentLine"), (lx0 + lx1) / 2, lBottom - 3.5, 10, "middle", lx1 - lx0);
     return out;
   }
 
@@ -244,6 +248,8 @@ const UnplannedIssue = (() => {
     }
     out += COMMENTS.map(([x0, x1, top, bottom], i) =>
       box(`comment${i}`, `Comments line ${i + 1}`, x0, x1, top + 1, bottom - top - 2, "up-left")).join("");
+    const [lx0, lx1, lTop, lBottom] = COMMENT_LINE;
+    out += box("commentLine", "Comments: Line #", lx0, lx1, lTop, lBottom - lTop, "up-line");
     return out;
   }
 
