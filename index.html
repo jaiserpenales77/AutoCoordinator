@@ -51,6 +51,7 @@
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="unplannedTab">Unplanned Issue</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkReturnTab">Bulk Return</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkCalcTab">Bulk Calculator</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="holdTab">HOLD TAG</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -368,6 +369,24 @@
   </section>
 </div>
 
+<div class="layout single-layout hidden" id="holdTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>HOLD TAG</h2>
+      <div class="actions br-actions">
+        <button type="button" id="holdFillBtn">Fill from Yield Sheet</button>
+        <button type="button" id="holdClearBtn">Clear</button>
+        <button type="button" id="holdPrintBtn" class="primary">Print Hold Tag</button>
+      </div>
+    </div>
+    <p class="muted">QA263C [ALL] QA Hold Tag. Type in the boxes; Work Order/Lot #, Tote/Pallet # and Reason/Comment take several lines. It prints like the paper tag, red page included.</p>
+    <p id="holdMsg" class="form-msg"></p>
+    <div id="holdSheetWrap" class="br-sheet-wrap">
+      <div id="holdSheet" class="br-sheet hold-sheet"></div>
+    </div>
+  </section>
+</div>
+
 <!-- Bulk Weighing Calculator: turns weighed bulk containers into TH (bulk-calc.js). -->
 <main class="layout hidden" id="bulkCalcTab">
   <div class="sheet-columns">
@@ -420,6 +439,9 @@
 <div id="reportPages" class="print-sheet"></div>
 <div id="calcPrint" class="calc-print"></div>
 <div id="brPrint" class="br-print"></div>
+<div id="holdPrint" class="hold-print">
+  <div id="holdPrintPage" class="br-print-page"></div>
+</div>
 <div id="upPrint" class="up-print">
   <div id="upPrintPage" class="br-print-page"></div>
 </div>
@@ -431,5 +453,6 @@
 <script src="bulk-calc.js"></script>
 <script src="bulk-return.js"></script>
 <script src="unplanned-issue.js"></script>
+<script src="hold-tag.js"></script>
 </body>
 </html>

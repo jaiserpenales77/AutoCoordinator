@@ -552,6 +552,20 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .up-print { display: none; }
 
+/* HOLD TAG: the red QA hold tag, using the Bulk Return sheet styles. */
+.hold-sheet { background: #ff0000; }
+.br-input.hold-input {
+  padding: 0 3pt;
+  background: rgba(255, 255, 255, 0.18);
+  font: 700 20pt Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+  text-align: left;
+}
+.br-input.hold-input:focus { outline: 2px solid #000; background: rgba(255, 255, 255, 0.3); }
+.br-input.hold-input::placeholder { color: rgba(0, 0, 0, 0.45); }
+.br-input.hold-multi { resize: none; overflow: hidden; line-height: 26pt; padding-top: 2pt; }
+.hold-print { display: none; }
+.hold-print .br-print-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }
 
@@ -645,7 +659,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   .app-header, .tabs, .layout { display: none !important; }
   body[data-print="calc"] .print-sheet,
   body[data-print="bulkReturn"] .print-sheet,
-  body[data-print="unplanned"] .print-sheet { display: none !important; }
+  body[data-print="unplanned"] .print-sheet,
+  body[data-print="hold"] .print-sheet { display: none !important; }
+  body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }
   body[data-print="calc"] .calc-print { display: block; }
   body[data-print="bulkReturn"] .br-print { display: block; }
