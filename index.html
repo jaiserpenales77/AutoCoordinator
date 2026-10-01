@@ -340,7 +340,19 @@
 
 <div class="layout single-layout hidden" id="bulkReturnTab">
   <section class="panel">
-    <h2>Bulk Return</h2>
+    <div class="panel-head">
+      <h2>Bulk Return</h2>
+      <div class="actions br-actions">
+        <button type="button" id="brFillBtn">Fill from Yield Sheet</button>
+        <button type="button" id="brClearBtn">Clear</button>
+        <button type="button" id="brPrintBtn" class="primary">Print Bulk Return</button>
+      </div>
+    </div>
+    <p class="muted">PK120A [VALA] Packaging - Bulk Return (QS106A). Type in the blanks and click a reason to circle it; it prints exactly like the paper form.</p>
+    <p id="brMsg" class="form-msg"></p>
+    <div id="brSheetWrap" class="br-sheet-wrap">
+      <div id="brSheet" class="br-sheet"></div>
+    </div>
   </section>
 </div>
 
@@ -395,11 +407,13 @@
 </div>
 <div id="reportPages" class="print-sheet"></div>
 <div id="calcPrint" class="calc-print"></div>
+<div id="brPrint" class="br-print"></div>
 
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>
 <script src="pdf-import.js"></script>
 <script src="app.js"></script>
 <script src="bulk-calc.js"></script>
+<script src="bulk-return.js"></script>
 </body>
 </html>

@@ -499,6 +499,45 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .calc-print { display: none; }
 
+/* Bulk Return: the paper form (Letter landscape, 792 x 612 pt), always white
+   like paper; scaled down to fit the panel by bulk-return.js. */
+.br-actions { margin-top: 0; }
+.br-sheet-wrap { overflow-x: auto; margin-top: 12px; }
+.br-sheet {
+  position: relative;
+  margin: 0 auto;
+  width: 792pt;
+  height: 612pt;
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+.br-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.br-input {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0 2pt;
+  border: 0;
+  border-radius: 2pt;
+  background: rgba(37, 99, 235, 0.07);
+  color: #000;
+  font: 700 12pt Arial, "Liberation Sans", Helvetica, sans-serif;
+  text-align: center;
+}
+.br-input.br-right { text-align: right; }
+.br-input::placeholder { color: #9aa5b1; font-weight: 400; font-size: 9pt; }
+.br-input:focus { outline: 2px solid #2563eb; background: rgba(37, 99, 235, 0.12); box-shadow: none; }
+.br-choice {
+  position: absolute;
+  padding: 0;
+  border: 1px dashed transparent;
+  border-radius: 50%;
+  background: transparent;
+}
+.br-choice:hover, .br-choice:focus-visible { border-color: #2563eb; filter: none; outline: none; }
+.br-print { display: none; }
+
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }
 
@@ -525,6 +564,21 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   size: letter landscape;
   margin: 0.5in 0.17in 0.51in 0.27in;
 }
+
+/* The Bulk Return form, printed full page: its own margin-free page, since
+   the form is drawn with the paper form's margins. */
+@page bulkreturn {
+  size: letter landscape;
+  margin: 0;
+}
+.br-print-page {
+  page: bulkreturn;
+  position: relative;
+  width: 11in;
+  height: 8.5in;
+  overflow: hidden;
+}
+.br-print-page .br-svg { position: absolute; inset: 0; width: 11in; height: 8.5in; }
 
 /* The Bulk Calculator report: one portrait page per bulk, like the original
    calculator's printout; shown instead of the yield sheet when printing from
@@ -575,8 +629,10 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 
 @media print {
   .app-header, .tabs, .layout { display: none !important; }
-  body[data-print="calc"] .print-sheet { display: none !important; }
+  body[data-print="calc"] .print-sheet,
+  body[data-print="bulkReturn"] .print-sheet { display: none !important; }
   body[data-print="calc"] .calc-print { display: block; }
+  body[data-print="bulkReturn"] .br-print { display: block; }
   html, body { background: #fff; margin: 0; height: auto; }
   .print-sheet { display: block; }
 }

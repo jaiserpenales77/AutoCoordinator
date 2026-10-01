@@ -630,7 +630,13 @@ function buildPrintSheet() {
 }
 
 // Also covers Ctrl+P and the browser's File > Print, not just the button.
-window.addEventListener("beforeprint", buildPrintSheet);
+window.addEventListener("beforeprint", () => {
+  // Tabs with their own printout (bulk-calc.js, bulk-return.js) set this
+  // after this listener when they're the open tab; otherwise the yield sheet prints.
+  delete document.body.dataset.print;
+  buildPrintSheet();
+});
+window.addEventListener("afterprint", () => delete document.body.dataset.print);
 
 el("printBtn").addEventListener("click", async () => {
   buildPrintSheet();

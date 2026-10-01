@@ -62,7 +62,14 @@ type, ready to copy onto the card:
 
 ## Other tabs
 
-- **Unplanned Issue** and **Bulk Return** — placeholders for now.
+- **Unplanned Issue** — placeholder for now.
+- **Bulk Return** — the PK120A [VALA] Packaging - Bulk Return form (QS106A),
+  drawn to the paper form's exact measurements (logo, fonts, table, blanks,
+  footer). Type in the blanks and click a reason to circle it; an empty Date
+  blank starts with today's date, and typing an "Other" reason circles Other.
+  **Fill from Yield Sheet** copies the W.O. #, Bulk Item (as Bulk Commodity)
+  and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while on this
+  tab) prints the form on Letter landscape with the entries on its lines.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -234,6 +241,8 @@ new password. To remove someone's access, delete (or disable) their user.
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `bulk-calc.js` — the Bulk Calculator tab.
+- `bulk-return.js` — the Bulk Return tab's form.
+- `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
 - `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.

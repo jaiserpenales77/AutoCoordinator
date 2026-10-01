@@ -181,11 +181,8 @@ const BulkCalc = (() => {
     if (onCalcTab()) {
       buildPrint();
       document.body.dataset.print = "calc";
-    } else {
-      delete document.body.dataset.print;
     }
   });
-  window.addEventListener("afterprint", () => delete document.body.dataset.print);
 
   el("calcPrintBtn").addEventListener("click", () => window.print());
   el("calcAddBulkBtn").addEventListener("click", () => addBulk().querySelector(".calc-bag").focus());
