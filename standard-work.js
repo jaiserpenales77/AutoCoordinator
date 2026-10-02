@@ -31,18 +31,6 @@ const StandardWork = (() => {
   };
   const DATE_FIELDS = ["date"];
 
-  // Boxes written in (the 4X / 8X rotation times): id -> [side, x0, y0, x1, y1, label].
-  const BOX_FIELDS = {
-    rot4_1: ["front", 162.96, 284.88, 219.84, 321.12, "4X ROT box 1"],
-    rot4_2: ["front", 220.08, 284.88, 276.96, 321.12, "4X ROT box 2"],
-    rot4_3: ["front", 276.96, 284.88, 333.36, 321.12, "4X ROT box 3"],
-    rot4_4: ["front", 333.6, 284.88, 389.76, 321.12, "4X ROT box 4"],
-    rot8_1: ["front", 503.04, 284.88, 559.68, 320.88, "8X ROT box 1"],
-    rot8_2: ["front", 559.92, 284.88, 617.52, 320.88, "8X ROT box 2"],
-    rot8_3: ["front", 617.76, 284.88, 674.88, 320.88, "8X ROT box 3"],
-    rot8_4: ["front", 675.12, 284.88, 731.52, 320.88, "8X ROT box 4"]
-  };
-
   // Boxes ticked by clicking: id -> [side, x0, y0, x1, y1, label]. Each click
   // cycles tick -> N/A -> empty.
   const CHECKS = {
@@ -50,6 +38,14 @@ const StandardWork = (() => {
     rotDumping: ["front", 219.84, 237.6, 276.72, 273.84, "Dumping 8x ROT - 1 HR"],
     rotDesByHand: ["front", 390, 237.6, 445.92, 273.84, "Des by Hand 8x ROT - 1 HR"],
     rotHeavy: ["front", 559.68, 237.6, 617.52, 273.84, "Heavy Bottles 8x ROT - 1 HR"],
+    rot4_1: ["front", 162.96, 284.88, 219.84, 321.12, "4X ROT box 1"],
+    rot4_2: ["front", 220.08, 284.88, 276.96, 321.12, "4X ROT box 2"],
+    rot4_3: ["front", 276.96, 284.88, 333.36, 321.12, "4X ROT box 3"],
+    rot4_4: ["front", 333.6, 284.88, 389.76, 321.12, "4X ROT box 4"],
+    rot8_1: ["front", 503.04, 284.88, 559.68, 320.88, "8X ROT box 1"],
+    rot8_2: ["front", 559.92, 284.88, 617.52, 320.88, "8X ROT box 2"],
+    rot8_3: ["front", 617.76, 284.88, 674.88, 320.88, "8X ROT box 3"],
+    rot8_4: ["front", 675.12, 284.88, 731.52, 320.88, "8X ROT box 4"],
     stretchStart: ["front", 106.32, 331.68, 162.72, 367.2, "Stretch: start up"],
     stretch1: ["front", 277.2, 331.68, 333.6, 366.96, "Stretch: 1st break"],
     stretchLunch: ["front", 446.4, 331.44, 502.8, 366.96, "Stretch: lunch"],
@@ -140,10 +136,6 @@ const StandardWork = (() => {
       }
       out += text(v(id), (x0 + x1) / 2, base - 1.5, fitSize(v(id), size, x1 - x0), "middle");
     }
-    for (const [id, [s, x0, y0, x1, y1]] of Object.entries(BOX_FIELDS)) {
-      if (s !== side || !v(id)) continue;
-      out += text(v(id), (x0 + x1) / 2, (y0 + y1) / 2 + 5, fitSize(v(id), 14, x1 - x0 - 6), "middle");
-    }
     if (side === "back" && v("comments")) {
       const { size, lines } = commentLines(v("comments"));
       lines.forEach((line, i) => { if (line) out += text(line, COMMENTS[0] + 2, COMMENTS[1] + size * (1.2 * i + 1), size, "start"); });
@@ -165,11 +157,6 @@ const StandardWork = (() => {
       if (s !== side) continue;
       out += `<input type="text" class="br-input sw-input" data-field="${id}" autocomplete="off" spellcheck="false"
         style="${at(x0, base - size - 3, x1, base + 2)};font-size:${size}pt" aria-label="${escapeHtml(label)}"${DATE_FIELDS.includes(id) ? ' placeholder="MM/DD/YY"' : COVERS[id] ? ' placeholder="##"' : ""}>`;
-    }
-    for (const [id, [s, x0, y0, x1, y1, label]] of Object.entries(BOX_FIELDS)) {
-      if (s !== side) continue;
-      out += `<input type="text" class="br-input sw-input" data-field="${id}" autocomplete="off" spellcheck="false"
-        style="${at(x0 + 2, y0 + 2, x1 - 2, y1 - 2)};font-size:14pt" aria-label="${escapeHtml(label)}">`;
     }
     for (const [id, [s, x0, y0, x1, y1, label]] of Object.entries(CHECKS)) {
       if (s !== side) continue;
@@ -302,5 +289,5 @@ const StandardWork = (() => {
   });
 
   render();
-  return { state, CHECKS, TEXT_FIELDS, BOX_FIELDS };
+  return { state, CHECKS, TEXT_FIELDS };
 })();

@@ -92,7 +92,7 @@ type, ready to copy onto the card:
   Steady State Tasks & Habits (back). Each side is the original scan,
   straightened and cleaned up (paper tint and show-through removed), so it
   looks exactly like the paper form. Type in the blanks (Lead Name, Line,
-  Shift, Date, Initials, the 4X / 8X ROT boxes, Video Jet WO1/COUNT, the
+  Shift, Date, Initials, Video Jet WO1/COUNT, the
   "## : 25" hours and the comments) and click a box to mark it: each click cycles
   tick / N/A / empty. The Lead Name prints large and bold;
   opening the tab fills it with the signed-in lead (or the yield sheet's
