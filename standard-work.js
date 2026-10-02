@@ -43,8 +43,8 @@ const StandardWork = (() => {
     rot8_4: ["front", 675.12, 284.88, 731.52, 320.88, "8X ROT box 4"]
   };
 
-  // Boxes ticked by clicking: id -> [side, x0, y0, x1, y1, label]. "trouble"
-  // (Check -or- N/A) cycles tick -> N/A -> empty.
+  // Boxes ticked by clicking: id -> [side, x0, y0, x1, y1, label]. Each click
+  // cycles tick -> N/A -> empty.
   const CHECKS = {
     rotStandard: ["front", 49.68, 237.6, 105.84, 273.84, "Standard 4x ROT - 2 HRs"],
     rotDumping: ["front", 219.84, 237.6, 276.72, 273.84, "Dumping 8x ROT - 1 HR"],
@@ -237,9 +237,7 @@ const StandardWork = (() => {
     if (!btn) return;
     const id = btn.dataset.check;
     const now = state.checks[id];
-    state.checks[id] = id === "trouble"
-      ? (now === "check" ? "na" : now === "na" ? "" : "check")
-      : (now ? "" : "check");
+    state.checks[id] = now === "check" ? "na" : now === "na" ? "" : "check";
     render();
   });
 

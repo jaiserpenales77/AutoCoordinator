@@ -93,8 +93,8 @@ type, ready to copy onto the card:
   straightened and cleaned up (paper tint and show-through removed), so it
   looks exactly like the paper form. Type in the blanks (Lead Name, Line,
   Shift, Date, Initials, the 4X / 8X ROT boxes, Video Jet WO1/COUNT, the
-  "## : 25" hours and the comments) and click a box to tick it; Troubleshooting
-  Sheet cycles tick / N/A / empty. **Fill from Yield Sheet** fills the Lead
+  "## : 25" hours and the comments) and click a box to mark it: each click cycles
+  tick / N/A / empty. **Fill from Yield Sheet** fills the Lead
   Name (Created By, or the signed-in lead), today's date, WO1 and its VideoJet
   count. **Print Standard Work** prints both sides, front then back, for
   double-sided printing.
