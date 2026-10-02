@@ -569,6 +569,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .sheet-page-label { margin: 12px 0 4px; font-size: 0.8rem; color: var(--muted); text-align: center; }
 .br-input.sw-input { padding: 0 2pt; font-family: Calibri, Carlito, Arial, sans-serif; }
 .br-input.sw-comments { resize: none; text-align: left; line-height: 1.2; padding: 2pt; }
+.br-input.sw-total { text-align: center; font-weight: 700; }
 /* "## : 25" boxes cover the printed ## (shown as the placeholder instead). */
 .br-input.sw-input[placeholder="##"] { background: #fff; padding: 0; }
 .br-input.sw-input[placeholder="##"]::placeholder { color: #000; font-weight: 700; }

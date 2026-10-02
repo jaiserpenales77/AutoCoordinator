@@ -93,13 +93,16 @@ type, ready to copy onto the card:
   straightened and cleaned up (paper tint and show-through removed), so it
   looks exactly like the paper form. Type in the blanks (Lead Name, Line,
   Shift, Date, Initials, Video Jet WO1/COUNT, the
-  "## : 25" hours and the comments) and click a box to mark it: each click cycles
+  "## : 25" hours and the comments, plus a large **Total Bottles Produced
+  (Shift)** box added beside "I followed the shift startup timeline") and click
+  a box to mark it: each click cycles
   tick / N/A / empty. The Lead Name prints large and bold;
   opening the tab fills it with the signed-in lead (or the yield sheet's
   Created By), and both Initials blanks follow it with the lead's initials
   unless something else was typed there. **Fill from Yield Sheet** fills the
   Lead Name (Created By, or the signed-in lead), today's date, WO1 and its
-  VideoJet count. **Print Standard Work** prints both sides, front then back, for
+  VideoJet count, and (if empty) the total bottles from the yield sheet.
+  **Print Standard Work** prints both sides, front then back, for
   double-sided printing.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk

@@ -79,6 +79,12 @@ const StandardWork = (() => {
 
   // The comments box on the back: [x0, y0, x1, y1].
   const COMMENTS = [88, 298, 444, 341];
+
+  // Added to the front, in the open space beside "I followed the shift startup
+  // timeline": the shift's total bottles, large. [x0, y0, x1, y1]
+  const TOTAL_BOX = [398, 142, 735, 201];
+  const TOTAL_LABEL = "TOTAL BOTTLES PRODUCED (SHIFT)";
+  const TOTAL_SIZE = 32;
   const COMMENT_SIZE = 11;
 
   const IMAGES = { front: "assets/standard-work-front.png", back: "assets/standard-work-back.png" };
@@ -136,6 +142,10 @@ const StandardWork = (() => {
       }
       out += text(v(id), (x0 + x1) / 2, base - 1.5, fitSize(v(id), size, x1 - x0), "middle");
     }
+    if (side === "front" && v("totalBottles")) {
+      const [x0, y0, x1, y1] = TOTAL_BOX;
+      out += text(v("totalBottles"), (x0 + x1) / 2, (y0 + y1) / 2 + 15, fitSize(v("totalBottles"), TOTAL_SIZE, x1 - x0 - 16), "middle");
+    }
     if (side === "back" && v("comments")) {
       const { size, lines } = commentLines(v("comments"));
       lines.forEach((line, i) => { if (line) out += text(line, COMMENTS[0] + 2, COMMENTS[1] + size * (1.2 * i + 1), size, "start"); });
@@ -143,9 +153,17 @@ const StandardWork = (() => {
     return out;
   }
 
+  // The total-bottles box's outline and label, drawn on the front.
+  function totalBoxSvg() {
+    const [x0, y0, x1, y1] = TOTAL_BOX;
+    return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="#000" stroke-width="1"/>
+      <text x="${x0 + 5}" y="${y0 + 11}" font-family='${SANS}' font-size="8.5" font-weight="700">${TOTAL_LABEL}</text>`;
+  }
+
   function sideSvg(side) {
     return `<svg class="br-svg" viewBox="0 0 792 612" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <image href="${IMAGES[side]}" x="0" y="0" width="792" height="612" preserveAspectRatio="none"/>
+      ${side === "front" ? totalBoxSvg() : ""}
       <g class="sw-values" fill="#000" font-family='${SANS}' font-weight="700"></g>
     </svg>`;
   }
@@ -162,6 +180,11 @@ const StandardWork = (() => {
       if (s !== side) continue;
       out += `<button type="button" class="br-choice sw-check" data-check="${id}" style="${at(x0, y0, x1, y1)}"
         title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" aria-pressed="false"></button>`;
+    }
+    if (side === "front") {
+      const [x0, y0, x1, y1] = TOTAL_BOX;
+      out += `<input type="text" class="br-input sw-input sw-total" data-field="totalBottles" autocomplete="off" spellcheck="false" inputmode="numeric"
+        style="${at(x0 + 3, y0 + 14, x1 - 3, y1 - 3)};font-size:${TOTAL_SIZE}pt" aria-label="Total bottles produced this shift">`;
     }
     if (side === "back") {
       const [x0, y0, x1, y1] = COMMENTS;
@@ -259,6 +282,11 @@ const StandardWork = (() => {
     if (!state.values.date) { setValue("date", formatDateMMDDYY(todayISO())); filled.push("today's date"); }
     if (wo) { setValue("wo1", wo); filled.push(`WO1 ${wo}`); }
     if (wo && vj) { setValue("count1", vj); filled.push(`Video Jet count ${vj}`); }
+    const bottles = Number(el("totalPackaged").value);
+    if (bottles > 0 && !String(state.values.totalBottles ?? "").trim()) {
+      setValue("totalBottles", bottles.toLocaleString("en-US"));
+      filled.push(`total bottles ${bottles.toLocaleString("en-US")}`);
+    }
     render();
     showMsg("swMsg", filled.length ? `Filled ${filled.join(", ")}.` : "Nothing to fill from the Yield Sheet yet.", filled.length > 0);
   });
