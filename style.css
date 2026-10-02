@@ -564,6 +564,18 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .br-input.hold-input::placeholder { color: rgba(0, 0, 0, 0.45); }
 .br-input.hold-multi { resize: none; overflow: hidden; padding-bottom: 0; text-align: center; }
 .hold-print { display: none; }
+
+/* Standard Work: the two scanned sides, using the Bulk Return sheet styles. */
+.sheet-page-label { margin: 12px 0 4px; font-size: 0.8rem; color: var(--muted); text-align: center; }
+.br-input.sw-input { padding: 0 2pt; font-family: Calibri, Carlito, Arial, sans-serif; }
+.br-input.sw-comments { resize: none; text-align: left; line-height: 1.2; padding: 2pt; }
+/* "## : 25" boxes cover the printed ## (shown as the placeholder instead). */
+.br-input.sw-input[placeholder="##"] { background: #fff; padding: 0; }
+.br-input.sw-input[placeholder="##"]::placeholder { color: #000; font-weight: 700; }
+.sw-check:hover, .sw-check:focus-visible { border-radius: 2pt; }
+.sw-print { display: none; }
+.sw-print .br-print-page { break-after: page; }
+.sw-print .br-print-page:last-child { break-after: auto; }
 .hold-red-toggle { margin-top: 0; }
 /* Red background off: black on a clear page, for printing on red paper. */
 .hold-plain .hold-bg { display: none; }
@@ -666,7 +678,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="calc"] .print-sheet,
   body[data-print="bulkReturn"] .print-sheet,
   body[data-print="unplanned"] .print-sheet,
-  body[data-print="hold"] .print-sheet { display: none !important; }
+  body[data-print="hold"] .print-sheet,
+  body[data-print="standardWork"] .print-sheet { display: none !important; }
+  body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }
   body[data-print="calc"] .calc-print { display: block; }

@@ -52,6 +52,7 @@
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkReturnTab">Bulk Return</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkCalcTab">Bulk Calculator</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="holdTab">HOLD TAG</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="swTab">Standard Work</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -391,6 +392,27 @@
   </section>
 </div>
 
+<div class="layout single-layout hidden" id="swTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Standard Work</h2>
+      <div class="actions br-actions">
+        <button type="button" id="swFillBtn">Fill from Yield Sheet</button>
+        <button type="button" id="swClearBtn">Clear</button>
+        <button type="button" id="swPrintBtn" class="primary">Print Standard Work</button>
+      </div>
+    </div>
+    <p class="muted">Team Lead Standard Work (front) and Steady State Tasks &amp; Habits (back). Type in the blanks and boxes, and click a box to tick it (Troubleshooting Sheet also takes N/A). It prints both sides, front then back, for double-sided printing.</p>
+    <p id="swMsg" class="form-msg"></p>
+    <div id="swSheetWrap" class="br-sheet-wrap">
+      <p class="sheet-page-label">Front</p>
+      <div id="swFront" class="br-sheet"></div>
+      <p class="sheet-page-label">Back</p>
+      <div id="swBack" class="br-sheet"></div>
+    </div>
+  </section>
+</div>
+
 <!-- Bulk Weighing Calculator: turns weighed bulk containers into TH (bulk-calc.js). -->
 <main class="layout hidden" id="bulkCalcTab">
   <div class="sheet-columns">
@@ -443,6 +465,10 @@
 <div id="reportPages" class="print-sheet"></div>
 <div id="calcPrint" class="calc-print"></div>
 <div id="brPrint" class="br-print"></div>
+<div id="swPrint" class="sw-print">
+  <div id="swPrintFront" class="br-print-page"></div>
+  <div id="swPrintBack" class="br-print-page"></div>
+</div>
 <div id="holdPrint" class="hold-print">
   <div id="holdPrintPage" class="br-print-page"></div>
 </div>
@@ -458,5 +484,6 @@
 <script src="bulk-return.js"></script>
 <script src="unplanned-issue.js"></script>
 <script src="hold-tag.js"></script>
+<script src="standard-work.js"></script>
 </body>
 </html>

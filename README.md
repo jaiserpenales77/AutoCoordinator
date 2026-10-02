@@ -88,6 +88,16 @@ type, ready to copy onto the card:
   Hold Tag** (or printing while on this tab) prints the tag with its red
   background; turn off **Red background** to print it black on a clear page,
   for red paper (remembered on that computer).
+- **Standard Work** — the two-sided Team Lead Standard Work sheet (front) and
+  Steady State Tasks & Habits (back). Each side is the original scan,
+  straightened and cleaned up (paper tint and show-through removed), so it
+  looks exactly like the paper form. Type in the blanks (Lead Name, Line,
+  Shift, Date, Initials, the 4X / 8X ROT boxes, Video Jet WO1/COUNT, the
+  "## : 25" hours and the comments) and click a box to tick it; Troubleshooting
+  Sheet cycles tick / N/A / empty. **Fill from Yield Sheet** fills the Lead
+  Name (Created By, or the signed-in lead), today's date, WO1 and its VideoJet
+  count. **Print Standard Work** prints both sides, front then back, for
+  double-sided printing.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -262,9 +272,13 @@ new password. To remove someone's access, delete (or disable) their user.
 - `bulk-return.js` — the Bulk Return tab's form.
 - `unplanned-issue.js` — the Unplanned Issue tab's form.
 - `hold-tag.js` — the HOLD TAG tab's tag.
+- `standard-work.js` — the Standard Work tab's two-sided sheet.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.
+- `assets/standard-work-front.png`, `assets/standard-work-back.png` — the
+  Standard Work sheet's two sides, from the 600 dpi scans (straightened,
+  cleaned, 300 dpi).
 - `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
 - `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
