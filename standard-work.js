@@ -4,14 +4,14 @@
 // landscape page; positions below are in pt from the page's top-left,
 // measured on those scans. On screen the blanks are inputs and the boxes tick
 // when clicked; printing gives both sides with the entries written in.
-// Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY, getCreatedBy and
+// Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY, getCreatedBy, initials and
 // currentUser/StoredData from app.js.
 const StandardWork = (() => {
   const SANS = `Calibri, Carlito, Arial, "Liberation Sans", sans-serif`;
 
   // Written-in blanks: id -> [side, x from, x to, baseline, size, label].
   const TEXT_FIELDS = {
-    leadName: ["front", 140, 414, 75, 13, "Lead Name"],
+    leadName: ["front", 140, 414, 76, 18, "Lead Name"],
     line: ["front", 446, 515, 75, 13, "Line"],
     shift: ["front", 548, 616, 75, 13, "Shift"],
     date: ["front", 649, 742, 75, 13, "Date"],
@@ -204,6 +204,27 @@ const StandardWork = (() => {
     if (input) input.value = value;
   }
 
+  // The Initials blanks follow the Lead Name's initials, unless someone typed
+  // something else in them.
+  const INITIALS_FIELDS = ["initials1", "initials2"];
+  let autoInitials = "";
+  function syncInitials() {
+    const next = initials(String(state.values.leadName ?? "").trim());
+    INITIALS_FIELDS.forEach(id => {
+      const now = String(state.values[id] ?? "");
+      if (!now || now === autoInitials) setValue(id, next);
+    });
+    autoInitials = next;
+  }
+
+  function setLeadName(name) {
+    setValue("leadName", name);
+    syncInitials();
+  }
+
+  // The lead for this sheet: the signed-in user's lead, else the yield sheet's Created By.
+  const knownLead = () => (currentUser && StoredData.leadForUser(currentUser)) || getCreatedBy() || "";
+
   function fitSheets() {
     const wrap = el("swSheetWrap");
     if (!wrap.clientWidth) return;
@@ -221,6 +242,7 @@ const StandardWork = (() => {
     const id = e.target.dataset.field;
     if (!id) return;
     state.values[id] = e.target.value;
+    if (id === "leadName") syncInitials();
     render();
   });
   // An empty Date starts with today's date.
@@ -242,11 +264,11 @@ const StandardWork = (() => {
   });
 
   el("swFillBtn").addEventListener("click", () => {
-    const lead = getCreatedBy() || (currentUser && StoredData.leadForUser(currentUser)) || "";
+    const lead = getCreatedBy() || knownLead();
     const wo = el("woNumber").value.trim();
     const vj = String(el("videoJetCount").value ?? "").trim();
     const filled = [];
-    if (lead) { setValue("leadName", lead); filled.push(`Lead Name ${lead}`); }
+    if (lead) { setLeadName(lead); filled.push(`Lead Name ${lead}`); }
     if (!state.values.date) { setValue("date", formatDateMMDDYY(todayISO())); filled.push("today's date"); }
     if (wo) { setValue("wo1", wo); filled.push(`WO1 ${wo}`); }
     if (wo && vj) { setValue("count1", vj); filled.push(`Video Jet count ${vj}`); }
@@ -258,6 +280,7 @@ const StandardWork = (() => {
     tab.querySelectorAll("[data-field]").forEach(i => { i.value = ""; });
     state.values = {};
     state.checks = {};
+    autoInitials = "";
     render();
     el("swMsg").textContent = "";
   });
@@ -269,7 +292,14 @@ const StandardWork = (() => {
   window.addEventListener("beforeprint", () => {
     if (!tab.classList.contains("hidden")) document.body.dataset.print = "standardWork";
   });
-  document.querySelector('[data-tab="swTab"]').addEventListener("click", () => requestAnimationFrame(fitSheets));
+  document.querySelector('[data-tab="swTab"]').addEventListener("click", () => {
+    // A blank sheet starts with the lead (and so their initials) filled in.
+    if (!String(state.values.leadName ?? "").trim() && knownLead()) {
+      setLeadName(knownLead());
+      render();
+    }
+    requestAnimationFrame(fitSheets);
+  });
 
   render();
   return { state, CHECKS, TEXT_FIELDS, BOX_FIELDS };
