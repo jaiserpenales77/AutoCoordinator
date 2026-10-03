@@ -127,8 +127,9 @@ const StoredData = (() => {
   }
 
   // Merges a file made by exportJson (files from before FG items existed have
-  // no fgItems); returns how many of each it held.
-  function importJson(text) {
+  // no fgItems); returns how many of each it held. Leads and their usernames
+  // are only taken in with `withLeads` (admins), else left out (leads: null).
+  function importJson(text, { withLeads = true } = {}) {
     let data;
     try {
       data = JSON.parse(text);
@@ -138,8 +139,8 @@ const StoredData = (() => {
     if (!data || !Array.isArray(data.leads) || !Array.isArray(data.items)) {
       throw new Error("not a Stored Data export file");
     }
-    data.leads.forEach(n => typeof n === "string" && addLead(n));
-    if (data.leadUsers && typeof data.leadUsers === "object") {
+    if (withLeads) data.leads.forEach(n => typeof n === "string" && addLead(n));
+    if (withLeads && data.leadUsers && typeof data.leadUsers === "object") {
       Object.entries(data.leadUsers).forEach(([u, name]) => {
         if (validUsername(normUser(u)) && leads().includes(name) && !leadForUser(u)) setLeadUsername(name, u);
       });
@@ -148,7 +149,7 @@ const StoredData = (() => {
     bulk.forEach(i => bulkItems.save(i.item, i.pieceWt));
     const fg = (Array.isArray(data.fgItems) ? data.fgItems : []).filter(fgItems.valid);
     fg.forEach(i => fgItems.save(i.item, i.count));
-    return { leads: data.leads.length, items: bulk.length, fgItems: fg.length };
+    return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length };
   }
 
   const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, replaceAll, exportJson, importJson, onChange: null };

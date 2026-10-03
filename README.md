@@ -122,17 +122,24 @@ reloaded).
   there. **Print Report** (or printing while it is open) prints one portrait
   page per bulk with Initial and Date lines.
 
-## Stored Data tab
+## Admin tab
 
-- **Leads** — the names in the **Yield Sheet Created By** dropdown. **Other…**
-  lets someone type a name that isn't listed yet. The chosen name prints on the
-  "Yield Sheet Created By:" line; with none chosen, the line prints blank as on
-  the paper form.
+Only admins see this tab (see **Admins** below; with no database, as when
+`index.html` is opened from disk, whoever uses that copy does).
+
+- **Leads & Usernames** — the names in the **Yield Sheet Created By**
+  dropdown. **Other…** lets someone type a name that isn't listed yet. The
+  chosen name prints on the "Yield Sheet Created By:" line; with none chosen,
+  the line prints blank as on the paper form.
   Each lead can be **linked to a sign-in username** (the box next to their
   name). When that person is signed in, the header shows their name instead
   of the username, and new sheets start with them as Created By; anyone can
   still pick someone else in the dropdown, and saved sheets keep their own.
   A username links to one lead at a time.
+- **Admins** — who the admins are.
+
+## Stored Data tab
+
 - **Bulk Items & Piece Weights** — when a stored Bulk Item is typed or
   imported on the yield sheet, Bulk Piece Wt fills in.
 - **FG Items & Counts** — when a stored FG Item is typed or imported, Count
@@ -142,7 +149,8 @@ A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
 
 Stored Data is shared through the database (see below). **Export Stored Data**
-saves a JSON backup; **Import Stored Data** adds a backup's entries back.
+saves a JSON backup; **Import Stored Data** adds a backup's entries back
+(its leads and usernames only for admins).
 
 ## Importing the JDE report PDFs
 
@@ -245,7 +253,11 @@ app runs without sign-in on that computer's own copy.
    site's public key and get past the rules.
 3. **Authentication → Users → Add user** for each person: email
    `theirname@pk030.local`, and a password (6+ characters).
-4. **Firestore Database → Rules** → replace them with the rules below →
+4. **Firestore Database → Data** → in the `pk030` collection, **Add
+   document** with Document ID `admins` and one field: name `usernames`,
+   type **array**, with your username (lowercase, without `@pk030.local`) as
+   a string element. See **Admins** below.
+5. **Firestore Database → Rules** → replace them with the rules below →
    **Publish**. JDE Sched only uses the `jde-sched` collection, which stays
    open exactly as before; this app's data then needs a signed-in user.
 
@@ -257,16 +269,50 @@ service cloud.firestore {
     match /jde-sched/{document=**} {
       allow read, write: if true;
     }
-    // PK030 Yield Coordinator: signed-in users only
-    match /pk030-yield-sheets/{id} {
-      allow read, write: if request.auth != null;
+
+    // Packaging Lead Hub: signed-in users only
+    function signedIn() {
+      return request.auth != null;
     }
-    match /pk030/{id} {
-      allow read, write: if request.auth != null;
+    // Admins are the usernames listed in pk030/admins.
+    function isAdmin() {
+      let admins = /databases/$(database)/documents/pk030/admins;
+      return signedIn()
+        && request.auth.token.email.matches('[^@]+@pk030[.]local')
+        && exists(admins)
+        && request.auth.token.email.split('@')[0] in get(admins).data.usernames;
+    }
+    match /pk030-yield-sheets/{id} {
+      allow read, write: if signedIn();
+    }
+    // Everyone signed in can change bulk items and FG items; only admins can
+    // change leads and their usernames.
+    match /pk030/storedData {
+      allow read: if signedIn();
+      allow create: if isAdmin()
+        || (signedIn() && !request.resource.data.keys().hasAny(['leads', 'leadUsers']));
+      allow update: if isAdmin()
+        || (signedIn() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leads', 'leadUsers']));
+      allow delete: if isAdmin();
+    }
+    // The admin list: read by the app, changed only in the Firebase console.
+    match /pk030/admins {
+      allow read: if signedIn();
+      allow write: if false;
     }
   }
 }
 ```
+
+### Admins
+
+Admins are the usernames in the `usernames` array of the `pk030/admins`
+document. Only they see the **Admin** tab, and the database rules only let them
+change leads and their usernames (everyone signed in can still use the
+leads, and change bulk items and FG items). The app can't change the admin
+list: add or remove an admin in the Firebase console (**Firestore Database →
+Data → pk030 → admins → usernames**). With no `admins` document, nobody can
+change leads.
 
 ### Forgotten password / removing someone
 
@@ -293,7 +339,7 @@ new password. To remove someone's access, delete (or disable) their user.
 - `assets/standard-work-front.png`, `assets/standard-work-back.png` — the
   Standard Work sheet's two sides, from the 600 dpi scans (straightened,
   cleaned, 300 dpi).
-- `stored-data.js` — the Stored Data tab's leads, bulk piece weights and FG counts.
+- `stored-data.js` — leads (Admin tab), bulk piece weights and FG counts (Stored Data tab).
 - `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth

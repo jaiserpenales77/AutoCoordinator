@@ -2,7 +2,9 @@
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
 // each sheet is a document in `pk030-yield-sheets`, and leads, their linked
 // usernames, bulk items and FG items are maps in the `pk030/storedData` document. The Firestore rules only
-// let signed-in users reach these. localStorage stays the app's working copy;
+// let signed-in users reach these, and only admins (the usernames listed in
+// the `pk030/admins` document, which is edited in the Firebase console) can
+// change leads and their usernames. localStorage stays the app's working copy;
 // Firestore's own offline cache (IndexedDB) holds writes made offline and
 // sends them later. Signing out clears both copies from this computer.
 const CloudSync = (() => {
@@ -34,6 +36,7 @@ const CloudSync = (() => {
   const clean = obj => JSON.parse(JSON.stringify(obj));
   const sheetRef = id => fs.doc(db, SHEETS, id);
   const storedRef = () => fs.doc(db, "pk030", "storedData");
+  const adminsRef = () => fs.doc(db, "pk030", "admins");
 
   function status() {
     if (failed) return { state: "error", text: failed };
@@ -110,7 +113,12 @@ const CloudSync = (() => {
     const missing = (list, remoteList) => list.filter(i => !remoteList.some(r => r.item === i.item));
     missing(local.bulkItems, remote.bulkItems).forEach(i => add("bulkItems", i.item, i.pieceWt));
     missing(local.fgItems, remote.fgItems).forEach(i => add("fgItems", i.item, i.count));
-    if (Object.keys(merge).length) write(() => fs.setDoc(storedRef(), merge, { merge: true }));
+    // Leads go in their own write: only admins may change them, and a refused
+    // write must not take the items with it.
+    const { leads, leadUsers, ...items } = merge;
+    const leadMerge = { ...(leads && { leads }), ...(leadUsers && { leadUsers }) };
+    if (Object.keys(items).length) write(() => fs.setDoc(storedRef(), items, { merge: true }));
+    if (Object.keys(leadMerge).length) write(() => fs.setDoc(storedRef(), leadMerge, { merge: true }));
     localStorage.setItem(MIGRATED.stored, "1");
     return {
       leads: [...remote.leads, ...Object.keys(merge.leads || {})],
@@ -144,6 +152,16 @@ const CloudSync = (() => {
       }
       report();
     }, err => fail("Stored Data sync unavailable.", err)));
+
+    // Whether this user is an admin. No list (or no access to it) means not.
+    // Usernames must match exactly, as the rules compare them.
+    unsubscribers.push(fs.onSnapshot(adminsRef(), snap => {
+      const list = snap.data()?.usernames;
+      handlers.onAdmins(Array.isArray(list) ? list.filter(u => typeof u === "string") : []);
+    }, err => {
+      console.warn("Couldn't read the admins list.", err);
+      handlers.onAdmins([]);
+    }));
   }
 
   function stopListening() {
@@ -153,7 +171,8 @@ const CloudSync = (() => {
   }
 
   // h: onSignedIn(username), onSignedOut(), onLocalOnly(message), onStatus,
-  // onSheets(records), onStoredData(data), localSheets(), localStored().
+  // onSheets(records), onStoredData(data), onAdmins(usernames), localSheets(),
+  // localStored().
   async function start(h) {
     handlers = h;
     try {

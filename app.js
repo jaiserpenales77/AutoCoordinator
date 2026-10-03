@@ -9,6 +9,10 @@ let editingId = null;
 // in the Created By dropdown on this sheet (see applyDefaultCreatedBy).
 let currentUser = null;
 let createdByPicked = false;
+// The admin usernames from the database, and whether the app runs without a
+// database on this computer (see renderAdmin).
+let admins = [];
+let localOnly = false;
 // Imported report PDFs as page images (see addImportedReports).
 const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
 let importedReports = [];
@@ -881,6 +885,7 @@ function renderStoredData() {
   if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();
   showSignedInName();
   applyDefaultCreatedBy();
+  renderAdmin();
 }
 
 el("leadForm").addEventListener("submit", e => {
@@ -1003,8 +1008,11 @@ el("importStoredInput").addEventListener("change", async e => {
   e.target.value = "";
   if (!file) return;
   try {
-    const n = StoredData.importJson(await file.text());
-    showMsg("storedImportMsg", `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.`);
+    // Only admins may change leads, so for everyone else they're left out.
+    const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads() });
+    showMsg("storedImportMsg", n.leads === null
+      ? `Imported ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name} (leads are left to admins).`
+      : `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.`);
     renderStoredData();
   } catch (err) {
     showMsg("storedImportMsg", `${file.name}: ${err.message}.`, false);
@@ -1078,6 +1086,30 @@ systemDark?.addEventListener("change", e => {
 });
 
 
+// Admins (the usernames in the database's pk030/admins list) get the Admin
+// tab, where leads and their usernames are managed; the database rules stop
+// anyone else changing them. With no database (local-only) there's nothing to
+// protect, so whoever uses that copy manages its leads.
+function isAdmin() {
+  return !!currentUser && admins.includes(currentUser);
+}
+
+function canManageLeads() {
+  return localOnly || isAdmin();
+}
+
+function renderAdmin() {
+  const show = canManageLeads();
+  el("adminTabBtn").classList.toggle("hidden", !show);
+  if (!show && !el("adminTab").classList.contains("hidden")) showView("sheetTab");
+  el("adminList").innerHTML = admins.map(u => {
+    const lead = StoredData.leadForUser(u);
+    const note = [lead && u, u === currentUser && "you"].filter(Boolean).join(", ");
+    return `<li>${escapeHtml(lead ?? u)}${note ? ` <span class="admin-note">(${escapeHtml(note)})</span>` : ""}</li>`;
+  }).join("");
+  el("adminLocalMsg").classList.toggle("hidden", !localOnly);
+}
+
 function showSignedInName() {
   if (!currentUser) return;
   const lead = StoredData.leadForUser(currentUser);
@@ -1104,12 +1136,17 @@ CloudSync.start({
     document.body.dataset.auth = "signed-in";
   },
   onSignedOut() {
+    currentUser = null;
+    admins = [];
+    renderAdmin();
     document.body.dataset.auth = "signed-out";
     el("signInUser").focus();
   },
   // The database library couldn't load (e.g. index.html opened from disk),
   // so there is nothing to sign in to; the app runs on this computer's copy.
   onLocalOnly(text) {
+    localOnly = true;
+    renderAdmin();
     document.body.dataset.auth = "local";
     showSyncStatus({ state: "error", text });
   },
@@ -1128,6 +1165,10 @@ CloudSync.start({
     StoredData.replaceAll(data);
     renderStoredData();
     fillFromStoredData();
+  },
+  onAdmins(list) {
+    admins = list;
+    renderAdmin();
   },
   onStatus: showSyncStatus
 });

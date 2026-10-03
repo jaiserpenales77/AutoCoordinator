@@ -49,6 +49,7 @@
   <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab">Forms</button>
+  <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="adminTab" id="adminTabBtn">Admin</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -268,18 +269,6 @@
 
 <div class="layout stored-layout hidden" id="storedTab">
   <section class="panel">
-    <h2>Leads</h2>
-    <p class="muted">Listed in the "Yield Sheet Created By" dropdown. Type a lead's sign-in username next to their name to link them: the app then shows their name when they're signed in and fills them in as Created By on new sheets.</p>
-    <form id="leadForm" class="inline-form" autocomplete="off">
-      <input type="text" id="leadName" placeholder="Lead name, e.g. Jane Doe" required>
-      <button type="submit" class="primary">Add Lead</button>
-    </form>
-    <p id="leadMsg" class="form-msg"></p>
-    <ul id="leadList" class="stored-list"></ul>
-    <p id="noLeadsMsg" class="muted">No leads yet.</p>
-  </section>
-
-  <section class="panel">
     <h2>Bulk Items &amp; Piece Weights</h2>
     <p class="muted">When a stored Bulk Item is entered or imported on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
     <form id="bulkItemForm" class="inline-form" autocomplete="off">
@@ -327,6 +316,27 @@
       </label>
     </div>
     <p id="storedImportMsg" class="form-msg"></p>
+  </section>
+</div>
+
+<div class="layout admin-layout hidden" id="adminTab">
+  <section class="panel">
+    <h2>Leads &amp; Usernames</h2>
+    <p class="muted">Leads are listed in the "Yield Sheet Created By" dropdown. Type a lead's sign-in username next to their name to link them: the app then shows their name when they're signed in and fills them in as Created By on new sheets. Only admins can change this list.</p>
+    <form id="leadForm" class="inline-form" autocomplete="off">
+      <input type="text" id="leadName" placeholder="Lead name, e.g. Jane Doe" required>
+      <button type="submit" class="primary">Add Lead</button>
+    </form>
+    <p id="leadMsg" class="form-msg"></p>
+    <ul id="leadList" class="stored-list"></ul>
+    <p id="noLeadsMsg" class="muted">No leads yet.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Admins</h2>
+    <p class="muted">Only admins see this tab, and the database only lets admins change leads and usernames. Admins are the usernames in the <code>usernames</code> list of the <code>pk030/admins</code> document, changed in the Firebase console (Firestore Database → Data).</p>
+    <ul id="adminList" class="admin-list"></ul>
+    <p id="adminLocalMsg" class="muted hidden">The database isn't connected on this computer, so there are no admins: anyone using this copy can manage leads.</p>
   </section>
 </div>
 
