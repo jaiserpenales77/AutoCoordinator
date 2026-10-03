@@ -9,10 +9,23 @@ let editingId = null;
 // in the Created By dropdown on this sheet (see applyDefaultCreatedBy).
 let currentUser = null;
 let createdByPicked = false;
-// The admin usernames from the database, and whether the app runs without a
-// database on this computer (see renderAdmin).
-let admins = [];
+// The signed-in account's type (null until known) and name, every account
+// (for admins), and whether the app runs without a database on this computer
+// (see renderAccess).
+let role = null;
+let accountName = "";
+let accounts = [];
 let localOnly = false;
+// Account types, lowest first, and the views PLT and MLT may open (see
+// renderAccess).
+const ROLE_ORDER = ["plt", "mlt", "lead", "admin", "owner"];
+const ROLE_LABELS = { plt: "PLT", mlt: "MLT", lead: "Lead", admin: "Admin", owner: "Owner" };
+const LIMITED_VIEWS = {
+  plt: ["formsTab", "unplannedTab", "bulkReturnTab", "bulkCalcTab"],
+  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "bulkCalcTab"]
+};
+const atLeast = (r, min) => ROLE_ORDER.indexOf(r) >= ROLE_ORDER.indexOf(min);
+const effectiveRole = () => (localOnly ? "owner" : role);
 // Imported report PDFs as page images (see addImportedReports).
 const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
 let importedReports = [];
@@ -42,8 +55,8 @@ function toNum(v) {
   return Number.isNaN(n) ? 0 : n;
 }
 
-function todayISO() {
-  const d = new Date();
+// A date (today by default) as YYYY-MM-DD.
+function todayISO(d = new Date()) {
   const pad = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
@@ -827,6 +840,8 @@ const FORM_VIEWS = [...document.querySelectorAll("#formsTab [data-form]")]
 const VIEWS = [...[...document.querySelectorAll(".tab")].map(t => t.dataset.tab), ...FORM_VIEWS.map(f => f.id)];
 
 function showView(id) {
+  // Once the account type is known, only views it may open (see canOpen).
+  if ((role || localOnly) && !canOpen(id)) return;
   const tabId = FORM_VIEWS.some(f => f.id === id) ? "formsTab" : id;
   document.querySelectorAll(".tab").forEach(t => {
     const active = t.dataset.tab === tabId;
@@ -885,7 +900,7 @@ function renderStoredData() {
   if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();
   showSignedInName();
   applyDefaultCreatedBy();
-  renderAdmin();
+  renderAccounts();
 }
 
 el("leadForm").addEventListener("submit", e => {
@@ -1043,6 +1058,42 @@ el("signInForm").addEventListener("submit", async e => {
   }
 });
 
+function showSignUp(on) {
+  el("signInForm").classList.toggle("hidden", on);
+  el("signUpForm").classList.toggle("hidden", !on);
+  el(on ? "signUpName" : "signInUser").focus();
+}
+el("showSignUpBtn").addEventListener("click", () => showSignUp(true));
+el("showSignInBtn").addEventListener("click", () => showSignUp(false));
+
+// Anyone can create an account; it starts as a PLT.
+el("signUpForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = el("signUpName").value.trim().replace(/\s+/g, " ");
+  const username = StoredData.normUser(el("signUpUser").value);
+  const password = el("signUpPassword").value;
+  const problem = !name ? "Enter your full name."
+    : !StoredData.validUsername(username) || username.length < 3 || username.length > 30
+      ? "Pick a username of 3–30 letters, numbers, dots, dashes or underscores."
+    : password.length < 6 ? "The password needs at least 6 characters."
+    : password !== el("signUpConfirm").value ? "The passwords don't match." : "";
+  if (problem) {
+    el("signUpMsg").textContent = problem;
+    return;
+  }
+  el("signUpBtn").disabled = true;
+  el("signUpMsg").textContent = "";
+  try {
+    await CloudSync.signUp(name, username, password);
+    el("signUpForm").reset();
+    showSignUp(false);
+  } catch (err) {
+    el("signUpMsg").textContent = err.message;
+  } finally {
+    el("signUpBtn").disabled = false;
+  }
+});
+
 el("signOutBtn").addEventListener("click", async () => {
   if (CloudSync.hasUnsyncedChanges() && !confirm(
     "Some changes haven't reached the database yet, and signing out removes them from this computer. Sign out anyway?")) return;
@@ -1086,35 +1137,102 @@ systemDark?.addEventListener("change", e => {
 });
 
 
-// Admins (the usernames in the database's pk030/admins list) get the Admin
-// tab, where leads and their usernames are managed; the database rules stop
-// anyone else changing them. With no database (local-only) there's nothing to
-// protect, so whoever uses that copy manages its leads.
-function isAdmin() {
-  return !!currentUser && admins.includes(currentUser);
+// Account types (see cloud-sync.js). PLT and MLT only open some forms and the
+// Bulk Calculator, and never the saved sheets or Stored Data; Lead and up open
+// everything but the Admin tab; Admin and Owner open everything. The database
+// rules enforce the same split. With no database (local-only) there's
+// nothing to protect, so whoever uses that copy gets everything.
+function canOpen(view) {
+  const r = effectiveRole();
+  if (!r) return false;
+  if (LIMITED_VIEWS[r]) return LIMITED_VIEWS[r].includes(view);
+  return view !== "adminTab" || atLeast(r, "admin");
+}
+
+function hasDatabaseAccess() {
+  const r = effectiveRole();
+  return !!r && atLeast(r, "lead");
 }
 
 function canManageLeads() {
-  return localOnly || isAdmin();
+  const r = effectiveRole();
+  return !!r && atLeast(r, "admin");
 }
 
-function renderAdmin() {
-  const show = canManageLeads();
-  el("adminTabBtn").classList.toggle("hidden", !show);
-  if (!show && !el("adminTab").classList.contains("hidden")) showView("sheetTab");
-  el("adminList").innerHTML = admins.map(u => {
-    const lead = StoredData.leadForUser(u);
-    const note = [lead && u, u === currentUser && "you"].filter(Boolean).join(", ");
-    return `<li>${escapeHtml(lead ?? u)}${note ? ` <span class="admin-note">(${escapeHtml(note)})</span>` : ""}</li>`;
-  }).join("");
-  el("adminLocalMsg").classList.toggle("hidden", !localOnly);
+// Shows only the tabs, forms and buttons this account type can use.
+function renderAccess() {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("hidden", !canOpen(t.dataset.tab)));
+  document.querySelectorAll("#formsTab [data-form], .form-nav [data-view]").forEach(b =>
+    b.classList.toggle("hidden", !canOpen(b.dataset.form ?? b.dataset.view)));
+  // Filling a form from the yield sheet needs the yield sheet.
+  ["upFillBtn", "brFillBtn", "holdFillBtn", "swFillBtn"].forEach(id => el(id).classList.toggle("hidden", !hasDatabaseAccess()));
+  if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();
+  const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
+  if (!canOpen(open)) showView(canOpen("sheetTab") ? "sheetTab" : "formsTab");
 }
+
+const accountDisplayName = a => a.name || StoredData.leadForUser(a.username) || a.username;
+
+// The Admin tab's account list: everyone's account type, changeable by
+// admins (only owners change an admin's; nobody changes an owner's or their own).
+function renderAccounts() {
+  el("adminLocalMsg").classList.toggle("hidden", !localOnly);
+  el("accountSearch").classList.toggle("hidden", localOnly || accounts.length === 0);
+  const query = el("accountSearch").value.trim().toLowerCase();
+  const shown = accounts
+    .filter(a => !query || `${accountDisplayName(a)} ${a.username} ${ROLE_LABELS[a.role]}`.toLowerCase().includes(query))
+    .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role)
+      || accountDisplayName(a).localeCompare(accountDisplayName(b), undefined, { sensitivity: "base" }));
+  el("accountTableBody").innerHTML = shown.map(a => {
+    const you = a.username === currentUser;
+    const locked = a.role === "owner" || you || (a.role === "admin" && role !== "owner");
+    const type = locked
+      ? `<span class="role-fixed">${ROLE_LABELS[a.role]}</span>`
+      : `<select data-uid="${escapeHtml(a.uid)}" aria-label="Account type for ${escapeHtml(a.username)}">${
+        ROLE_ORDER.filter(r => r !== "owner").map(r =>
+          `<option value="${r}"${r === a.role ? " selected" : ""}>${ROLE_LABELS[r]}</option>`).join("")}</select>`;
+    return `<tr><td>${escapeHtml(accountDisplayName(a))}${you ? ` <span class="account-you">(you)</span>` : ""}</td>
+      <td>${escapeHtml(a.username)}</td>
+      <td>${type}${a.role === "plt" ? `<span class="role-new">New</span>` : ""}</td>
+      <td>${a.created ? escapeHtml(formatDateMMDDYY(todayISO(a.created))) : ""}</td></tr>`;
+  }).join("");
+  el("noAccountsMsg").textContent = accounts.length ? `No accounts match "${el("accountSearch").value.trim()}".` : "No accounts yet.";
+  el("noAccountsMsg").classList.toggle("hidden", localOnly || shown.length > 0);
+}
+
+// Lead and up are in the Created By leads list, linked to their username;
+// PLT and MLT aren't.
+function syncLeadList(account, newRole) {
+  const linked = StoredData.leadForUser(account.username);
+  if (atLeast(newRole, "lead")) {
+    if (linked) return;
+    const name = accountDisplayName(account).trim().replace(/\s+/g, " ");
+    const existing = StoredData.leads().find(n => n.toLowerCase() === name.toLowerCase());
+    if (!existing) StoredData.addLead(name);
+    StoredData.setLeadUsername(existing ?? name, account.username);
+  } else if (linked) {
+    StoredData.removeLead(linked);
+  }
+}
+
+el("accountSearch").addEventListener("input", renderAccounts);
+el("accountTableBody").addEventListener("change", e => {
+  const select = e.target.closest("select[data-uid]");
+  const account = select && accounts.find(a => a.uid === select.dataset.uid);
+  if (!account) return;
+  const newRole = select.value;
+  CloudSync.setRole(account.uid, newRole);
+  syncLeadList(account, newRole);
+  showMsg("accountMsg", `${accountDisplayName(account)} is now ${ROLE_LABELS[newRole]}.`);
+  renderStoredData();
+});
 
 function showSignedInName() {
   if (!currentUser) return;
   const lead = StoredData.leadForUser(currentUser);
-  el("userName").textContent = lead ?? currentUser;
+  el("userName").textContent = lead ?? (accountName || currentUser);
   el("userName").title = `Username: ${currentUser}`;
+  el("userRole").textContent = role ? ROLE_LABELS[role] : "";
 }
 
 // A new sheet's Created By starts as the signed-in user's lead, unless someone
@@ -1129,16 +1247,33 @@ function applyDefaultCreatedBy() {
 
 StoredData.onChange = CloudSync.saveStored;
 CloudSync.start({
+  // Signed in; the app shows once the account type is known (onRole).
   onSignedIn(username) {
     currentUser = username;
+    document.body.dataset.auth = "pending";
+  },
+  onRole(newRole, { name }) {
+    role = newRole;
+    accountName = name;
+    // Below Lead there's no access to the shared data, so none stays here.
+    if (!hasDatabaseAccess()) {
+      saveRecords([]);
+      StoredData.replaceAll({ leads: [], bulkItems: [], fgItems: [] });
+      renderRecordsTable();
+      renderStoredData();
+    }
+    if (!canManageLeads()) accounts = [];
+    document.body.dataset.auth = "signed-in";
+    document.body.dataset.role = newRole;
+    renderAccess();
+    renderAccounts();
     showSignedInName();
     applyDefaultCreatedBy();
-    document.body.dataset.auth = "signed-in";
   },
   onSignedOut() {
     currentUser = null;
-    admins = [];
-    renderAdmin();
+    role = null;
+    accounts = [];
     document.body.dataset.auth = "signed-out";
     el("signInUser").focus();
   },
@@ -1146,7 +1281,8 @@ CloudSync.start({
   // so there is nothing to sign in to; the app runs on this computer's copy.
   onLocalOnly(text) {
     localOnly = true;
-    renderAdmin();
+    renderAccess();
+    renderAccounts();
     document.body.dataset.auth = "local";
     showSyncStatus({ state: "error", text });
   },
@@ -1166,9 +1302,9 @@ CloudSync.start({
     renderStoredData();
     fillFromStoredData();
   },
-  onAdmins(list) {
-    admins = list;
-    renderAdmin();
+  onAccounts(list) {
+    accounts = list;
+    renderAccounts();
   },
   onStatus: showSyncStatus
 });

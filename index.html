@@ -24,7 +24,7 @@
   <p class="subtitle">Yield sheets, forms and calculators for the packaging floor</p>
   <div class="header-status">
     <span id="syncStatus" class="sync-status" role="status"></span>
-    <span class="user-bar">Signed in as <strong id="userName"></strong>
+    <span class="user-bar">Signed in as <strong id="userName"></strong><span id="userRole" class="role-badge"></span>
       <button type="button" id="signOutBtn">Sign out</button></span>
     <button type="button" id="themeToggle" class="theme-toggle"></button>
   </div>
@@ -41,7 +41,28 @@
     </label>
     <button type="submit" class="primary" id="signInBtn">Sign in</button>
     <p id="signInMsg" class="form-msg hint-err" role="alert"></p>
-    <p class="muted">Need an account or forgot your password? Ask the app admin.</p>
+    <p class="muted">New here? <button type="button" class="link-btn" id="showSignUpBtn">Create an account</button></p>
+    <p class="muted">Forgot your password? Ask the app admin.</p>
+  </form>
+  <form id="signUpForm" class="panel signin-panel hidden">
+    <h2>Create an account</h2>
+    <label>Full name
+      <input type="text" id="signUpName" autocomplete="name" maxlength="60" required>
+    </label>
+    <label>Username
+      <input type="text" id="signUpUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" required>
+      <small class="muted">Letters, numbers, dots, dashes or underscores; you'll sign in with it.</small>
+    </label>
+    <label>Password
+      <input type="password" id="signUpPassword" autocomplete="new-password" minlength="6" required>
+    </label>
+    <label>Confirm password
+      <input type="password" id="signUpConfirm" autocomplete="new-password" minlength="6" required>
+    </label>
+    <button type="submit" class="primary" id="signUpBtn">Create account</button>
+    <p id="signUpMsg" class="form-msg hint-err" role="alert"></p>
+    <p class="muted">New accounts start as PLT (Unplanned Issue, Bulk Return and the Bulk Calculator) until an admin changes the account type.</p>
+    <p class="muted">Already have an account? <button type="button" class="link-btn" id="showSignInBtn">Sign in</button></p>
   </form>
 </section>
 
@@ -320,6 +341,21 @@
 </div>
 
 <div class="layout admin-layout hidden" id="adminTab">
+  <section class="panel accounts-panel">
+    <h2>Accounts</h2>
+    <p class="muted">Change an account type to promote or demote someone. Making someone a Lead or Admin adds them to the Created By leads list and links their username; making them PLT or MLT takes them off it.</p>
+    <input type="search" id="accountSearch" class="stored-search" placeholder="Search accounts…" aria-label="Search accounts">
+    <div class="table-scroll stored-table">
+      <table class="accounts-table">
+        <thead><tr><th>Name</th><th>Username</th><th>Account type</th><th>Joined</th></tr></thead>
+        <tbody id="accountTableBody"></tbody>
+      </table>
+    </div>
+    <p id="accountMsg" class="form-msg"></p>
+    <p id="noAccountsMsg" class="muted">No accounts yet.</p>
+    <p id="adminLocalMsg" class="muted hidden">The database isn't connected on this computer, so there are no accounts: whoever uses this copy can use everything and manage its leads.</p>
+  </section>
+
   <section class="panel">
     <h2>Leads &amp; Usernames</h2>
     <p class="muted">Leads are listed in the "Yield Sheet Created By" dropdown. Type a lead's sign-in username next to their name to link them: the app then shows their name when they're signed in and fills them in as Created By on new sheets. Only admins can change this list.</p>
@@ -333,10 +369,15 @@
   </section>
 
   <section class="panel">
-    <h2>Admins</h2>
-    <p class="muted">Only admins see this tab, and the database only lets admins change leads and usernames. Admins are the usernames in the <code>usernames</code> list of the <code>pk030/admins</code> document, changed in the Firebase console (Firestore Database → Data).</p>
-    <ul id="adminList" class="admin-list"></ul>
-    <p id="adminLocalMsg" class="muted hidden">The database isn't connected on this computer, so there are no admins: anyone using this copy can manage leads.</p>
+    <h2>Account Types</h2>
+    <ul class="role-list">
+      <li><strong>PLT</strong> — Unplanned Issue, Bulk Return and the Bulk Calculator. Everyone who signs up starts here.</li>
+      <li><strong>MLT</strong> — every form except the Hold Tag, and the Bulk Calculator.</li>
+      <li><strong>Lead</strong> — everything except this tab: yield sheets, Stored Data and all forms. Leads are in the Created By list.</li>
+      <li><strong>Admin</strong> — everything, and this tab: change account types and the leads list.</li>
+      <li><strong>Owner</strong> — an admin who can't be demoted or removed here; only owners can demote admins. Owners are the usernames in the <code>owners</code> list of the <code>pk030/admins</code> document, changed in the Firebase console.</li>
+    </ul>
+    <p class="muted">PLT and MLT never reach the saved yield sheets or Stored Data.</p>
   </section>
 </div>
 

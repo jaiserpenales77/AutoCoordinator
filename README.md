@@ -124,9 +124,16 @@ reloaded).
 
 ## Admin tab
 
-Only admins see this tab (see **Admins** below; with no database, as when
-`index.html` is opened from disk, whoever uses that copy does).
+Only Admins and Owners see this tab (see **Account types** below; with no
+database, as when `index.html` is opened from disk, whoever uses that copy
+does).
 
+- **Accounts** — everyone who has signed in, with their account type. Change
+  the type to promote or demote someone (new sign-ups are PLT and marked
+  **New**). Admins can change anyone's type except their own, an Owner's or
+  another Admin's; only Owners demote Admins. Making someone a Lead or Admin
+  adds their name to the leads list below and links their username; making
+  them PLT or MLT takes them off it.
 - **Leads & Usernames** — the names in the **Yield Sheet Created By**
   dropdown. **Other…** lets someone type a name that isn't listed yet. The
   chosen name prints on the "Yield Sheet Created By:" line; with none chosen,
@@ -135,8 +142,10 @@ Only admins see this tab (see **Admins** below; with no database, as when
   name). When that person is signed in, the header shows their name instead
   of the username, and new sheets start with them as Created By; anyone can
   still pick someone else in the dropdown, and saved sheets keep their own.
-  A username links to one lead at a time.
-- **Admins** — who the admins are.
+  A username links to one lead at a time. Leads without an account can be
+  added here by hand. Linking a username to a lead before that person signs
+  up makes their new account a Lead straight away.
+- **Account Types** — what each type can use.
 
 ## Stored Data tab
 
@@ -238,7 +247,9 @@ saved before the database existed are uploaded.
 People sign in with a **username and password** before the app shows or syncs
 anything. Accounts are Firebase Authentication email/password accounts named
 `username@pk030.local`; the address is never emailed, and the sign-in screen
-only asks for the username. The app remembers the sign-in on that computer.
+only asks for the username. **Create an account** on the sign-in screen lets
+anyone sign up with their full name, a username and a password; every new
+account starts as a **PLT** until an Admin or Owner changes it. The app remembers the sign-in on that computer.
 **Sign out** clears this computer's copies of the shared data (saved sheets,
 Stored Data and the offline cache); signing in again downloads them. If the
 database library can't load at all (e.g. `index.html` opened from disk), the
@@ -248,18 +259,20 @@ app runs without sign-in on that computer's own copy.
 
 1. **Authentication → Sign-in method → Email/Password → Enable** (leave
    "Email link" off).
-2. **Authentication → Settings → User actions → uncheck "Enable create
-   (sign-up)"**. Without this, anyone could create their own account with the
-   site's public key and get past the rules.
-3. **Authentication → Users → Add user** for each person: email
-   `theirname@pk030.local`, and a password (6+ characters).
-4. **Firestore Database → Data** → in the `pk030` collection, **Add
-   document** with Document ID `admins` and one field: name `usernames`,
-   type **array**, with your username (lowercase, without `@pk030.local`) as
-   a string element. See **Admins** below.
-5. **Firestore Database → Rules** → replace them with the rules below →
+2. **Authentication → Settings → User actions → check "Enable create
+   (sign-up)"** so the app's **Create an account** works. (Unchecked, only
+   accounts added in the console exist: **Authentication → Users → Add
+   user**, email `theirname@pk030.local`, a password of 6+ characters.) A new
+   account can only make itself a PLT, which never reaches the database's
+   data; the rules below enforce that.
+3. **Firestore Database → Data** → `pk030` collection → **Add document**
+   with Document ID `admins` (or open it, if it's there) and a field named
+   `owners`, type **array**, with your username (lowercase, without
+   `@pk030.local`) as a string element. See **Account types** below.
+4. **Firestore Database → Rules** → replace them with the rules below →
    **Publish**. JDE Sched only uses the `jde-sched` collection, which stays
-   open exactly as before; this app's data then needs a signed-in user.
+   open exactly as before. Until these rules are published, the app treats
+   everyone signed in as a Lead, as before account types.
 
 ```
 rules_version = '2';
@@ -270,55 +283,113 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Packaging Lead Hub: signed-in users only
+    // Packaging Lead Hub. Accounts are username@pk030.local.
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null
+        && request.auth.token.email.matches('[^@]+@pk030[.]local');
     }
-    // Admins are the usernames listed in pk030/admins.
+    function username() {
+      return request.auth.token.email.split('@')[0];
+    }
+    function doc(path) {
+      return /databases/$(database)/documents/pk030/$(path);
+    }
+    // Owners: the usernames in pk030/admins "owners" (Firebase console only).
+    function owners() {
+      return exists(doc('admins')) ? get(doc('admins')).data.get('owners', []) : [];
+    }
+    function isOwner() {
+      return signedIn() && username() in owners();
+    }
+    // Everyone else's account type is in their pk030-users record.
+    function myRole() {
+      let me = /databases/$(database)/documents/pk030-users/$(request.auth.uid);
+      return exists(me) ? get(me).data.role : 'none';
+    }
     function isAdmin() {
-      let admins = /databases/$(database)/documents/pk030/admins;
-      return signedIn()
-        && request.auth.token.email.matches('[^@]+@pk030[.]local')
-        && exists(admins)
-        && request.auth.token.email.split('@')[0] in get(admins).data.usernames;
+      return isOwner() || (signedIn() && myRole() == 'admin');
     }
+    function isLead() {
+      return isAdmin() || (signedIn() && myRole() == 'lead');
+    }
+    // Usernames an admin has linked to a lead.
+    function linkedToLead() {
+      return exists(doc('storedData'))
+        && username() in get(doc('storedData')).data.get('leadUsers', {});
+    }
+
+    // Saved yield sheets: Lead and up.
     match /pk030-yield-sheets/{id} {
-      allow read, write: if signedIn();
+      allow read, write: if isLead();
     }
-    // Everyone signed in can change bulk items and FG items; only admins can
-    // change leads and their usernames.
+    // Stored Data: Lead and up; only admins change leads and their usernames.
     match /pk030/storedData {
-      allow read: if signedIn();
+      allow read: if isLead();
       allow create: if isAdmin()
-        || (signedIn() && !request.resource.data.keys().hasAny(['leads', 'leadUsers']));
+        || (isLead() && !request.resource.data.keys().hasAny(['leads', 'leadUsers']));
       allow update: if isAdmin()
-        || (signedIn() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leads', 'leadUsers']));
+        || (isLead() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leads', 'leadUsers']));
       allow delete: if isAdmin();
     }
-    // The admin list: read by the app, changed only in the Firebase console.
+    // The owners list: read by the app, changed only in the Firebase console.
     match /pk030/admins {
       allow read: if signedIn();
       allow write: if false;
+    }
+    // Account records. A new account makes its own as a PLT (or as a Lead if
+    // an admin already linked its username to a lead). Admins change account
+    // types; only owners change an admin's; nobody changes their own.
+    match /pk030-users/{uid} {
+      allow read: if signedIn() && (uid == request.auth.uid || isAdmin());
+      allow create: if signedIn() && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['username', 'name', 'role', 'createdAt'])
+        && request.resource.data.username == username()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.role == 'plt'
+          || (request.resource.data.role == 'lead' && linkedToLead()));
+      allow update: if isAdmin() && uid != request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+        && request.resource.data.role in ['plt', 'mlt', 'lead', 'admin']
+        && !(resource.data.username in owners())
+        && (isOwner() || resource.data.role != 'admin');
+      allow delete: if false;
     }
   }
 }
 ```
 
-### Admins
+### Account types
 
-Admins are the usernames in the `usernames` array of the `pk030/admins`
-document. Only they see the **Admin** tab, and the database rules only let them
-change leads and their usernames (everyone signed in can still use the
-leads, and change bulk items and FG items). The app can't change the admin
-list: add or remove an admin in the Firebase console (**Firestore Database →
-Data → pk030 → admins → usernames**). With no `admins` document, nobody can
-change leads.
+| Type | Can use |
+|---|---|
+| **PLT** | Unplanned Issue, Bulk Return and the Bulk Calculator. Every new account starts here. |
+| **MLT** | Every form except the Hold Tag, and the Bulk Calculator. |
+| **Lead** | Everything except the Admin tab: yield sheets, Stored Data, all forms. |
+| **Admin** | Everything, plus the Admin tab. |
+| **Owner** | Same as Admin, and can't be demoted or removed in the app; only Owners demote Admins. |
+
+PLT and MLT never reach the saved yield sheets or Stored Data (the database
+refuses them), so their forms' **Fill from Yield Sheet** buttons and the
+calculator's save-to-Stored-Data button are hidden.
+
+Each account's type is in its `pk030-users/{uid}` record (keyed by the
+sign-in account's unique ID, so a deleted account's username signed up again
+starts over as a PLT). The first sign-in makes the record: a PLT, or a Lead
+if an admin has linked that username to a lead (so existing leads keep their
+access). Owners are the usernames in the `owners` array of the `pk030/admins`
+document, which the app can't change: add or remove an Owner in the Firebase
+console (**Firestore Database → Data → pk030 → admins → owners**). Before
+deleting an Owner's sign-in account, take them off `owners` first, or someone
+could sign up with that username and be an Owner.
 
 ### Forgotten password / removing someone
 
 The console's "Reset password" sends an email, which can't reach a
 `@pk030.local` address. Instead, **delete the user and add them again** with a
-new password. To remove someone's access, delete (or disable) their user.
+new password (or let them sign up again; a new account starts as a PLT). To
+remove someone's access, delete (or disable) their user.
 
 ## Files
 
@@ -340,7 +411,7 @@ new password. To remove someone's access, delete (or disable) their user.
   Standard Work sheet's two sides, from the 600 dpi scans (straightened,
   cleaned, 300 dpi).
 - `stored-data.js` — leads (Admin tab), bulk piece weights and FG counts (Stored Data tab).
-- `cloud-sync.js` — sign-in, and syncing sheets and Stored Data with Firestore.
+- `cloud-sync.js` — sign-in and sign-up, account types, and syncing sheets and Stored Data with Firestore.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth
   (Apache-2.0); the Firestore and Auth files import the local app file instead

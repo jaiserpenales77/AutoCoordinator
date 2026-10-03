@@ -129,6 +129,8 @@ body[data-auth="signed-out"] .signin { display: block; }
   margin: 0 auto;
 }
 .signin-panel h2 { margin: 0; }
+.signin-panel .link-btn { margin: 0; font-size: inherit; }
+.signin-panel small { display: block; margin-top: 4px; font-weight: 400; }
 .sync-synced { color: var(--ok-text); }
 .sync-saving, .sync-connecting { color: var(--caution-text); }
 .sync-offline, .sync-error { color: var(--warn-text); }
@@ -657,9 +659,31 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .stored-list button, .stored-layout .row-actions button { padding: 4px 10px; font-size: 0.78rem; }
 .stored-list .lead-name { flex: 1 1 auto; min-width: 0; }
 .stored-list input.lead-user { flex: 0 1 150px; min-width: 0; padding: 4px 8px; font-size: 0.82rem; }
-.admin-list { list-style: none; margin: 8px 0 0; padding: 0; }
-.admin-list li { padding: 8px 0; border-bottom: 1px solid var(--border); }
-.admin-list .admin-note { color: var(--muted); font-size: 0.82rem; }
+.accounts-panel { grid-column: 1 / -1; }
+.accounts-table td { vertical-align: middle; }
+.accounts-table select { padding: 4px 8px; font-size: 0.85rem; }
+.accounts-table .role-fixed { font-weight: 600; }
+.accounts-table .role-new {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--caution-bg);
+  color: var(--caution-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.accounts-table .account-you { color: var(--muted); font-size: 0.8rem; }
+.role-list { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
+.role-list li { margin-bottom: 6px; }
+.role-badge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
 
 .print-sheet { display: none; }
 

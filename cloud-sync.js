@@ -1,10 +1,13 @@
 // Signs users in and syncs saved yield sheets and Stored Data through the
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
 // each sheet is a document in `pk030-yield-sheets`, and leads, their linked
-// usernames, bulk items and FG items are maps in the `pk030/storedData` document. The Firestore rules only
-// let signed-in users reach these, and only admins (the usernames listed in
-// the `pk030/admins` document, which is edited in the Firebase console) can
-// change leads and their usernames. localStorage stays the app's working copy;
+// usernames, bulk items and FG items are maps in the `pk030/storedData` document.
+// Each account has a `pk030-users/{uid}` record with its account type (role):
+// PLT (what everyone who signs up starts as) and MLT only use the forms and
+// never reach the database; Lead and up sync sheets and Stored Data; Admin and
+// Owner also manage accounts and leads. Owners are the usernames in the
+// `pk030/admins` document's `owners` list, which only the Firebase console can
+// change. The Firestore rules enforce all of this. localStorage stays the app's working copy;
 // Firestore's own offline cache (IndexedDB) holds writes made offline and
 // sends them later. Signing out clears both copies from this computer.
 const CloudSync = (() => {
@@ -20,6 +23,7 @@ const CloudSync = (() => {
   // Accounts are "username@pk030.local"; the address never receives mail.
   const USERNAME_DOMAIN = "pk030.local";
   const SHEETS = "pk030-yield-sheets";
+  const USERS = "pk030-users";
   // Set once this browser's pre-sync data has been uploaded; until then a
   // snapshot must not replace the local copy, or that data would be lost.
   const MIGRATED = { sheets: "pk030_cloud_migrated_sheets", stored: "pk030_cloud_migrated_stored" };
@@ -31,15 +35,29 @@ const CloudSync = (() => {
   let failed = null;
   let meta = { sheets: null, stored: null };
   let unsubscribers = [];
+  let dataUnsubscribers = [];
+  let accountsUnsubscribers = [];
   let handlers = null;
+  // The signed-in account: its record (undefined until loaded), the owners
+  // list (likewise), and the account type worked out from them.
+  let account = null;
+  // The name typed on the sign-up form, for the new account's record.
+  let pendingName = null;
 
   const clean = obj => JSON.parse(JSON.stringify(obj));
   const sheetRef = id => fs.doc(db, SHEETS, id);
   const storedRef = () => fs.doc(db, "pk030", "storedData");
   const adminsRef = () => fs.doc(db, "pk030", "admins");
+  const userRef = uid => fs.doc(db, USERS, uid);
+
+  // Account types, lowest first; the index is the access level.
+  const ROLES = ["plt", "mlt", "lead", "admin", "owner"];
+  const atLeast = (role, min) => ROLES.indexOf(role) >= ROLES.indexOf(min);
 
   function status() {
     if (failed) return { state: "error", text: failed };
+    if (!account?.role) return { state: "connecting", text: "Connecting to database…" };
+    if (!atLeast(account.role, "lead")) return { state: "synced", text: "Signed in" };
     if (!meta.sheets || !meta.stored) return { state: "connecting", text: "Connecting to database…" };
     if (meta.sheets.fromCache || meta.stored.fromCache) return { state: "offline", text: "Offline — changes will sync when back online" };
     if (meta.sheets.hasPendingWrites || meta.stored.hasPendingWrites) return { state: "saving", text: "Saving…" };
@@ -128,8 +146,9 @@ const CloudSync = (() => {
     };
   }
 
-  function listen() {
-    unsubscribers.push(fs.onSnapshot(fs.collection(db, SHEETS), { includeMetadataChanges: true }, snap => {
+  // Saved sheets and Stored Data, for Lead and up.
+  function listenData() {
+    dataUnsubscribers.push(fs.onSnapshot(fs.collection(db, SHEETS), { includeMetadataChanges: true }, snap => {
       meta.sheets = snap.metadata;
       if (!localStorage.getItem(MIGRATED.sheets)) {
         if (snap.metadata.fromCache) return report();
@@ -141,7 +160,7 @@ const CloudSync = (() => {
       report();
     }, err => fail("Yield sheet sync unavailable.", err)));
 
-    unsubscribers.push(fs.onSnapshot(storedRef(), { includeMetadataChanges: true }, snap => {
+    dataUnsubscribers.push(fs.onSnapshot(storedRef(), { includeMetadataChanges: true }, snap => {
       meta.stored = snap.metadata;
       const remote = storedFromRemote(snap.data());
       if (!localStorage.getItem(MIGRATED.stored)) {
@@ -152,27 +171,116 @@ const CloudSync = (() => {
       }
       report();
     }, err => fail("Stored Data sync unavailable.", err)));
+  }
 
-    // Whether this user is an admin. No list (or no access to it) means not.
-    // Usernames must match exactly, as the rules compare them.
-    unsubscribers.push(fs.onSnapshot(adminsRef(), snap => {
-      const list = snap.data()?.usernames;
-      handlers.onAdmins(Array.isArray(list) ? list.filter(u => typeof u === "string") : []);
-    }, err => {
-      console.warn("Couldn't read the admins list.", err);
-      handlers.onAdmins([]);
-    }));
+  function stopData() {
+    dataUnsubscribers.splice(0).forEach(unsub => unsub());
+    meta = { sheets: null, stored: null };
+  }
+
+  // Every account's record, for the Admin tab (Admin and Owner).
+  function listenAccounts() {
+    accountsUnsubscribers.push(fs.onSnapshot(fs.collection(db, USERS), snap => {
+      handlers.onAccounts(snap.docs.map(d => {
+        const data = d.data();
+        const created = data.createdAt?.toDate?.() ?? null;
+        const username = String(data.username ?? "");
+        const role = account?.owners?.includes(username) ? "owner"
+          : ROLES.includes(data.role) && data.role !== "owner" ? data.role : "plt";
+        return { uid: d.id, username, name: String(data.name ?? ""), role, created };
+      }));
+    }, err => console.warn("Couldn't load the accounts.", err)));
+  }
+
+  function stopAccounts() {
+    accountsUnsubscribers.splice(0).forEach(unsub => unsub());
+  }
+
+  // A first sign-in has no account record yet, so it makes one: as a Lead if
+  // an admin already linked this username to a lead (the rules check that),
+  // otherwise as a PLT.
+  async function createAccountRecord(user) {
+    if (account.creating) return;
+    account.creating = true;
+    const base = { username: account.username, name: (pendingName ?? "").slice(0, 60), createdAt: fs.serverTimestamp() };
+    try {
+      await fs.setDoc(userRef(user.uid), { ...base, role: "lead" });
+    } catch {
+      try {
+        await fs.setDoc(userRef(user.uid), { ...base, role: "plt" });
+      } catch (err) {
+        fail("Couldn't create the account record.", err);
+      }
+    }
+    pendingName = null;
+    if (account) account.creating = false;
+  }
+
+  // Works out the account type once the record and the owners list are in,
+  // and starts or stops the shared data to match.
+  function updateRole() {
+    if (!account || account.record === undefined || account.owners === undefined) return;
+    const recorded = account.record?.role;
+    const role = account.owners.includes(account.username) ? "owner"
+      : ROLES.includes(recorded) && recorded !== "owner" ? recorded : "plt";
+    if (role === account.role) return;
+    account.role = role;
+    const data = atLeast(role, "lead");
+    if (data && !dataUnsubscribers.length) listenData();
+    if (!data) stopData();
+    const admin = atLeast(role, "admin");
+    if (admin && !accountsUnsubscribers.length) listenAccounts();
+    if (!admin) stopAccounts();
+    handlers.onRole(role, { name: String(account.record?.name ?? "") });
+    report();
+  }
+
+  function listenAccount(user) {
+    const mine = { uid: user.uid, username: usernameOf(user), record: undefined, owners: undefined, role: null };
+    account = mine;
+    // Ignore anything arriving after this account signed out.
+    const current = fn => (...args) => { if (account === mine) fn(...args); };
+    unsubscribers.push(fs.onSnapshot(userRef(user.uid), { includeMetadataChanges: true }, current(snap => {
+      // Wait for the server's answer, so a refused write never counts.
+      if (snap.metadata.hasPendingWrites) return;
+      const data = snap.data();
+      if (!data) {
+        if (!snap.metadata.fromCache) createAccountRecord(user);
+        return;
+      }
+      account.record = data;
+      updateRole();
+    }), current(err => {
+      // Rules from before account types refuse account records; until the
+      // new rules are published, everyone signed in works as before (a Lead).
+      // The rules, not this, decide what anyone can reach.
+      console.warn("Account record unavailable; using the pre-account-types access.", err);
+      account.record = { role: "lead" };
+      updateRole();
+    })));
+    // Owners. No list (or no access to it) means no owners.
+    unsubscribers.push(fs.onSnapshot(adminsRef(), current(snap => {
+      const list = snap.data()?.owners;
+      account.owners = Array.isArray(list) ? list.filter(u => typeof u === "string") : [];
+      updateRole();
+    }), current(err => {
+      console.warn("Couldn't read the owners list.", err);
+      account.owners = [];
+      updateRole();
+    })));
   }
 
   function stopListening() {
     unsubscribers.splice(0).forEach(unsub => unsub());
-    meta = { sheets: null, stored: null };
+    stopData();
+    stopAccounts();
+    account = null;
     failed = null;
   }
 
-  // h: onSignedIn(username), onSignedOut(), onLocalOnly(message), onStatus,
-  // onSheets(records), onStoredData(data), onAdmins(usernames), localSheets(),
-  // localStored().
+  // h: onSignedIn(username), onRole(role, { name }), onSignedOut(),
+  // onLocalOnly(message), onStatus, onSheets(records), onStoredData(data),
+  // onAccounts(accounts), localSheets(), localStored().
   async function start(h) {
     handlers = h;
     try {
@@ -186,8 +294,8 @@ const CloudSync = (() => {
       stopListening();
       if (user) {
         handlers.onSignedIn(usernameOf(user));
+        listenAccount(user);
         report();
-        listen();
       } else {
         handlers.onSignedOut();
       }
@@ -214,6 +322,27 @@ const CloudSync = (() => {
     }
   }
 
+  const signUpErrors = {
+    "auth/email-already-in-use": "That username is taken. Pick another, or sign in.",
+    "auth/weak-password": "The password needs at least 6 characters.",
+    "auth/invalid-email": "That isn't a valid username.",
+    "auth/operation-not-allowed": "Sign-up is turned off. Ask the app admin for an account.",
+    "auth/admin-restricted-operation": "Sign-up is turned off. Ask the app admin for an account.",
+    "auth/network-request-failed": "Can't reach the sign-in service. Check the connection.",
+    "auth/too-many-requests": "Too many attempts. Wait a few minutes and try again."
+  };
+
+  // Creates the account and signs it in; its record (a PLT) follows.
+  async function signUp(name, username, password) {
+    pendingName = name;
+    try {
+      await authMod.createUserWithEmailAndPassword(auth, toEmail(username), password);
+    } catch (err) {
+      pendingName = null;
+      throw new Error(signUpErrors[err.code] ?? `Sign-up failed (${err.code || err.message}).`);
+    }
+  }
+
   const hasUnsyncedChanges = () => !!(meta.sheets?.hasPendingWrites || meta.stored?.hasPendingWrites);
 
   // Signs out and removes this computer's copies of the shared data (the
@@ -234,6 +363,10 @@ const CloudSync = (() => {
     saveSheet: record => write(() => fs.setDoc(sheetRef(record.id), clean(record))),
     deleteSheet: id => write(() => fs.deleteDoc(sheetRef(id))),
     saveStored: (field, key, value) => write(() => fs.setDoc(storedRef(),
-      { [field]: { [key]: value === null ? fs.deleteField() : value } }, { merge: true }))
+      { [field]: { [key]: value === null ? fs.deleteField() : value } }, { merge: true })),
+    signUp,
+    // An admin changing someone's account type.
+    setRole: (uid, role) => write(() => fs.setDoc(userRef(uid), { role }, { merge: true })),
+    ROLES
   };
 })();
