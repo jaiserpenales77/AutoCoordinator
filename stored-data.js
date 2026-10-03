@@ -127,9 +127,11 @@ const StoredData = (() => {
   }
 
   // Merges a file made by exportJson (files from before FG items existed have
-  // no fgItems); returns how many of each it held. Leads and their usernames
-  // are only taken in with `withLeads` (admins), else left out (leads: null).
-  function importJson(text, { withLeads = true } = {}) {
+  // no fgItems); returns how many of each it took in. Leads and their
+  // usernames are only taken in with `withLeads` (admins), else left out
+  // (leads: null). With `addOnly` (Leads), items already stored keep their
+  // value and are counted as `kept`.
+  function importJson(text, { withLeads = true, addOnly = false } = {}) {
     let data;
     try {
       data = JSON.parse(text);
@@ -145,11 +147,15 @@ const StoredData = (() => {
         if (validUsername(normUser(u)) && leads().includes(name) && !leadForUser(u)) setLeadUsername(name, u);
       });
     }
-    const bulk = data.items.filter(bulkItems.valid);
+    const isNew = store => i => !addOnly || !store.find(i.item);
+    const bulkAll = data.items.filter(bulkItems.valid);
+    const bulk = bulkAll.filter(isNew(bulkItems));
     bulk.forEach(i => bulkItems.save(i.item, i.pieceWt));
-    const fg = (Array.isArray(data.fgItems) ? data.fgItems : []).filter(fgItems.valid);
+    const fgAll = (Array.isArray(data.fgItems) ? data.fgItems : []).filter(fgItems.valid);
+    const fg = fgAll.filter(isNew(fgItems));
     fg.forEach(i => fgItems.save(i.item, i.count));
-    return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length };
+    return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length,
+      kept: bulkAll.length - bulk.length + fgAll.length - fg.length };
   }
 
   const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, replaceAll, exportJson, importJson, onChange: null };

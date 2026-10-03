@@ -292,6 +292,7 @@
   <section class="panel">
     <h2>Bulk Items &amp; Piece Weights</h2>
     <p class="muted">When a stored Bulk Item is entered or imported on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
+    <p id="bulkItemAddOnlyNote" class="muted hidden">You can add new bulk items; only an admin can change or remove a stored one.</p>
     <form id="bulkItemForm" class="inline-form" autocomplete="off">
       <input type="text" id="bulkItemNumber" placeholder="Bulk item, e.g. BU001565" required>
       <input type="number" id="bulkItemValue" step="any" min="0" placeholder="Piece wt (mg)" required>
@@ -311,6 +312,7 @@
   <section class="panel">
     <h2>FG Items &amp; Counts</h2>
     <p class="muted">When a stored FG Item is entered or imported on the yield sheet, its Count (Fill Rate) fills in automatically.</p>
+    <p id="fgItemAddOnlyNote" class="muted hidden">You can add new FG items; only an admin can change or remove a stored one.</p>
     <form id="fgItemForm" class="inline-form" autocomplete="off">
       <input type="text" id="fgItemNumber" placeholder="FG item, e.g. 2676" required>
       <input type="number" id="fgItemValue" step="any" min="0" placeholder="Count per bottle" required>

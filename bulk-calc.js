@@ -5,7 +5,8 @@
 //   total TH    = total grams / piece weight (mg)   (1000 pieces weigh
 //                 "piece weight" grams, so grams / mg gives thousands)
 //   rounded TH  = total TH rounded to a whole number
-// Uses el, escapeHtml, StoredData, renderStoredData and hasDatabaseAccess from app.js.
+// Uses el, escapeHtml, StoredData, renderStoredData, hasDatabaseAccess and
+// canChangeStoredItems from app.js.
 const BulkCalc = (() => {
   const TARES = [
     { name: "Big Blue Pallet", kg: 23.9 },
@@ -139,8 +140,9 @@ const BulkCalc = (() => {
     const item = el("calcBulkItem").value.trim().toUpperCase();
     const pw = parseFloat(el("calcPieceWt").value);
     const stored = item ? StoredData.bulkItems.find(item) : null;
-    // Saving needs Stored Data, which only Lead and up reach.
-    const show = hasDatabaseAccess() && item && pw > 0 && (!stored || stored.pieceWt !== pw);
+    // Saving needs Stored Data, which only Lead and up reach; changing a
+    // stored piece weight is for admins.
+    const show = hasDatabaseAccess() && item && pw > 0 && (!stored || (stored.pieceWt !== pw && canChangeStoredItems()));
     el("calcSaveItemBtn").classList.toggle("hidden", !show);
     if (show) el("calcSaveItemBtn").textContent = stored
       ? `Update ${item} in Stored Data to ${pw} mg (now ${stored.pieceWt} mg)`

@@ -157,9 +157,14 @@ does).
 A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
 
+**Leads** can only add new items: an item that's already stored can't be
+saved again with another value, and there are no Edit or Remove buttons (the
+database refuses it too). **Admins and Owners** can add, edit and remove.
+
 Stored Data is shared through the database (see below). **Export Stored Data**
 saves a JSON backup; **Import Stored Data** adds a backup's entries back
-(its leads and usernames only for admins).
+(its leads and usernames only for admins; for Leads, items already stored keep
+their values).
 
 ## Importing the JDE report PDFs
 
@@ -312,6 +317,16 @@ service cloud.firestore {
     function isLead() {
       return isAdmin() || (signedIn() && myRole() == 'lead');
     }
+    // A Lead's change to Stored Data: only new bulk/FG items, none changed
+    // or removed.
+    function onlyAddsItems() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bulkItems', 'fgItems'])
+        && onlyAdds('bulkItems') && onlyAdds('fgItems');
+    }
+    function onlyAdds(field) {
+      let change = request.resource.data.get(field, {}).diff(resource.data.get(field, {}));
+      return change.removedKeys().size() == 0 && change.changedKeys().size() == 0;
+    }
     // Usernames an admin has linked to a lead.
     function linkedToLead() {
       return exists(doc('storedData'))
@@ -322,13 +337,13 @@ service cloud.firestore {
     match /pk030-yield-sheets/{id} {
       allow read, write: if isLead();
     }
-    // Stored Data: Lead and up; only admins change leads and their usernames.
+    // Stored Data: Leads read it and add new bulk/FG items; only admins
+    // change or remove items, and change leads and their usernames.
     match /pk030/storedData {
       allow read: if isLead();
       allow create: if isAdmin()
-        || (isLead() && !request.resource.data.keys().hasAny(['leads', 'leadUsers']));
-      allow update: if isAdmin()
-        || (isLead() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leads', 'leadUsers']));
+        || (isLead() && request.resource.data.keys().hasOnly(['bulkItems', 'fgItems']));
+      allow update: if isAdmin() || (isLead() && onlyAddsItems());
       allow delete: if isAdmin();
     }
     // The owners list: read by the app, changed only in the Firebase console.
@@ -366,7 +381,7 @@ service cloud.firestore {
 |---|---|
 | **PLT** | Unplanned Issue, Bulk Return and the Bulk Calculator. Every new account starts here. |
 | **MLT** | Every form except the Hold Tag, and the Bulk Calculator. |
-| **Lead** | Everything except the Admin tab: yield sheets, Stored Data, all forms. |
+| **Lead** | Everything except the Admin tab: yield sheets, all forms, and Stored Data, where they can add new bulk and FG items but not change or remove stored ones. |
 | **Admin** | Everything, plus the Admin tab. |
 | **Owner** | Same as Admin, and can't be demoted or removed in the app; only Owners demote Admins. |
 

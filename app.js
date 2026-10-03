@@ -958,12 +958,15 @@ function renderItemPanel(panel) {
   const all = panel.store.all();
   const query = el(`${panel.prefix}Search`).value.trim().toUpperCase();
   const items = query ? all.filter(i => i.item.toUpperCase().includes(query)) : all;
+  // Leads only add items; changing or removing a stored one is for admins.
+  const change = canChangeStoredItems();
   el(`${panel.prefix}TableBody`).innerHTML = items.map(i => `
     <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(String(i[panel.field]))}</td>
-      <td class="row-actions">
+      <td class="row-actions">${change ? `
         <button type="button" data-edit="${escapeHtml(i.item)}">Edit</button>
-        <button type="button" data-remove="${escapeHtml(i.item)}">Remove</button>
+        <button type="button" data-remove="${escapeHtml(i.item)}">Remove</button>` : ""}
       </td></tr>`).join("");
+  el(`${panel.prefix}AddOnlyNote`).classList.toggle("hidden", change);
   el(panel.none).textContent = all.length
     ? `No ${panel.label} match "${el(`${panel.prefix}Search`).value.trim()}".`
     : `No ${panel.label} yet.`;
@@ -982,7 +985,12 @@ ITEM_PANELS.forEach(panel => {
       showMsg(id("Msg"), `The ${panel.what} must be more than 0.`, false);
       return;
     }
-    const existed = panel.store.find(item) !== null;
+    const stored = panel.store.find(item);
+    if (stored && !canChangeStoredItems()) {
+      showMsg(id("Msg"), `${item} is already stored (${stored[panel.field]}${panel.unit}). Only an admin can change it.`, false);
+      return;
+    }
+    const existed = stored !== null;
     panel.store.save(item, value);
     showMsg(id("Msg"), `${existed ? "Updated" : "Added"} ${item}: ${value}${panel.unit}.`);
     el(id("Number")).value = "";
@@ -993,7 +1001,7 @@ ITEM_PANELS.forEach(panel => {
 
   el(id("TableBody")).addEventListener("click", e => {
     const btn = e.target.closest("button");
-    if (!btn) return;
+    if (!btn || !canChangeStoredItems()) return;
     if (btn.dataset.edit) {
       const hit = panel.store.find(btn.dataset.edit);
       el(id("Number")).value = hit.item;
@@ -1023,11 +1031,13 @@ el("importStoredInput").addEventListener("change", async e => {
   e.target.value = "";
   if (!file) return;
   try {
-    // Only admins may change leads, so for everyone else they're left out.
-    const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads() });
+    // Only admins may change leads and stored items, so for everyone else
+    // leads are left out and items already stored keep their values.
+    const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
+    const kept = n.kept ? ` ${n.kept} already stored item(s) kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
-      ? `Imported ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name} (leads are left to admins).`
-      : `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.`);
+      ? `Imported ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name} (leads are left to admins).${kept}`
+      : `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.${kept}`);
     renderStoredData();
   } catch (err) {
     showMsg("storedImportMsg", `${file.name}: ${err.message}.`, false);
@@ -1159,6 +1169,11 @@ function canManageLeads() {
   return !!r && atLeast(r, "admin");
 }
 
+// Leads add bulk and FG items; changing or removing stored ones is for admins.
+function canChangeStoredItems() {
+  return canManageLeads();
+}
+
 // Shows only the tabs, forms and buttons this account type can use.
 function renderAccess() {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("hidden", !canOpen(t.dataset.tab)));
@@ -1260,15 +1275,14 @@ CloudSync.start({
       saveRecords([]);
       StoredData.replaceAll({ leads: [], bulkItems: [], fgItems: [] });
       renderRecordsTable();
-      renderStoredData();
     }
     if (!canManageLeads()) accounts = [];
     document.body.dataset.auth = "signed-in";
     document.body.dataset.role = newRole;
     renderAccess();
-    renderAccounts();
-    showSignedInName();
-    applyDefaultCreatedBy();
+    // Redraws what depends on the account type (item buttons, accounts,
+    // header name).
+    renderStoredData();
   },
   onSignedOut() {
     currentUser = null;
