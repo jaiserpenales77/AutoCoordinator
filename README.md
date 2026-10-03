@@ -62,8 +62,8 @@ type, ready to copy onto the card:
 
 ## Forms tab
 
-The **Forms** tab shows a button for each paper form; click one to open that
-form. Each open form has a bar at the top: **← All Forms** goes back to the
+The **Forms** tab shows a button for each paper form and the Bulk Calculator;
+click one to open it. Each open form has a bar at the top: **← All Forms** goes back to the
 buttons, and the form names switch straight to another form. What's typed in
 a form stays there while switching between forms and tabs (until the page is
 reloaded).
@@ -110,18 +110,15 @@ reloaded).
   VideoJet count, and (if empty) the total bottles from the yield sheet.
   **Print Standard Work** prints both sides, front then back, for
   double-sided printing.
-
-## Bulk Calculator tab
-
-Turns weighed bulk containers into thousand-piece units (TH), with the Bulk
-Weighing Calculator v2.5 formulas: net kg = bulk weight − tare (Big Blue
-Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5, Blue Tote 16.9 kg); grams
-= net kg × 1000 rounded; TH = grams ÷ piece weight (mg), rounded to a whole
-number. Add as many bulks as needed; the total of their rounded TH shows at
-the top of the results. Typing a Bulk Item fills the piece weight from Stored
-Data, and a new piece weight can be saved there. **Print Report** (or printing
-while on this tab) prints one portrait page per bulk with Initial and Date
-lines.
+- **Bulk Calculator** — turns weighed bulk containers into thousand-piece
+  units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
+  weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
+  Blue Tote 16.9 kg); grams = net kg × 1000 rounded; TH = grams ÷ piece weight
+  (mg), rounded to a whole number. Add as many bulks as needed; the total of
+  their rounded TH shows at the top of the results. Typing a Bulk Item fills
+  the piece weight from Stored Data, and a new piece weight can be saved
+  there. **Print Report** (or printing while it is open) prints one portrait
+  page per bulk with Initial and Date lines.
 
 ## Stored Data tab
 
@@ -283,7 +280,7 @@ new password. To remove someone's access, delete (or disable) their user.
 - `app.js` — calculations, saved-record persistence (localStorage), CSV
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
-- `bulk-calc.js` — the Bulk Calculator tab.
+- `bulk-calc.js` — the Forms tab's Bulk Calculator.
 - `bulk-return.js` — the Forms tab's Bulk Return form.
 - `unplanned-issue.js` — the Forms tab's Unplanned Issue form.
 - `hold-tag.js` — the Forms tab's Hold Tag.
