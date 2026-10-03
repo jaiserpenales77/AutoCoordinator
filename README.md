@@ -1,8 +1,10 @@
-# PK030 Packaging Yield Coordinator
+# Packaging Lead Hub
 
-A small web app that replaces the manual **PK030M [ALL] Final Packaging Yield
-Sheet** (QS017B) Excel workbook with a live calculator and a saved-record
-list for tracking multiple work orders.
+Yield sheets, forms and calculators for the packaging floor. A small web app
+that replaces the manual **PK030M [ALL] Final Packaging Yield Sheet** (QS017B)
+Excel workbook with a live calculator and a saved-record list for tracking
+multiple work orders, alongside fillable, printable copies of the paper forms
+(Unplanned Issue, Bulk Return, Hold Tag, Standard Work) and a Bulk Calculator.
 
 ## What it replicates from the original spreadsheet
 
