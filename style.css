@@ -674,6 +674,40 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .accounts-table .account-you { color: var(--muted); font-size: 0.8rem; }
 .role-list { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
+.activity-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.activity-filters input { flex: 1 1 240px; min-width: 0; }
+.activity-person {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-bg);
+}
+.activity-person summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.activity-person summary strong { font-size: 1rem; }
+.activity-person .activity-who { color: var(--muted); font-size: 0.82rem; }
+.activity-person .activity-count { margin-left: auto; color: var(--muted); font-size: 0.82rem; }
+.activity-person[open] summary { border-bottom: 1px solid var(--border); }
+.activity-person .table-scroll { padding: 0 14px 6px; }
+/* Same column widths for every person, so the groups line up. */
+.activity-table { table-layout: fixed; width: 100%; margin-bottom: 0; }
+.activity-table .col-time { width: 150px; }
+.activity-table .col-action { width: 280px; }
+.activity-table td { vertical-align: top; overflow-wrap: anywhere; }
+.activity-table td:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.activity-table td:nth-child(2) { font-weight: 600; }
+@media (max-width: 700px) {
+  .activity-table .col-time { width: 78px; }
+  .activity-table .col-action { width: 42%; }
+  .activity-person .table-scroll { padding: 0 8px 6px; }
+  .activity-person summary { padding: 10px; }
+}
 .role-list li { margin-bottom: 6px; }
 .role-badge {
   margin-left: 6px;

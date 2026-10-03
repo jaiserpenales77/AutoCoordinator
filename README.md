@@ -147,6 +147,27 @@ does).
   up makes their new account a Lead straight away.
 - **Account Types** — what each type can use.
 
+## Activity Log tab
+
+Only Admins and Owners see this tab. It lists what everyone does in the app,
+grouped by person with names A–Z (click a name to open their entries, newest
+first), with a search box, a time range (today, last 7 or 30 days, all) and
+**Export CSV**. It shows the newest 1,000 entries and updates live.
+
+Logged: signing in, signing out and creating an account; saving, updating,
+deleting, printing and exporting yield sheets; importing JDE report PDFs;
+adding, changing and removing bulk and FG items (also from the Bulk
+Calculator); importing and exporting Stored Data; adding and removing leads
+and linking usernames; changing account types; and printing each form and
+the Bulk Calculator report.
+
+Entries are written by each person's own app as they act: the database only
+accepts entries in their own name with the server's time, and nobody can
+change or delete them from the app (an Owner can delete them in the Firebase
+console, **Firestore Database → Data → pk030-activity**). Something done
+while offline is logged when the connection comes back. The log records what
+people do through the app; it isn't a tamper-proof audit trail.
+
 ## Stored Data tab
 
 - **Bulk Items & Piece Weights** — when a stored Bulk Item is typed or
@@ -371,6 +392,21 @@ service cloud.firestore {
         && (isOwner() || resource.data.role != 'admin');
       allow delete: if false;
     }
+    // Activity log: everyone signed in adds entries as themselves; only
+    // admins read it; nobody changes or deletes entries.
+    match /pk030-activity/{id} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'username', 'action', 'detail', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.username == username()
+        && request.resource.data.action is string
+        && request.resource.data.action.size() <= 60
+        && request.resource.data.detail is string
+        && request.resource.data.detail.size() <= 300
+        && request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
   }
 }
 ```
@@ -382,7 +418,7 @@ service cloud.firestore {
 | **PLT** | Unplanned Issue, Bulk Return and the Bulk Calculator. Every new account starts here. |
 | **MLT** | Every form except the Hold Tag, and the Bulk Calculator. |
 | **Lead** | Everything except the Admin tab: yield sheets, all forms, and Stored Data, where they can add new bulk and FG items but not change or remove stored ones. |
-| **Admin** | Everything, plus the Admin tab. |
+| **Admin** | Everything, plus the Admin and Activity Log tabs. |
 | **Owner** | Same as Admin, and can't be demoted or removed in the app; only Owners demote Admins. |
 
 PLT and MLT never reach the saved yield sheets or Stored Data (the database

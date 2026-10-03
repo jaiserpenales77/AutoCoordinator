@@ -71,6 +71,7 @@
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab">Forms</button>
   <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="adminTab" id="adminTabBtn">Admin</button>
+  <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="activityTab" id="activityTabBtn">Activity Log</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -380,6 +381,30 @@
       <li><strong>Owner</strong> — an admin who can't be demoted or removed here; only owners can demote admins. Owners are the usernames in the <code>owners</code> list of the <code>pk030/admins</code> document, changed in the Firebase console.</li>
     </ul>
     <p class="muted">PLT and MLT never reach the saved yield sheets or Stored Data.</p>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="activityTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Activity Log</h2>
+      <div class="actions br-actions">
+        <button type="button" id="activityExpandBtn">Expand All</button>
+        <button type="button" id="activityExportBtn">Export CSV</button>
+      </div>
+    </div>
+    <p class="muted">What everyone does in the app, grouped by name (A–Z), newest first for each person. Entries can't be changed or deleted from the app.</p>
+    <div class="activity-filters">
+      <input type="search" id="activitySearch" placeholder="Search names, activities and details…" aria-label="Search the activity log">
+      <select id="activityRange" aria-label="Time range">
+        <option value="1">Today</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="" selected>All</option>
+      </select>
+    </div>
+    <p id="activityMsg" class="muted"></p>
+    <div id="activityGroups"></div>
   </section>
 </div>
 

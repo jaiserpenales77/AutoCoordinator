@@ -24,8 +24,13 @@ const LIMITED_VIEWS = {
   plt: ["formsTab", "unplannedTab", "bulkReturnTab", "bulkCalcTab"],
   mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "bulkCalcTab"]
 };
+// Views only Admins and Owners open.
+const ADMIN_VIEWS = ["adminTab", "activityTab"];
 const atLeast = (r, min) => ROLE_ORDER.indexOf(r) >= ROLE_ORDER.indexOf(min);
 const effectiveRole = () => (localOnly ? "owner" : role);
+// True while renderStoredData replaces the leads list (see the lead-username
+// focusout handler).
+let redrawingLeads = false;
 // Imported report PDFs as page images (see addImportedReports).
 const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
 let importedReports = [];
@@ -377,6 +382,7 @@ form.addEventListener("submit", e => {
   else records.push(record);
   saveRecords(records);
   CloudSync.saveSheet(record);
+  logActivity(idx >= 0 ? "Updated a yield sheet" : "Saved a yield sheet", sheetLabel(record));
   editingId = id;
   editingBadge.classList.remove("hidden");
   renderRecordsTable();
@@ -403,6 +409,7 @@ el("recordsTableBody").addEventListener("click", e => {
     if (confirm("Delete this saved yield sheet?")) {
       saveRecords(records.filter(r => r.id !== id));
       CloudSync.deleteSheet(id);
+      logActivity("Deleted a yield sheet", sheetLabel(records.find(r => r.id === id) ?? {}));
       if (editingId === id) clearForm();
       renderRecordsTable();
     }
@@ -420,17 +427,22 @@ el("exportCsvBtn").addEventListener("click", () => {
     const r = computeResults(rec);
     return [...fields.map(f => rec[f] ?? ""), r.error ? "" : fmtFixed(r.finalYieldRatio * 100, 2), r.statusLabel];
   });
-  const csv = [header, ...rows]
+  downloadCsv([header, ...rows], "pk030_yield_sheets.csv");
+  logActivity("Exported yield sheets", `${records.length} sheet(s) to CSV`);
+});
+
+function downloadCsv(rows, filename) {
+  const csv = rows
     .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "pk030_yield_sheets.csv";
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-});
+}
 
 // Column widths (pt) of the Excel print area PK030!E21:L71, columns E..L.
 const XL_COL_WIDTHS_PT = [48, 65.25, 138.75, 98.25, 123, 37.5, 108.75, 161.25];
@@ -771,6 +783,7 @@ async function importPdfs(fileList) {
 
   if (gen !== importGen) return;
   const { values, log, preview, accepted } = result;
+  logActivity("Imported JDE reports", [`${files.length} PDF(s)`, values.woNumber && `WO ${values.woNumber}`].filter(Boolean).join(", "));
   const found = IMPORT_FIELDS.filter(id => values[id] !== undefined && values[id] !== null);
   if (found.length) {
     const currentWo = el("woNumber").value.trim();
@@ -886,12 +899,23 @@ function showMsg(id, text, ok = true) {
 
 function renderStoredData() {
   const leads = StoredData.leads();
+  // A live update mustn't wipe a username someone is typing.
+  const typing = document.activeElement?.matches?.("#leadList input.lead-user") ? document.activeElement : null;
+  const draft = typing && { lead: typing.dataset.lead, value: typing.value, start: typing.selectionStart, end: typing.selectionEnd };
+  redrawingLeads = true;
   el("leadList").innerHTML = leads.map(name => `
     <li><span class="lead-name">${escapeHtml(name)}</span>
       <input type="text" class="lead-user" data-lead="${escapeHtml(name)}" value="${escapeHtml(StoredData.usernameForLead(name))}"
         placeholder="Username" aria-label="Sign-in username for ${escapeHtml(name)}" autocapitalize="none" spellcheck="false">
       <button type="button" data-remove-lead="${escapeHtml(name)}">Remove</button></li>`).join("");
+  redrawingLeads = false;
   el("noLeadsMsg").classList.toggle("hidden", leads.length > 0);
+  const again = draft && [...el("leadList").querySelectorAll("input.lead-user")].find(i => i.dataset.lead === draft.lead);
+  if (again) {
+    again.value = draft.value;
+    again.focus();
+    again.setSelectionRange(draft.start, draft.end);
+  }
 
   ITEM_PANELS.forEach(renderItemPanel);
 
@@ -907,6 +931,7 @@ el("leadForm").addEventListener("submit", e => {
   e.preventDefault();
   const name = el("leadName").value.trim();
   if (StoredData.addLead(name)) {
+    logActivity("Added a lead", name);
     showMsg("leadMsg", `Added ${name}.`);
     el("leadName").value = "";
     renderStoredData();
@@ -916,10 +941,13 @@ el("leadForm").addEventListener("submit", e => {
   el("leadName").focus();
 });
 
-// Linking a sign-in username to a lead; saved when the box loses focus or on Enter.
-el("leadList").addEventListener("change", e => {
+// Linking a sign-in username to a lead; saved when the box loses focus or on
+// Enter. (Not "change": a box redrawn while someone types in it, see
+// renderStoredData, gets its text back from code, which "change" ignores.)
+el("leadList").addEventListener("focusout", e => {
   const input = e.target.closest("input.lead-user");
-  if (!input) return;
+  // A box taken away by a redraw isn't being left by the person typing.
+  if (!input || redrawingLeads) return;
   const name = input.dataset.lead;
   const username = StoredData.normUser(input.value);
   if (username && !StoredData.validUsername(username)) {
@@ -930,6 +958,7 @@ el("leadList").addEventListener("change", e => {
   const before = StoredData.usernameForLead(name);
   if (username === before) return;
   const movedFrom = StoredData.setLeadUsername(name, username);
+  logActivity(username ? "Linked a username" : "Unlinked a username", username ? `${username} → ${name}` : `${before} from ${name}`);
   if (!username) showMsg("leadMsg", `${name} is no longer linked to ${before}.`);
   else showMsg("leadMsg", `${username} now signs in as ${name}.${movedFrom ? ` (Unlinked from ${movedFrom}.)` : ""}`);
   renderStoredData();
@@ -942,6 +971,7 @@ el("leadList").addEventListener("click", e => {
   const name = e.target.closest("button")?.dataset.removeLead;
   if (name && confirm(`Remove ${name} from the leads list?`)) {
     StoredData.removeLead(name);
+    logActivity("Removed a lead", name);
     showMsg("leadMsg", `Removed ${name}.`);
     renderStoredData();
   }
@@ -950,8 +980,8 @@ el("leadList").addEventListener("click", e => {
 // The two item lists on the Stored Data tab share the same form/table layout,
 // with element ids prefixed by `prefix`.
 const ITEM_PANELS = [
-  { prefix: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", what: "piece weight", unit: " mg", none: "noBulkItemsMsg", label: "bulk items" },
-  { prefix: "fgItem", store: StoredData.fgItems, field: "count", what: "count", unit: "", none: "noFgItemsMsg", label: "FG items" }
+  { prefix: "bulkItem", store: StoredData.bulkItems, field: "pieceWt", what: "piece weight", unit: " mg", none: "noBulkItemsMsg", label: "bulk items", one: "a bulk item" },
+  { prefix: "fgItem", store: StoredData.fgItems, field: "count", what: "count", unit: "", none: "noFgItemsMsg", label: "FG items", one: "an FG item" }
 ];
 
 function renderItemPanel(panel) {
@@ -992,6 +1022,8 @@ ITEM_PANELS.forEach(panel => {
     }
     const existed = stored !== null;
     panel.store.save(item, value);
+    logActivity(`${existed ? "Changed" : "Added"} ${panel.one}`,
+      `${item}: ${value}${panel.unit}${existed ? ` (was ${stored[panel.field]}${panel.unit})` : ""}`);
     showMsg(id("Msg"), `${existed ? "Updated" : "Added"} ${item}: ${value}${panel.unit}.`);
     el(id("Number")).value = "";
     el(id("Value")).value = "";
@@ -1009,7 +1041,9 @@ ITEM_PANELS.forEach(panel => {
       el(id("Value")).focus();
       showMsg(id("Msg"), `Editing ${hit.item} — change the ${panel.what} and click Save Item.`);
     } else if (btn.dataset.remove && confirm(`Remove ${btn.dataset.remove}?`)) {
+      const removed = panel.store.find(btn.dataset.remove);
       panel.store.remove(btn.dataset.remove);
+      logActivity(`Removed ${panel.one}`, removed ? `${removed.item}: ${removed[panel.field]}${panel.unit}` : btn.dataset.remove);
       showMsg(id("Msg"), `Removed ${btn.dataset.remove}.`);
       renderStoredData();
     }
@@ -1017,6 +1051,7 @@ ITEM_PANELS.forEach(panel => {
 });
 
 el("exportStoredBtn").addEventListener("click", () => {
+  logActivity("Exported Stored Data");
   const blob = new Blob([StoredData.exportJson()], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1034,6 +1069,7 @@ el("importStoredInput").addEventListener("change", async e => {
     // Only admins may change leads and stored items, so for everyone else
     // leads are left out and items already stored keep their values.
     const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
+    logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${n.items} bulk item(s), ${n.fgItems} FG item(s)`);
     const kept = n.kept ? ` ${n.kept} already stored item(s) kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
       ? `Imported ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name} (leads are left to admins).${kept}`
@@ -1156,7 +1192,7 @@ function canOpen(view) {
   const r = effectiveRole();
   if (!r) return false;
   if (LIMITED_VIEWS[r]) return LIMITED_VIEWS[r].includes(view);
-  return view !== "adminTab" || atLeast(r, "admin");
+  return !ADMIN_VIEWS.includes(view) || atLeast(r, "admin");
 }
 
 function hasDatabaseAccess() {
@@ -1237,9 +1273,151 @@ el("accountTableBody").addEventListener("change", e => {
   if (!account) return;
   const newRole = select.value;
   CloudSync.setRole(account.uid, newRole);
+  logActivity("Changed an account type", `${accountDisplayName(account)} (${account.username}): ${ROLE_LABELS[account.role]} → ${ROLE_LABELS[newRole]}`);
   syncLeadList(account, newRole);
   showMsg("accountMsg", `${accountDisplayName(account)} is now ${ROLE_LABELS[newRole]}.`);
   renderStoredData();
+});
+
+// The activity log (cloud-sync.js): what people do, saved as they do it.
+function logActivity(action, detail = "") {
+  CloudSync.log(action, detail);
+}
+
+const sheetLabel = rec => [rec.woNumber && `WO ${rec.woNumber}`, rec.fgItem && `FG ${rec.fgItem}`].filter(Boolean).join(", ") || "no WO #";
+
+// Printing (the buttons, Ctrl+P or the browser menu), by what's open.
+const PRINT_ACTIONS = {
+  unplannedTab: "Printed an Unplanned Issue form",
+  bulkReturnTab: "Printed a Bulk Return form",
+  holdTab: "Printed a Hold Tag",
+  swTab: "Printed Standard Work",
+  bulkCalcTab: "Printed a Bulk Calculator report"
+};
+window.addEventListener("beforeprint", () => {
+  const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
+  if (PRINT_ACTIONS[open]) {
+    const item = open === "bulkCalcTab" ? el("calcBulkItem").value.trim().toUpperCase() : "";
+    logActivity(PRINT_ACTIONS[open], item);
+  } else {
+    // Every other tab prints the yield sheet.
+    logActivity("Printed a yield sheet", sheetLabel({ woNumber: el("woNumber").value.trim(), fgItem: el("fgItem").value.trim() }));
+  }
+});
+
+// The Activity Log tab (Admin and Owner): entries grouped by person, names
+// A–Z, newest first within each.
+let activityEntries = [];
+let activityTruncated = false;
+let activityLoaded = false;
+const activityOpen = new Set();
+// Whether the list on screen was drawn for a search (every group open).
+let activityDrawnSearching = false;
+const ACTIVITY_DAY_MS = 24 * 60 * 60 * 1000;
+
+const activityAccount = e => accounts.find(a => a.uid === e.uid);
+const activityName = e => {
+  const account = activityAccount(e);
+  return account ? accountDisplayName(account) : StoredData.leadForUser(e.username) ?? e.username;
+};
+const activityTime = d => d.toLocaleString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit", hour: "numeric", minute: "2-digit" });
+
+function filteredActivity() {
+  const days = el("activityRange").value;
+  const from = days === "1" ? new Date(new Date().setHours(0, 0, 0, 0))
+    : days ? new Date(Date.now() - Number(days) * ACTIVITY_DAY_MS) : null;
+  const query = el("activitySearch").value.trim().toLowerCase();
+  return activityEntries.filter(e => (!from || e.at >= from)
+    && (!query || `${activityName(e)} ${e.username} ${e.action} ${e.detail}`.toLowerCase().includes(query)));
+}
+
+// [[name, entries], ...] sorted by name; entries stay newest first.
+function activityGroups() {
+  const groups = new Map();
+  filteredActivity().forEach(e => {
+    const key = e.uid || e.username;
+    if (!groups.has(key)) groups.set(key, { key, name: activityName(e), entry: e, entries: [] });
+    groups.get(key).entries.push(e);
+  });
+  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+}
+
+// `keepOpen` (the default) first notes which groups are open on screen, so a
+// live update never closes one that was just opened.
+function renderActivity({ keepOpen = true } = {}) {
+  if (keepOpen && !activityDrawnSearching) {
+    el("activityGroups").querySelectorAll("details[data-key]").forEach(d =>
+      (d.open ? activityOpen.add(d.dataset.key) : activityOpen.delete(d.dataset.key)));
+  }
+  if (localOnly) {
+    el("activityMsg").textContent = "The activity log needs the database, which isn't connected on this computer.";
+    el("activityGroups").innerHTML = "";
+    return;
+  }
+  const groups = activityGroups();
+  const searching = el("activitySearch").value.trim() !== "";
+  activityDrawnSearching = searching;
+  const count = groups.reduce((n, g) => n + g.entries.length, 0);
+  el("activityMsg").textContent = !activityLoaded ? "Loading…"
+    : !activityEntries.length ? "No activity yet."
+    : !count ? "No activity matches."
+    : `${count} ${count === 1 ? "activity" : "activities"} by ${groups.length} ${groups.length === 1 ? "person" : "people"}`
+      + (activityTruncated ? " (the newest 1,000 entries)." : ".");
+  el("activityGroups").innerHTML = groups.map(g => {
+    const account = activityAccount(g.entry);
+    const who = [g.entry.username, account && ROLE_LABELS[account.role]].filter(Boolean).join(" · ");
+    const open = searching || activityOpen.has(g.key);
+    return `<details class="activity-person" data-key="${escapeHtml(g.key)}"${open ? " open" : ""}>
+      <summary><strong>${escapeHtml(g.name)}</strong><span class="activity-who">${escapeHtml(who)}</span>
+        <span class="activity-count">${g.entries.length} ${g.entries.length === 1 ? "activity" : "activities"} · last ${escapeHtml(activityTime(g.entries[0].at))}</span></summary>
+      <div class="table-scroll"><table class="activity-table">
+        <colgroup><col class="col-time"><col class="col-action"><col></colgroup><tbody>${g.entries.map(e => `
+        <tr><td>${escapeHtml(activityTime(e.at))}</td><td>${escapeHtml(e.action)}</td><td>${escapeHtml(e.detail)}</td></tr>`).join("")}
+      </tbody></table></div></details>`;
+  }).join("");
+  el("activityExpandBtn").textContent = activityAllOpen() ? "Collapse All" : "Expand All";
+}
+
+onViewShown("activityTab", () => {
+  renderActivity();
+  CloudSync.watchActivity((entries, truncated) => {
+    activityEntries = entries;
+    activityTruncated = truncated;
+    activityLoaded = true;
+    renderActivity();
+  });
+});
+el("activitySearch").addEventListener("input", renderActivity);
+el("activityRange").addEventListener("change", renderActivity);
+// "toggle" doesn't bubble, so it's caught on the way down.
+const activityAllOpen = () => {
+  const shown = [...el("activityGroups").querySelectorAll("details[data-key]")];
+  return shown.length > 0 && shown.every(d => d.open);
+};
+el("activityGroups").addEventListener("toggle", () => {
+  el("activityExpandBtn").textContent = activityAllOpen() ? "Collapse All" : "Expand All";
+}, true);
+el("activityExpandBtn").addEventListener("click", () => {
+  const expand = !activityAllOpen();
+  if (activityDrawnSearching) {
+    // Search results only: open or close what's shown, keep what's remembered.
+    el("activityGroups").querySelectorAll("details[data-key]").forEach(d => { d.open = expand; });
+    return;
+  }
+  activityGroups().forEach(g => (expand ? activityOpen.add(g.key) : activityOpen.delete(g.key)));
+  renderActivity({ keepOpen: false });
+});
+el("activityExportBtn").addEventListener("click", () => {
+  const rows = activityGroups().flatMap(g => g.entries.map(e => {
+    const account = activityAccount(e);
+    return [g.name, e.username, account ? ROLE_LABELS[account.role] : "", activityTime(e.at), e.action, e.detail];
+  }));
+  if (!rows.length) {
+    alert("No activity to export.");
+    return;
+  }
+  downloadCsv([["Name", "Username", "Account type", "Date/time", "Activity", "Details"], ...rows],
+    `pk030-activity-${todayISO()}.csv`);
 });
 
 function showSignedInName() {
@@ -1319,6 +1497,7 @@ CloudSync.start({
   onAccounts(list) {
     accounts = list;
     renderAccounts();
+    if (!el("activityTab").classList.contains("hidden")) renderActivity();
   },
   onStatus: showSyncStatus
 });

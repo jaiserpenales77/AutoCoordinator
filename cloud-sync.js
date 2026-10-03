@@ -24,6 +24,9 @@ const CloudSync = (() => {
   const USERNAME_DOMAIN = "pk030.local";
   const SHEETS = "pk030-yield-sheets";
   const USERS = "pk030-users";
+  const ACTIVITY = "pk030-activity";
+  // The Activity Log shows this many of the newest entries.
+  const ACTIVITY_LIMIT = 1000;
   // Set once this browser's pre-sync data has been uploaded; until then a
   // snapshot must not replace the local copy, or that data would be lost.
   const MIGRATED = { sheets: "pk030_cloud_migrated_sheets", stored: "pk030_cloud_migrated_stored" };
@@ -37,6 +40,8 @@ const CloudSync = (() => {
   let unsubscribers = [];
   let dataUnsubscribers = [];
   let accountsUnsubscribers = [];
+  let activityUnsubscribe = null;
+  let activityHandler = null;
   let handlers = null;
   // The signed-in account: its record (undefined until loaded), the owners
   // list (likewise), and the account type worked out from them.
@@ -194,6 +199,43 @@ const CloudSync = (() => {
 
   function stopAccounts() {
     accountsUnsubscribers.splice(0).forEach(unsub => unsub());
+    activityUnsubscribe?.();
+    activityUnsubscribe = null;
+  }
+
+  // The newest activity entries, live, for the Activity Log (Admin and
+  // Owner). Starts when the log is first opened.
+  function watchActivity(onEntries) {
+    activityHandler = onEntries;
+    if (activityUnsubscribe || !account || !atLeast(account.role ?? "plt", "admin")) return;
+    const q = fs.query(fs.collection(db, ACTIVITY), fs.orderBy("at", "desc"), fs.limit(ACTIVITY_LIMIT));
+    activityUnsubscribe = fs.onSnapshot(q, snap => {
+      activityHandler(snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, uid: String(data.uid ?? ""), username: String(data.username ?? ""),
+          action: String(data.action ?? ""), detail: String(data.detail ?? ""),
+          at: data.at?.toDate?.() ?? new Date() };
+      }), snap.size >= ACTIVITY_LIMIT);
+    }, err => {
+      console.warn("Couldn't load the activity log.", err);
+      activityUnsubscribe = null;
+    });
+  }
+
+  // Adds an entry to the activity log as the signed-in user. Never blocks or
+  // fails the action itself; resolves once saved (or after `waitMs`).
+  function log(action, detail = "", waitMs = 0) {
+    if (!db || !auth?.currentUser) return Promise.resolve();
+    let saved;
+    try {
+      const entry = { uid: auth.currentUser.uid, username: usernameOf(auth.currentUser),
+        action: String(action).slice(0, 60), detail: String(detail ?? "").slice(0, 300), at: fs.serverTimestamp() };
+      saved = Promise.resolve(fs.addDoc(fs.collection(db, ACTIVITY), entry));
+    } catch (err) {
+      saved = Promise.reject(err);
+    }
+    saved = saved.catch(err => console.warn("Couldn't add to the activity log.", err));
+    return waitMs ? Promise.race([saved, new Promise(r => setTimeout(r, waitMs))]) : saved;
   }
 
   // A first sign-in has no account record yet, so it makes one: as a Lead if
@@ -312,6 +354,7 @@ const CloudSync = (() => {
   async function signIn(username, password) {
     try {
       await authMod.signInWithEmailAndPassword(auth, toEmail(username), password);
+      log("Signed in");
     } catch (err) {
       const wrong = ["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found", "auth/invalid-email"];
       if (wrong.includes(err.code)) throw new Error("Wrong username or password.");
@@ -337,6 +380,7 @@ const CloudSync = (() => {
     pendingName = name;
     try {
       await authMod.createUserWithEmailAndPassword(auth, toEmail(username), password);
+      log("Created an account", name);
     } catch (err) {
       pendingName = null;
       throw new Error(signUpErrors[err.code] ?? `Sign-up failed (${err.code || err.message}).`);
@@ -348,6 +392,8 @@ const CloudSync = (() => {
   // Signs out and removes this computer's copies of the shared data (the
   // Firestore cache and the app's localStorage copy via onCleared).
   async function signOut(onCleared) {
+    // Saved before the offline copy is cleared; a few seconds at most.
+    await log("Signed out", "", 3000);
     stopListening();
     await authMod.signOut(auth);
     await fs.terminate(db);
@@ -365,6 +411,8 @@ const CloudSync = (() => {
     saveStored: (field, key, value) => write(() => fs.setDoc(storedRef(),
       { [field]: { [key]: value === null ? fs.deleteField() : value } }, { merge: true })),
     signUp,
+    log,
+    watchActivity,
     // An admin changing someone's account type.
     setRole: (uid, role) => write(() => fs.setDoc(userRef(uid), { role }, { merge: true })),
     ROLES

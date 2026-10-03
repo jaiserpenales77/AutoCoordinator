@@ -5,8 +5,8 @@
 //   total TH    = total grams / piece weight (mg)   (1000 pieces weigh
 //                 "piece weight" grams, so grams / mg gives thousands)
 //   rounded TH  = total TH rounded to a whole number
-// Uses el, escapeHtml, StoredData, renderStoredData, hasDatabaseAccess and
-// canChangeStoredItems from app.js.
+// Uses el, escapeHtml, StoredData, renderStoredData, hasDatabaseAccess,
+// canChangeStoredItems and logActivity from app.js.
 const BulkCalc = (() => {
   const TARES = [
     { name: "Big Blue Pallet", kg: 23.9 },
@@ -204,7 +204,10 @@ const BulkCalc = (() => {
   });
   el("calcSaveItemBtn").addEventListener("click", () => {
     const item = el("calcBulkItem").value.trim();
+    const before = StoredData.bulkItems.find(item);
     StoredData.bulkItems.save(item, parseFloat(el("calcPieceWt").value));
+    logActivity(before ? "Changed a bulk item" : "Added a bulk item",
+      `${item.toUpperCase()}: ${parseFloat(el("calcPieceWt").value)} mg${before ? ` (was ${before.pieceWt} mg)` : ""} (Bulk Calculator)`);
     renderStoredData();
     fillPieceWt();
   });
