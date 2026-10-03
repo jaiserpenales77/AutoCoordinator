@@ -60,7 +60,13 @@ type, ready to copy onto the card:
 | Bulk Rejected / Bulk Returned | Bulk Rejected / Bulk Returned |
 | Total Bottles Yielded | Total Bottles Produced |
 
-## Other tabs
+## Forms tab
+
+The **Forms** tab shows a button for each paper form; click one to open that
+form. Each open form has a bar at the top: **← All Forms** goes back to the
+buttons, and the form names switch straight to another form. What's typed in
+a form stays there while switching between forms and tabs (until the page is
+reloaded).
 
 - **Unplanned Issue** — the [VALA] Unplanned Issue Request Form (PK007B),
   drawn to the form PDF's exact measurements on one Letter landscape page (the
@@ -71,21 +77,21 @@ type, ready to copy onto the card:
   with an X. An empty Date starts with today; long table entries print on two
   lines in their cell. **Fill from Yield Sheet** puts the yield sheet's W.O. #
   in Work Order # on every line with a Part No. **Print Unplanned Issue** (or
-  printing while on this tab) prints the page.
+  printing while this form is open) prints the page.
 - **Bulk Return** — the PK120A [VALA] Packaging - Bulk Return form (QS106A),
   drawn to the paper form's exact measurements (logo, fonts, table, blanks,
   footer). Type in the blanks and click a reason to circle it; an empty Date
   blank starts with today's date, and typing an "Other" reason circles Other.
   **Fill from Yield Sheet** copies the W.O. #, Bulk Item (as Bulk Commodity)
-  and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while on this
-  tab) prints the form on Letter landscape with the entries on its lines.
+  and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while this
+  form is open) prints the form on Letter landscape with the entries on its lines.
 - **HOLD TAG** — the QA263C [ALL] QA Hold Tag, drawn to the tag PDF's exact
   measurements (red page, Calibri text, table, logo, footer). Type in the value
   boxes; Work Order/Lot #, Tote/Pallet # and Reason/Comment print large (up to
   34 pt) and centred in their box, taking several lines and shrinking only as
   much as needed to fit. An empty Date starts with today. **Fill from Yield Sheet**
   copies the FG Item (as Item #) and W.O. # (as Work Order/Lot #). **Print
-  Hold Tag** (or printing while on this tab) prints the tag with its red
+  Hold Tag** (or printing while this form is open) prints the tag with its red
   background; turn off **Red background** to print it black on a clear page,
   for red paper (remembered on that computer).
 - **Standard Work** — the two-sided Team Lead Standard Work sheet (front) and
@@ -97,22 +103,25 @@ type, ready to copy onto the card:
   (Shift)** box added beside "I followed the shift startup timeline") and click
   a box to mark it: each click cycles
   tick / N/A / empty. The Lead Name prints large and bold;
-  opening the tab fills it with the signed-in lead (or the yield sheet's
+  opening the form fills it with the signed-in lead (or the yield sheet's
   Created By), and both Initials blanks follow it with the lead's initials
   unless something else was typed there. **Fill from Yield Sheet** fills the
   Lead Name (Created By, or the signed-in lead), today's date, WO1 and its
   VideoJet count, and (if empty) the total bottles from the yield sheet.
   **Print Standard Work** prints both sides, front then back, for
   double-sided printing.
-- **Bulk Calculator** — turns weighed bulk containers into thousand-piece
-  units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
-  weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
-  Blue Tote 16.9 kg); grams = net kg × 1000 rounded; TH = grams ÷ piece weight
-  (mg), rounded to a whole number. Add as many bulks as needed; the total of
-  their rounded TH shows at the top of the results. Typing a Bulk Item fills
-  the piece weight from Stored Data, and a new piece weight can be saved there.
-  **Print Report** (or printing while on this tab) prints one portrait page per
-  bulk with Initial and Date lines.
+
+## Bulk Calculator tab
+
+Turns weighed bulk containers into thousand-piece units (TH), with the Bulk
+Weighing Calculator v2.5 formulas: net kg = bulk weight − tare (Big Blue
+Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5, Blue Tote 16.9 kg); grams
+= net kg × 1000 rounded; TH = grams ÷ piece weight (mg), rounded to a whole
+number. Add as many bulks as needed; the total of their rounded TH shows at
+the top of the results. Typing a Bulk Item fills the piece weight from Stored
+Data, and a new piece weight can be saved there. **Print Report** (or printing
+while on this tab) prints one portrait page per bulk with Initial and Date
+lines.
 
 ## Stored Data tab
 
@@ -275,10 +284,10 @@ new password. To remove someone's access, delete (or disable) their user.
   export, and print-report generation.
 - `pdf-import.js` — reads the JDE report PDFs and extracts the values above.
 - `bulk-calc.js` — the Bulk Calculator tab.
-- `bulk-return.js` — the Bulk Return tab's form.
-- `unplanned-issue.js` — the Unplanned Issue tab's form.
-- `hold-tag.js` — the HOLD TAG tab's tag.
-- `standard-work.js` — the Standard Work tab's two-sided sheet.
+- `bulk-return.js` — the Forms tab's Bulk Return form.
+- `unplanned-issue.js` — the Forms tab's Unplanned Issue form.
+- `hold-tag.js` — the Forms tab's Hold Tag.
+- `standard-work.js` — the Forms tab's two-sided Standard Work sheet.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.

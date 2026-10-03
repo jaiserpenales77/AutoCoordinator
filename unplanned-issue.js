@@ -4,7 +4,7 @@
 // PDF's page 2 holds the rest of its Comments box, which is joined back on.
 // On screen the blanks and table cells are fillable; printing gives the page
 // with the entries filled in.
-// Uses el, escapeHtml, showMsg, todayISO and formatDateMMDDYY from app.js.
+// Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY and onViewShown from app.js.
 const UnplannedIssue = (() => {
   const SANS = `Arial, "Liberation Sans", Helvetica, sans-serif`;
   const FONTS = { B: 700, A: 400 };
@@ -333,7 +333,7 @@ const UnplannedIssue = (() => {
   window.addEventListener("beforeprint", () => {
     if (!tab.classList.contains("hidden")) document.body.dataset.print = "unplanned";
   });
-  document.querySelector('[data-tab="unplannedTab"]').addEventListener("click", () => requestAnimationFrame(fitSheets));
+  onViewShown("unplannedTab", () => requestAnimationFrame(fitSheets));
 
   renderValues();
   return { state, cellId, COLS, ROWS };

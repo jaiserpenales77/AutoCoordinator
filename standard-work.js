@@ -5,7 +5,7 @@
 // measured on those scans. On screen the blanks are inputs and the boxes tick
 // when clicked; printing gives both sides with the entries written in.
 // Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY, getCreatedBy, initials and
-// currentUser/StoredData from app.js.
+// currentUser/StoredData and onViewShown from app.js.
 const StandardWork = (() => {
   const SANS = `Calibri, Carlito, Arial, "Liberation Sans", sans-serif`;
 
@@ -307,7 +307,7 @@ const StandardWork = (() => {
   window.addEventListener("beforeprint", () => {
     if (!tab.classList.contains("hidden")) document.body.dataset.print = "standardWork";
   });
-  document.querySelector('[data-tab="swTab"]').addEventListener("click", () => {
+  onViewShown("swTab", () => {
     // A blank sheet starts with the lead (and so their initials) filled in.
     if (!String(state.values.leadName ?? "").trim() && knownLead()) {
       setLeadName(knownLead());

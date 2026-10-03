@@ -3,7 +3,7 @@
 // from the top-left of the page). On screen the blanks are fillable and the
 // "Circle One" choices are clickable; printing gives the form with the entries
 // written on its lines and the chosen reasons circled.
-// Uses el, escapeHtml, todayISO and formatDateMMDDYY from app.js.
+// Uses el, escapeHtml, todayISO, formatDateMMDDYY and onViewShown from app.js.
 const BulkReturn = (() => {
   const SERIF = `"Times New Roman", "Liberation Serif", Times, serif`;
   const SANS = `Arial, "Liberation Sans", Helvetica, sans-serif`;
@@ -282,7 +282,7 @@ const BulkReturn = (() => {
   window.addEventListener("beforeprint", () => {
     if (onTab()) document.body.dataset.print = "bulkReturn";
   });
-  document.querySelector('[data-tab="bulkReturnTab"]').addEventListener("click", () => requestAnimationFrame(fitSheet));
+  onViewShown("bulkReturnTab", () => requestAnimationFrame(fitSheet));
 
   return { state, BLANKS, CELLS, CHOICES };
 })();

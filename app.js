@@ -815,15 +815,50 @@ dropZone.addEventListener("drop", e => {
 window.addEventListener("dragover", e => e.preventDefault());
 window.addEventListener("drop", e => e.preventDefault());
 
-document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+// Each top tab shows one view; the Forms tab shows its menu (formsTab) or one
+// of the forms listed there. Exactly one view is visible at a time, so a
+// form's print listener only fires while that form is open.
+const FORM_VIEWS = [...document.querySelectorAll("#formsTab [data-form]")]
+  .map(card => ({ id: card.dataset.form, name: card.querySelector(".form-card-name").textContent }));
+const VIEWS = [...[...document.querySelectorAll(".tab")].map(t => t.dataset.tab), ...FORM_VIEWS.map(f => f.id)];
+
+function showView(id) {
+  const tabId = FORM_VIEWS.some(f => f.id === id) ? "formsTab" : id;
   document.querySelectorAll(".tab").forEach(t => {
-    const active = t === tab;
+    const active = t.dataset.tab === tabId;
     t.classList.toggle("active", active);
     t.setAttribute("aria-selected", String(active));
-    el(t.dataset.tab).classList.toggle("hidden", !active);
   });
-  if (tab.dataset.tab === "sheetTab") fillFromStoredData();
-}));
+  VIEWS.forEach(v => el(v).classList.toggle("hidden", v !== id));
+  document.querySelectorAll(".form-nav [data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === id));
+  if (id === "sheetTab") fillFromStoredData();
+  window.dispatchEvent(new CustomEvent("viewshown", { detail: id }));
+}
+
+// Runs fn each time the view with this id is shown.
+function onViewShown(id, fn) {
+  window.addEventListener("viewshown", e => { if (e.detail === id) fn(); });
+}
+
+// Every form starts with a bar back to the Forms menu and to the other forms.
+FORM_VIEWS.forEach(({ id }) => {
+  const nav = document.createElement("nav");
+  nav.className = "form-nav";
+  nav.setAttribute("aria-label", "Forms");
+  nav.innerHTML = `<button type="button" class="form-back" data-view="formsTab">← All Forms</button>
+    <span class="form-nav-links">${FORM_VIEWS.map(f =>
+      `<button type="button" class="form-link" data-view="${f.id}">${escapeHtml(f.name)}</button>`).join("")}</span>`;
+  el(id).querySelector(".panel").prepend(nav);
+});
+
+document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => showView(tab.dataset.tab)));
+document.querySelectorAll("#formsTab [data-form]").forEach(card =>
+  card.addEventListener("click", () => showView(card.dataset.form)));
+document.querySelectorAll(".form-nav [data-view]").forEach(b =>
+  b.addEventListener("click", () => {
+    showView(b.dataset.view);
+    window.scrollTo(0, 0);
+  }));
 
 function showMsg(id, text, ok = true) {
   el(id).textContent = text;

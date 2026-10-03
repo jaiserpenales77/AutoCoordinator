@@ -48,11 +48,8 @@
 <nav class="tabs" role="tablist">
   <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="unplannedTab">Unplanned Issue</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkReturnTab">Bulk Return</button>
   <button type="button" class="tab" role="tab" aria-selected="false" data-tab="bulkCalcTab">Bulk Calculator</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="holdTab">HOLD TAG</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="swTab">Standard Work</button>
+  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab">Forms</button>
 </nav>
 
 <main class="layout" id="sheetTab">
@@ -331,6 +328,35 @@
       </label>
     </div>
     <p id="storedImportMsg" class="form-msg"></p>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="formsTab">
+  <section class="panel">
+    <h2>Forms</h2>
+    <p class="muted">Pick a form to fill in and print. Each form keeps what you typed while you switch between forms and tabs.</p>
+    <div class="forms-menu">
+      <button type="button" class="form-card" data-form="unplannedTab">
+        <span class="form-card-name">Unplanned Issue</span>
+        <span class="form-card-code">PK007B</span>
+        <span class="form-card-desc">Unplanned Issue Request Form</span>
+      </button>
+      <button type="button" class="form-card" data-form="bulkReturnTab">
+        <span class="form-card-name">Bulk Return</span>
+        <span class="form-card-code">PK120A · QS106A</span>
+        <span class="form-card-desc">Packaging - Bulk Return form</span>
+      </button>
+      <button type="button" class="form-card" data-form="holdTab">
+        <span class="form-card-name">HOLD TAG</span>
+        <span class="form-card-code">QA263C</span>
+        <span class="form-card-desc">QA Hold Tag</span>
+      </button>
+      <button type="button" class="form-card" data-form="swTab">
+        <span class="form-card-name">Standard Work</span>
+        <span class="form-card-code">Front &amp; back</span>
+        <span class="form-card-desc">Team Lead Standard Work and Steady State Tasks &amp; Habits</span>
+      </button>
+    </div>
   </section>
 </div>
 

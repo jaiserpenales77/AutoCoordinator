@@ -2,7 +2,7 @@
 // as the tag's PDF (Letter landscape, in pt from the top-left of the page; a
 // red page with a Word table in Calibri). On screen the value cells are
 // fillable; printing gives the tag with the entries written in.
-// Uses el, escapeHtml, showMsg, todayISO and formatDateMMDDYY from app.js.
+// Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY and onViewShown from app.js.
 const HoldTag = (() => {
   const CALIBRI = `Calibri, Carlito, "Segoe UI", Arial, sans-serif`;
   const RED = "#ff0000";
@@ -253,7 +253,7 @@ const HoldTag = (() => {
   window.addEventListener("beforeprint", () => {
     if (!tab.classList.contains("hidden")) document.body.dataset.print = "hold";
   });
-  document.querySelector('[data-tab="holdTab"]').addEventListener("click", () => requestAnimationFrame(fitSheet));
+  onViewShown("holdTab", () => requestAnimationFrame(fitSheet));
 
   renderValues();
   return { state, FIELDS };
