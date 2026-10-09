@@ -332,7 +332,7 @@
 
   <section class="panel line-rates-panel">
     <h2>Line Rates</h2>
-    <p class="muted">Full Hour, Lunch and Break for each line and FG item.</p>
+    <p class="muted">Full Hour, Lunch and Break for each line and FG item. Leave Lunch or Break empty for a line that runs through them.</p>
     <p id="lineRateAddOnlyNote" class="muted hidden">You can add new line rates; only an admin can change or remove a stored one.</p>
     <form id="lineRateForm" class="line-rate-form" autocomplete="off">
       <label>Line
@@ -347,10 +347,10 @@
         <input type="number" id="lineRateFull" step="any" min="0" required>
       </label>
       <label>Lunch
-        <input type="number" id="lineRateLunch" step="any" min="0" required>
+        <input type="number" id="lineRateLunch" step="any" min="0" placeholder="Optional">
       </label>
       <label>Break
-        <input type="number" id="lineRateBreak" step="any" min="0" required>
+        <input type="number" id="lineRateBreak" step="any" min="0" placeholder="Optional">
       </label>
       <button type="submit" class="primary">Save Line Rate</button>
     </form>

@@ -175,7 +175,8 @@ people do through the app; it isn't a tamper-proof audit trail.
 - **FG Items & Counts** — when a stored FG Item is typed or imported, Count
   (Fill Rate) fills in.
 - **Line Rates** — Full Hour, Lunch and Break for each line and FG item (one
-  entry per line + FG item pair). Line keeps its value after saving, so several
+  entry per line + FG item pair). Lunch and Break are optional: leave them
+  empty for a line that runs through lunch or breaks (they show as "—"). Line keeps its value after saving, so several
   FG items can be entered for one line; the FG Item box suggests the stored FG
   items. Search finds lines and FG items.
 

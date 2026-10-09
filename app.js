@@ -1055,7 +1055,8 @@ ITEM_PANELS.forEach(panel => {
 // the item lists, Leads only add; changing or removing is for admins.
 const RATE_INPUTS = { line: "lineRateLine", fgItem: "lineRateFg", fullHour: "lineRateFull", lunch: "lineRateLunch", break: "lineRateBreak" };
 const RATE_FIGURES = ["fullHour", "lunch", "break"];
-const fmtRate = n => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
+// Lunch and Break are optional (null): a line that runs through them.
+const fmtRate = n => (n === null || n === undefined ? "—" : n.toLocaleString("en-US", { maximumFractionDigits: 3 }));
 const rateName = r => `Line ${r.line}, FG ${r.fgItem}`;
 const rateFigures = r => `full hour ${fmtRate(r.fullHour)}, lunch ${fmtRate(r.lunch)}, break ${fmtRate(r.break)}`;
 
@@ -1093,8 +1094,9 @@ el("lineRateForm").addEventListener("submit", e => {
     showMsg("lineRateMsg", "Line and FG Item can't contain \"|\".", false);
     return;
   }
-  if (RATE_FIGURES.some(f => rate[f] === "" || !(Number(rate[f]) >= 0))) {
-    showMsg("lineRateMsg", "Full Hour, Lunch and Break must each be a number (0 or more).", false);
+  if (rate.fullHour === "" || !(Number(rate.fullHour) >= 0)
+    || [rate.lunch, rate.break].some(v => v !== "" && !(Number(v) >= 0))) {
+    showMsg("lineRateMsg", "Full Hour must be a number (0 or more); Lunch and Break too, or left empty.", false);
     return;
   }
   const stored = StoredData.lineRates.find(rate.line, rate.fgItem);
@@ -1120,7 +1122,7 @@ el("lineRateTableBody").addEventListener("click", e => {
   const hit = StoredData.lineRates.find(btn.dataset.line, btn.dataset.fg);
   if (!hit) return;
   if (btn.dataset.action === "edit") {
-    Object.entries(RATE_INPUTS).forEach(([field, id]) => { el(id).value = String(hit[field]); });
+    Object.entries(RATE_INPUTS).forEach(([field, id]) => { el(id).value = String(hit[field] ?? ""); });
     el("lineRateFull").focus();
     showMsg("lineRateMsg", `Editing ${rateName(hit)} — change the figures and click Save Line Rate.`);
   } else if (confirm(`Remove ${rateName(hit)}?`)) {

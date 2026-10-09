@@ -46,19 +46,21 @@ const StoredData = (() => {
   // Full Hour, Lunch and Break for each line and FG item, as
   // { line, fgItem, fullHour, lunch, break } keyed by line + FG item
   // (case-insensitive); synced as lineRates["LINE|FG ITEM"] = { fullHour, lunch, break }.
-  const RATE_FIELDS = ["fullHour", "lunch", "break"];
+  // Lunch and Break are optional (null), for lines that run through them.
   const normLine = s => String(s ?? "").trim().replace(/\s+/g, " ").toUpperCase();
   const rateKey = (line, fgItem) => `${normLine(line)}|${normItem(fgItem)}`;
   const byLineThenItem = (a, b) => a.line.localeCompare(b.line, undefined, { numeric: true, sensitivity: "base" })
     || a.fgItem.localeCompare(b.fgItem, undefined, { numeric: true, sensitivity: "base" });
   const lineRates = (() => {
     const KEY = "pk030_line_rates";
-    const isNumber = v => v !== "" && v !== null && v !== undefined && Number.isFinite(Number(v));
+    const blank = v => v === "" || v === null || v === undefined;
+    const isNumber = v => !blank(v) && Number.isFinite(Number(v));
+    const optional = v => (blank(v) ? null : Number(v));
     // "|" separates line from FG item in the synced key, so neither may hold one.
     const valid = r => !!r && normLine(r.line) !== "" && normItem(r.fgItem) !== ""
-      && !String(r.line).includes("|") && !String(r.fgItem).includes("|") && RATE_FIELDS.every(f => isNumber(r[f]));
+      && !String(r.line).includes("|") && !String(r.fgItem).includes("|") && isNumber(r.fullHour) && [r.lunch, r.break].every(v => blank(v) || isNumber(v));
     const clean = r => ({ line: normLine(r.line), fgItem: normItem(r.fgItem),
-      fullHour: Number(r.fullHour), lunch: Number(r.lunch), break: Number(r.break) });
+      fullHour: Number(r.fullHour), lunch: optional(r.lunch), break: optional(r.break) });
     const all = () => read(KEY).filter(valid).map(clean).sort(byLineThenItem);
     const without = key => all().filter(r => rateKey(r.line, r.fgItem) !== key);
     return {
