@@ -918,6 +918,7 @@ function renderStoredData() {
   }
 
   ITEM_PANELS.forEach(renderItemPanel);
+  renderLineRates();
 
   populateLeads();
   // The Bulk Calculator's item suggestions (bulk-calc.js loads after this file).
@@ -1050,6 +1051,86 @@ ITEM_PANELS.forEach(panel => {
   });
 });
 
+// Line Rates: Full Hour, Lunch and Break for each line and FG item. As with
+// the item lists, Leads only add; changing or removing is for admins.
+const RATE_INPUTS = { line: "lineRateLine", fgItem: "lineRateFg", fullHour: "lineRateFull", lunch: "lineRateLunch", break: "lineRateBreak" };
+const RATE_FIGURES = ["fullHour", "lunch", "break"];
+const fmtRate = n => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
+const rateName = r => `Line ${r.line}, FG ${r.fgItem}`;
+const rateFigures = r => `full hour ${fmtRate(r.fullHour)}, lunch ${fmtRate(r.lunch)}, break ${fmtRate(r.break)}`;
+
+function renderLineRates() {
+  const all = StoredData.lineRates.all();
+  const query = el("lineRateSearch").value.trim().toUpperCase();
+  const rates = query ? all.filter(r => `LINE ${r.line} ${r.fgItem}`.includes(query)) : all;
+  const change = canChangeStoredItems();
+  const ids = r => `data-line="${escapeHtml(r.line)}" data-fg="${escapeHtml(r.fgItem)}"`;
+  el("lineRateTableBody").innerHTML = rates.map(r => `
+    <tr><td>${escapeHtml(r.line)}</td><td>${escapeHtml(r.fgItem)}</td>
+      <td>${fmtRate(r.fullHour)}</td><td>${fmtRate(r.lunch)}</td><td>${fmtRate(r.break)}</td>
+      <td class="row-actions">${change ? `
+        <button type="button" data-action="edit" ${ids(r)}>Edit</button>
+        <button type="button" data-action="remove" ${ids(r)}>Remove</button>` : ""}
+      </td></tr>`).join("");
+  el("lineRateAddOnlyNote").classList.toggle("hidden", change);
+  el("noLineRatesMsg").textContent = all.length
+    ? `No line rates match "${el("lineRateSearch").value.trim()}".`
+    : "No line rates yet.";
+  el("noLineRatesMsg").classList.toggle("hidden", rates.length > 0);
+  el("lineRateSearch").classList.toggle("hidden", all.length === 0);
+  // Suggestions: lines already in use, and the stored FG items.
+  el("lineRateLineList").innerHTML = [...new Set(all.map(r => r.line))]
+    .map(line => `<option value="${escapeHtml(line)}">`).join("");
+  el("lineRateFgList").innerHTML = StoredData.fgItems.all()
+    .map(i => `<option value="${escapeHtml(i.item)}">`).join("");
+}
+
+el("lineRateSearch").addEventListener("input", renderLineRates);
+el("lineRateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const rate = Object.fromEntries(Object.entries(RATE_INPUTS).map(([field, id]) => [field, el(id).value.trim()]));
+  if (`${rate.line}${rate.fgItem}`.includes("|")) {
+    showMsg("lineRateMsg", "Line and FG Item can't contain \"|\".", false);
+    return;
+  }
+  if (RATE_FIGURES.some(f => rate[f] === "" || !(Number(rate[f]) >= 0))) {
+    showMsg("lineRateMsg", "Full Hour, Lunch and Break must each be a number (0 or more).", false);
+    return;
+  }
+  const stored = StoredData.lineRates.find(rate.line, rate.fgItem);
+  if (stored && !canChangeStoredItems()) {
+    showMsg("lineRateMsg", `${rateName(stored)} is already stored (${rateFigures(stored)}). Only an admin can change it.`, false);
+    return;
+  }
+  StoredData.lineRates.save(rate);
+  const saved = StoredData.lineRates.find(rate.line, rate.fgItem);
+  logActivity(`${stored ? "Changed" : "Added"} a line rate`,
+    `${rateName(saved)}: ${rateFigures(saved)}${stored ? ` (was ${rateFigures(stored)})` : ""}`);
+  showMsg("lineRateMsg", `${stored ? "Updated" : "Added"} ${rateName(saved)}: ${rateFigures(saved)}.`);
+  // The line stays filled in (as saved), for entering several FG items on one line.
+  el("lineRateLine").value = saved.line;
+  ["fgItem", ...RATE_FIGURES].forEach(f => { el(RATE_INPUTS[f]).value = ""; });
+  renderStoredData();
+  el("lineRateFg").focus();
+});
+
+el("lineRateTableBody").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn || !canChangeStoredItems()) return;
+  const hit = StoredData.lineRates.find(btn.dataset.line, btn.dataset.fg);
+  if (!hit) return;
+  if (btn.dataset.action === "edit") {
+    Object.entries(RATE_INPUTS).forEach(([field, id]) => { el(id).value = String(hit[field]); });
+    el("lineRateFull").focus();
+    showMsg("lineRateMsg", `Editing ${rateName(hit)} — change the figures and click Save Line Rate.`);
+  } else if (confirm(`Remove ${rateName(hit)}?`)) {
+    StoredData.lineRates.remove(hit.line, hit.fgItem);
+    logActivity("Removed a line rate", `${rateName(hit)}: ${rateFigures(hit)}`);
+    showMsg("lineRateMsg", `Removed ${rateName(hit)}.`);
+    renderStoredData();
+  }
+});
+
 el("exportStoredBtn").addEventListener("click", () => {
   logActivity("Exported Stored Data");
   const blob = new Blob([StoredData.exportJson()], { type: "application/json" });
@@ -1069,11 +1150,12 @@ el("importStoredInput").addEventListener("change", async e => {
     // Only admins may change leads and stored items, so for everyone else
     // leads are left out and items already stored keep their values.
     const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
-    logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${n.items} bulk item(s), ${n.fgItems} FG item(s)`);
-    const kept = n.kept ? ` ${n.kept} already stored item(s) kept their values (only an admin can change them).` : "";
+    const counts = `${n.items} bulk item(s), ${n.fgItems} FG item(s) and ${n.lineRates} line rate(s)`;
+    logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${counts}`);
+    const kept = n.kept ? ` ${n.kept} already stored ${n.kept === 1 ? "entry" : "entries"} kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
-      ? `Imported ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name} (leads are left to admins).${kept}`
-      : `Imported ${n.leads} lead(s), ${n.items} bulk item(s) and ${n.fgItems} FG item(s) from ${file.name}.${kept}`);
+      ? `Imported ${counts} from ${file.name} (leads are left to admins).${kept}`
+      : `Imported ${n.leads} lead(s), ${counts} from ${file.name}.${kept}`);
     renderStoredData();
   } catch (err) {
     showMsg("storedImportMsg", `${file.name}: ${err.message}.`, false);
@@ -1205,7 +1287,8 @@ function canManageLeads() {
   return !!r && atLeast(r, "admin");
 }
 
-// Leads add bulk and FG items; changing or removing stored ones is for admins.
+// Leads add bulk items, FG items and line rates; changing or removing stored
+// ones is for admins.
 function canChangeStoredItems() {
   return canManageLeads();
 }
@@ -1483,7 +1566,8 @@ CloudSync.start({
     leads: StoredData.leads(),
     leadUsers: StoredData.leadUsers(),
     bulkItems: StoredData.bulkItems.all(),
-    fgItems: StoredData.fgItems.all()
+    fgItems: StoredData.fgItems.all(),
+    lineRates: StoredData.lineRates.all()
   }),
   onSheets(records) {
     saveRecords(records);

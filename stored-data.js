@@ -1,5 +1,5 @@
-// Leads (and the sign-in username linked to each), bulk item piece weights and
-// FG item counts entered on the Stored Data tab. localStorage is the working copy; each local change is reported to
+// Leads (and the sign-in username linked to each), bulk item piece weights,
+// FG item counts and line rates entered on the Stored Data tab. localStorage is the working copy; each local change is reported to
 // `StoredData.onChange(field, key, value)` (value null = removed) so it can be
 // synced, and `replaceAll` takes in the synced copy without reporting back.
 const StoredData = (() => {
@@ -42,6 +42,53 @@ const StoredData = (() => {
       valid
     };
   }
+
+  // Full Hour, Lunch and Break for each line and FG item, as
+  // { line, fgItem, fullHour, lunch, break } keyed by line + FG item
+  // (case-insensitive); synced as lineRates["LINE|FG ITEM"] = { fullHour, lunch, break }.
+  const RATE_FIELDS = ["fullHour", "lunch", "break"];
+  const normLine = s => String(s ?? "").trim().replace(/\s+/g, " ").toUpperCase();
+  const rateKey = (line, fgItem) => `${normLine(line)}|${normItem(fgItem)}`;
+  const byLineThenItem = (a, b) => a.line.localeCompare(b.line, undefined, { numeric: true, sensitivity: "base" })
+    || a.fgItem.localeCompare(b.fgItem, undefined, { numeric: true, sensitivity: "base" });
+  const lineRates = (() => {
+    const KEY = "pk030_line_rates";
+    const isNumber = v => v !== "" && v !== null && v !== undefined && Number.isFinite(Number(v));
+    // "|" separates line from FG item in the synced key, so neither may hold one.
+    const valid = r => !!r && normLine(r.line) !== "" && normItem(r.fgItem) !== ""
+      && !String(r.line).includes("|") && !String(r.fgItem).includes("|") && RATE_FIELDS.every(f => isNumber(r[f]));
+    const clean = r => ({ line: normLine(r.line), fgItem: normItem(r.fgItem),
+      fullHour: Number(r.fullHour), lunch: Number(r.lunch), break: Number(r.break) });
+    const all = () => read(KEY).filter(valid).map(clean).sort(byLineThenItem);
+    const without = key => all().filter(r => rateKey(r.line, r.fgItem) !== key);
+    return {
+      all,
+      save(rate) {
+        const r = clean(rate);
+        const key = rateKey(r.line, r.fgItem);
+        localStorage.setItem(KEY, JSON.stringify([...without(key), r]));
+        notify("lineRates", key, { fullHour: r.fullHour, lunch: r.lunch, break: r.break });
+      },
+      remove(line, fgItem) {
+        const key = rateKey(line, fgItem);
+        localStorage.setItem(KEY, JSON.stringify(without(key)));
+        notify("lineRates", key, null);
+      },
+      replace(list) {
+        localStorage.setItem(KEY, JSON.stringify((list ?? []).filter(valid).map(clean)));
+      },
+      find(line, fgItem) {
+        const key = rateKey(line, fgItem);
+        return normLine(line) && normItem(fgItem) ? all().find(r => rateKey(r.line, r.fgItem) === key) ?? null : null;
+      },
+      // A synced key back into { line, fgItem }.
+      fromKey(key) {
+        const [line, fgItem] = String(key).split("|");
+        return { line: line ?? "", fgItem: fgItem ?? "" };
+      },
+      valid
+    };
+  })();
 
   const LEADS_KEY = "pk030_leads";
   const LEAD_USERS_KEY = "pk030_lead_users";
@@ -120,14 +167,16 @@ const StoredData = (() => {
     writeLeadUsers(data.leadUsers ?? {});
     bulkItems.replace(data.bulkItems);
     fgItems.replace(data.fgItems);
+    lineRates.replace(data.lineRates);
   }
 
   function exportJson() {
-    return JSON.stringify({ leads: leads(), leadUsers: leadUsers(), items: bulkItems.all(), fgItems: fgItems.all() }, null, 2);
+    return JSON.stringify({ leads: leads(), leadUsers: leadUsers(), items: bulkItems.all(), fgItems: fgItems.all(),
+      lineRates: lineRates.all() }, null, 2);
   }
 
-  // Merges a file made by exportJson (files from before FG items existed have
-  // no fgItems); returns how many of each it took in. Leads and their
+  // Merges a file made by exportJson (files from before FG items or line rates
+  // existed have no fgItems or lineRates); returns how many of each it took in. Leads and their
   // usernames are only taken in with `withLeads` (admins), else left out
   // (leads: null). With `addOnly` (Leads), items already stored keep their
   // value and are counted as `kept`.
@@ -154,10 +203,13 @@ const StoredData = (() => {
     const fgAll = (Array.isArray(data.fgItems) ? data.fgItems : []).filter(fgItems.valid);
     const fg = fgAll.filter(isNew(fgItems));
     fg.forEach(i => fgItems.save(i.item, i.count));
-    return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length,
-      kept: bulkAll.length - bulk.length + fgAll.length - fg.length };
+    const ratesAll = (Array.isArray(data.lineRates) ? data.lineRates : []).filter(lineRates.valid);
+    const rates = ratesAll.filter(r => !addOnly || !lineRates.find(r.line, r.fgItem));
+    rates.forEach(r => lineRates.save(r));
+    return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length, lineRates: rates.length,
+      kept: bulkAll.length - bulk.length + fgAll.length - fg.length + ratesAll.length - rates.length };
   }
 
-  const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, replaceAll, exportJson, importJson, onChange: null };
+  const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, lineRates, replaceAll, exportJson, importJson, onChange: null };
   return api;
 })();

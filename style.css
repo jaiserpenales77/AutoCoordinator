@@ -643,6 +643,23 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .inline-form input { flex: 1 1 140px; min-width: 0; }
 
+/* Line Rates: full width, a labelled field each for Line, FG Item and the
+   three figures. */
+.line-rates-panel { grid-column: 1 / -1; }
+.line-rate-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+.line-rate-form input { width: 100%; min-width: 0; }
+.line-rates-table td:nth-child(n+3):not(.row-actions),
+.line-rates-table th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) {
+  .line-rate-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .line-rate-form button { grid-column: 1 / -1; }
+}
+
 .form-msg { min-height: 1em; margin: 8px 0 0; font-size: 0.82rem; }
 .hint-ok { color: var(--ok-text); }
 .hint-err { color: var(--warn-text); }

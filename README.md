@@ -156,8 +156,8 @@ first), with a search box, a time range (today, last 7 or 30 days, all) and
 
 Logged: signing in, signing out and creating an account; saving, updating,
 deleting, printing and exporting yield sheets; importing JDE report PDFs;
-adding, changing and removing bulk and FG items (also from the Bulk
-Calculator); importing and exporting Stored Data; adding and removing leads
+adding, changing and removing bulk items (also from the Bulk Calculator), FG
+items and line rates; importing and exporting Stored Data; adding and removing leads
 and linking usernames; changing account types; and printing each form and
 the Bulk Calculator report.
 
@@ -174,13 +174,17 @@ people do through the app; it isn't a tamper-proof audit trail.
   imported on the yield sheet, Bulk Piece Wt fills in.
 - **FG Items & Counts** — when a stored FG Item is typed or imported, Count
   (Fill Rate) fills in.
+- **Line Rates** — Full Hour, Lunch and Break for each line and FG item (one
+  entry per line + FG item pair). Line keeps its value after saving, so several
+  FG items can be entered for one line; the FG Item box suggests the stored FG
+  items. Search finds lines and FG items.
 
 A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
 
-**Leads** can only add new items: an item that's already stored can't be
-saved again with another value, and there are no Edit or Remove buttons (the
-database refuses it too). **Admins and Owners** can add, edit and remove.
+**Leads** can only add new items and line rates: one that's already stored
+can't be saved again with other values, and there are no Edit or Remove
+buttons (the database refuses it too). **Admins and Owners** can add, edit and remove.
 
 Stored Data is shared through the database (see below). **Export Stored Data**
 saves a JSON backup; **Import Stored Data** adds a backup's entries back
@@ -338,11 +342,11 @@ service cloud.firestore {
     function isLead() {
       return isAdmin() || (signedIn() && myRole() == 'lead');
     }
-    // A Lead's change to Stored Data: only new bulk/FG items, none changed
-    // or removed.
+    // A Lead's change to Stored Data: only new bulk/FG items and line rates,
+    // none changed or removed.
     function onlyAddsItems() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bulkItems', 'fgItems'])
-        && onlyAdds('bulkItems') && onlyAdds('fgItems');
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bulkItems', 'fgItems', 'lineRates'])
+        && onlyAdds('bulkItems') && onlyAdds('fgItems') && onlyAdds('lineRates');
     }
     function onlyAdds(field) {
       let change = request.resource.data.get(field, {}).diff(resource.data.get(field, {}));
@@ -358,12 +362,12 @@ service cloud.firestore {
     match /pk030-yield-sheets/{id} {
       allow read, write: if isLead();
     }
-    // Stored Data: Leads read it and add new bulk/FG items; only admins
-    // change or remove items, and change leads and their usernames.
+    // Stored Data: Leads read it and add new bulk/FG items and line rates;
+    // only admins change or remove them, and change leads and their usernames.
     match /pk030/storedData {
       allow read: if isLead();
       allow create: if isAdmin()
-        || (isLead() && request.resource.data.keys().hasOnly(['bulkItems', 'fgItems']));
+        || (isLead() && request.resource.data.keys().hasOnly(['bulkItems', 'fgItems', 'lineRates']));
       allow update: if isAdmin() || (isLead() && onlyAddsItems());
       allow delete: if isAdmin();
     }
@@ -417,7 +421,7 @@ service cloud.firestore {
 |---|---|
 | **PLT** | Unplanned Issue, Bulk Return and the Bulk Calculator. Every new account starts here. |
 | **MLT** | Every form except the Hold Tag, and the Bulk Calculator. |
-| **Lead** | Everything except the Admin tab: yield sheets, all forms, and Stored Data, where they can add new bulk and FG items but not change or remove stored ones. |
+| **Lead** | Everything except the Admin tab: yield sheets, all forms, and Stored Data, where they can add new bulk items, FG items and line rates but not change or remove stored ones. |
 | **Admin** | Everything, plus the Admin and Activity Log tabs. |
 | **Owner** | Same as Admin, and can't be demoted or removed in the app; only Owners demote Admins. |
 

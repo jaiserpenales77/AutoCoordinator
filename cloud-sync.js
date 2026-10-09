@@ -1,7 +1,8 @@
 // Signs users in and syncs saved yield sheets and Stored Data through the
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
 // each sheet is a document in `pk030-yield-sheets`, and leads, their linked
-// usernames, bulk items and FG items are maps in the `pk030/storedData` document.
+// usernames, bulk items, FG items and line rates are maps in the
+// `pk030/storedData` document.
 // Each account has a `pk030-users/{uid}` record with its account type (role):
 // PLT (what everyone who signs up starts as) and MLT only use the forms and
 // never reach the database; Lead and up sync sheets and Stored Data; Admin and
@@ -115,7 +116,8 @@ const CloudSync = (() => {
       leads: Object.keys(data.leads || {}),
       leadUsers: { ...(data.leadUsers || {}) },
       bulkItems: Object.entries(data.bulkItems || {}).map(([item, pieceWt]) => ({ item, pieceWt })),
-      fgItems: Object.entries(data.fgItems || {}).map(([item, count]) => ({ item, count }))
+      fgItems: Object.entries(data.fgItems || {}).map(([item, count]) => ({ item, count })),
+      lineRates: Object.entries(data.lineRates || {}).map(([key, rate]) => ({ ...StoredData.lineRates.fromKey(key), ...rate }))
     };
   }
 
@@ -136,6 +138,9 @@ const CloudSync = (() => {
     const missing = (list, remoteList) => list.filter(i => !remoteList.some(r => r.item === i.item));
     missing(local.bulkItems, remote.bulkItems).forEach(i => add("bulkItems", i.item, i.pieceWt));
     missing(local.fgItems, remote.fgItems).forEach(i => add("fgItems", i.item, i.count));
+    const rateKey = r => `${r.line}|${r.fgItem}`;
+    const missingRates = (local.lineRates ?? []).filter(r => !remote.lineRates.some(x => rateKey(x) === rateKey(r)));
+    missingRates.forEach(r => add("lineRates", rateKey(r), { fullHour: r.fullHour, lunch: r.lunch, break: r.break }));
     // Leads go in their own write: only admins may change them, and a refused
     // write must not take the items with it.
     const { leads, leadUsers, ...items } = merge;
@@ -147,7 +152,8 @@ const CloudSync = (() => {
       leads: [...remote.leads, ...Object.keys(merge.leads || {})],
       leadUsers: { ...remote.leadUsers, ...(merge.leadUsers || {}) },
       bulkItems: [...remote.bulkItems, ...missing(local.bulkItems, remote.bulkItems)],
-      fgItems: [...remote.fgItems, ...missing(local.fgItems, remote.fgItems)]
+      fgItems: [...remote.fgItems, ...missing(local.fgItems, remote.fgItems)],
+      lineRates: [...remote.lineRates, ...missingRates]
     };
   }
 

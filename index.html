@@ -330,6 +330,41 @@
     <p id="noFgItemsMsg" class="muted">No FG items yet.</p>
   </section>
 
+  <section class="panel line-rates-panel">
+    <h2>Line Rates</h2>
+    <p class="muted">Full Hour, Lunch and Break for each line and FG item.</p>
+    <p id="lineRateAddOnlyNote" class="muted hidden">You can add new line rates; only an admin can change or remove a stored one.</p>
+    <form id="lineRateForm" class="line-rate-form" autocomplete="off">
+      <label>Line
+        <input type="text" id="lineRateLine" list="lineRateLineList" placeholder="e.g. 10" required>
+        <datalist id="lineRateLineList"></datalist>
+      </label>
+      <label>FG Item
+        <input type="text" id="lineRateFg" list="lineRateFgList" placeholder="e.g. 2676" required>
+        <datalist id="lineRateFgList"></datalist>
+      </label>
+      <label>Full Hour
+        <input type="number" id="lineRateFull" step="any" min="0" required>
+      </label>
+      <label>Lunch
+        <input type="number" id="lineRateLunch" step="any" min="0" required>
+      </label>
+      <label>Break
+        <input type="number" id="lineRateBreak" step="any" min="0" required>
+      </label>
+      <button type="submit" class="primary">Save Line Rate</button>
+    </form>
+    <p id="lineRateMsg" class="form-msg"></p>
+    <input type="search" id="lineRateSearch" class="stored-search" placeholder="Search lines and FG items…" aria-label="Search line rates">
+    <div class="table-scroll stored-table">
+      <table class="line-rates-table">
+        <thead><tr><th>Line</th><th>FG Item</th><th>Full Hour</th><th>Lunch</th><th>Break</th><th></th></tr></thead>
+        <tbody id="lineRateTableBody"></tbody>
+      </table>
+    </div>
+    <p id="noLineRatesMsg" class="muted">No line rates yet.</p>
+  </section>
+
   <section class="panel">
     <h2>Back Up / Share</h2>
     <p class="muted">Stored Data and saved yield sheets are shared with every computer through the database. Export Stored Data to a file as a backup; importing a file adds its entries back.</p>
