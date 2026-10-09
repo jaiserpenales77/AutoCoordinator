@@ -300,17 +300,32 @@ app runs without sign-in on that computer's own copy.
    `owners`, type **array**, with your username (lowercase, without
    `@pk030.local`) as a string element. See **Account types** below.
 4. **Firestore Database → Rules** → replace them with the rules below →
-   **Publish**. JDE Sched only uses the `jde-sched` collection, which stays
-   open exactly as before. Until these rules are published, the app treats
-   everyone signed in as a Lead, as before account types.
+   **Publish**. The rules also cover the JDE Sched app, which shares this
+   database: its `jde-sched` collection opens only for its three shift
+   accounts (`1st@jde-sched.local`, `2nd@jde-sched.local`,
+   `3rd@jde-sched.local`), each to its own shift, and Packaging Lead Hub
+   accounts can't reach it (nor can JDE Sched accounts reach this app's data).
+   Keep that part when changing the rules. Until these rules are published,
+   the app treats everyone signed in as a Lead, as before account types.
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // JDE Sched: unchanged, no sign-in
-    match /jde-sched/{document=**} {
-      allow read, write: if true;
+    // JDE Sched: each shift's data opens only with that shift's password.
+    // The accounts are 1st@jde-sched.local, 2nd@jde-sched.local and
+    // 3rd@jde-sched.local (created in the Firebase console). Any other
+    // account - including Packaging Lead Hub accounts - gets nothing.
+    function jdeShiftAccount(shift) {
+      return request.auth != null
+        && shift in ['1st', '2nd', '3rd']
+        && request.auth.token.email == shift + '@jde-sched.local';
+    }
+    match /jde-sched/{shift} {
+      allow read, write: if jdeShiftAccount(shift);
+    }
+    match /jde-sched/{shift}/{rest=**} {
+      allow read, write: if jdeShiftAccount(shift);
     }
 
     // Packaging Lead Hub. Accounts are username@pk030.local.
