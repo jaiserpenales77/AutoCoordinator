@@ -483,6 +483,11 @@ remove someone's access, delete (or disable) their user.
   cleaned, 300 dpi).
 - `stored-data.js` — leads (Admin tab), bulk piece weights and FG counts (Stored Data tab).
 - `cloud-sync.js` — sign-in and sign-up, account types, and syncing sheets and Stored Data with Firestore.
+- `tools/pk030_db.py` — adds FG items, bulk items and line rates to Stored Data
+  from a file in the export format, signed in as the account in
+  `PK030_USERNAME` / `PK030_PASSWORD` (add-only, with Activity Log entries);
+  used by Claude Code sessions (see `CLAUDE.md`).
+- `CLAUDE.md` — instructions Claude Code reads at the start of each session.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth
   (Apache-2.0); the Firestore and Auth files import the local app file instead
