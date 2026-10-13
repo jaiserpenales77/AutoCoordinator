@@ -95,9 +95,15 @@ const StandardWork = (() => {
     measureCtx.font = `700 ${size}pt ${SANS}`;
     return measureCtx.measureText(s).width * 0.75; // px to pt
   };
-  const fitSize = (s, size, room) => Math.max(6, Math.min(size, size * room / Math.max(1, widthPt(s, size))));
-  const text = (s, x, base, size, anchor) =>
-    `<text x="${x.toFixed(2)}" y="${base.toFixed(2)}" font-size="${size.toFixed(2)}" text-anchor="${anchor}">${escapeHtml(s)}</text>`;
+  // A long entry shrinks to fit (on screen and printed), down to 6pt; past
+  // that, the printout squeezes it into its room.
+  const fitSize = (s, size, room) => (s ? Math.max(6, Math.min(size, size * room / Math.max(1, widthPt(s, size)))) : size);
+  const text = (s, x, base, size, anchor, room) =>
+    `<text x="${x.toFixed(2)}" y="${base.toFixed(2)}" font-size="${size.toFixed(2)}" text-anchor="${anchor}"`
+    + `${room && widthPt(s, size) > room ? ` textLength="${room.toFixed(2)}" lengthAdjust="spacingAndGlyphs"` : ""}>${escapeHtml(s)}</text>`;
+  // Room for an entry, in pt: its box less the box's padding (none on the "##" boxes).
+  const fieldRoom = id => TEXT_FIELDS[id][2] - TEXT_FIELDS[id][1] - (COVERS[id] ? 0 : 4);
+  const TOTAL_ROOM = TOTAL_BOX[2] - TOTAL_BOX[0] - 16;
 
   // A tick drawn as a path (no font needed), or "N/A", inside a box.
   function checkMark(id) {
@@ -140,15 +146,16 @@ const StandardWork = (() => {
         const [cx0, cy0, cx1, cy1] = COVERS[id];
         out += `<rect x="${cx0}" y="${cy0}" width="${(cx1 - cx0).toFixed(2)}" height="${(cy1 - cy0).toFixed(2)}" fill="#fff"/>`;
       }
-      out += text(v(id), (x0 + x1) / 2, base - 1.5, fitSize(v(id), size, x1 - x0), "middle");
+      const fit = fitSize(v(id), size, fieldRoom(id));
+      out += text(v(id), (x0 + x1) / 2, base - 1.5, fit, "middle", fieldRoom(id));
     }
     if (side === "front" && v("totalBottles")) {
       const [x0, y0, x1, y1] = TOTAL_BOX;
-      out += text(v("totalBottles"), (x0 + x1) / 2, (y0 + y1) / 2 + 15, fitSize(v("totalBottles"), TOTAL_SIZE, x1 - x0 - 16), "middle");
+      out += text(v("totalBottles"), (x0 + x1) / 2, (y0 + y1) / 2 + 15, fitSize(v("totalBottles"), TOTAL_SIZE, TOTAL_ROOM), "middle", TOTAL_ROOM);
     }
     if (side === "back" && v("comments")) {
       const { size, lines } = commentLines(v("comments"));
-      lines.forEach((line, i) => { if (line) out += text(line, COMMENTS[0] + 2, COMMENTS[1] + size * (1.2 * i + 1), size, "start"); });
+      lines.forEach((line, i) => { if (line) out += text(line, COMMENTS[0] + 2, COMMENTS[1] + size * (1.2 * i + 1), size, "start", COMMENTS[2] - COMMENTS[0] - 4); });
     }
     return out;
   }
@@ -200,7 +207,21 @@ const StandardWork = (() => {
 
   // The printed copies are kept up to date as the sheet is filled in, so
   // they're ready (images loaded) whenever printing starts.
+  // On screen, long entries shrink the same way as on the printout.
+  function sizeInputs() {
+    tab.querySelectorAll("input.sw-input").forEach(input => {
+      const id = input.dataset.field;
+      input.style.fontSize = id === "totalBottles"
+        ? `${fitSize(input.value.trim(), TOTAL_SIZE, TOTAL_ROOM).toFixed(2)}pt`
+        : `${fitSize(input.value.trim(), TEXT_FIELDS[id][4], fieldRoom(id)).toFixed(2)}pt`;
+    });
+    const comments = tab.querySelector("textarea.sw-comments");
+    const text = comments.value.trim();
+    comments.style.fontSize = `${text ? commentLines(text).size : COMMENT_SIZE}pt`;
+  }
+
   function render() {
+    sizeInputs();
     for (const side of ["front", "back"]) {
       copies[side].querySelector(".sw-values").innerHTML = valuesSvg(side, true);
       sheets[side].querySelector(".sw-values").innerHTML = valuesSvg(side, false);

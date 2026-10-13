@@ -174,18 +174,25 @@ const UnplannedIssue = (() => {
     </svg>`;
   }
 
-  // Shrinks an entry that's wider than its space.
+  // Shrinks an entry that's wider than its space (on screen and printed),
+  // down to MIN_SIZE; past that, the printout squeezes it into the space.
+  const MIN_SIZE = 5;
   const measureCtx = document.createElement("canvas").getContext("2d");
-  function fitSize(text, size, room) {
+  function widthPt(text, size) {
     measureCtx.font = `700 ${size}pt Arial, "Liberation Sans", Helvetica, sans-serif`;
-    const width = measureCtx.measureText(text).width * 0.75; // px to pt
-    return width > room ? Math.max(5, size * room / width) : size;
+    return measureCtx.measureText(text).width * 0.75; // px to pt
   }
+  function fitSize(text, size, room) {
+    const width = text ? widthPt(text, size) : 0;
+    return width > room ? Math.max(MIN_SIZE, size * room / width) : size;
+  }
+  const squeeze = (s, size, room) => (widthPt(s, size) > room
+    ? ` textLength="${room.toFixed(2)}" lengthAdjust="spacingAndGlyphs"` : "");
 
   function textAt(s, x, base, size, anchor, room) {
     if (!s) return "";
     const fit = fitSize(s, size, room);
-    return `<text x="${x.toFixed(2)}" y="${base.toFixed(2)}" font-size="${fit.toFixed(2)}" text-anchor="${anchor}">${escapeHtml(s)}</text>`;
+    return `<text x="${x.toFixed(2)}" y="${base.toFixed(2)}" font-size="${fit.toFixed(2)}" text-anchor="${anchor}"${squeeze(s, fit, room)}>${escapeHtml(s)}</text>`;
   }
 
   // A table entry, centred in its cell; one too long for a readable single line
@@ -205,7 +212,7 @@ const UnplannedIssue = (() => {
     const lineH = best.fit * 1.12;
     const first = mid - lineH / 2 + best.fit * 0.3;
     return best.lines.map((line, i) =>
-      `<text x="${cx.toFixed(2)}" y="${(first + i * lineH).toFixed(2)}" font-size="${best.fit.toFixed(2)}" text-anchor="middle">${escapeHtml(line)}</text>`).join("");
+      `<text x="${cx.toFixed(2)}" y="${(first + i * lineH).toFixed(2)}" font-size="${best.fit.toFixed(2)}" text-anchor="middle"${squeeze(line, best.fit, room)}>${escapeHtml(line)}</text>`).join("");
   }
 
   const typeMark = () => TYPES.filter(t => t[0] === state.type)
@@ -230,8 +237,12 @@ const UnplannedIssue = (() => {
 
   // The fillable layer on screen.
   function inputsHtml() {
+    // Each box knows its text size and the room inside it (its width less
+    // padding and border, as styled), so sizeInputs can shrink long entries.
+    const FIT = { "up-left": [10, 4], "up-cell": [9.5, 2], "up-line": [10, 5.5] };
     const box = (id, label, x0, x1, top, height, cls) =>
       `<input type="text" class="br-input ${cls}" data-field="${id}" autocomplete="off" spellcheck="false"
+        data-fit-size="${FIT[cls][0]}" data-fit-room="${(x1 - x0 - FIT[cls][1]).toFixed(2)}"
         style="left:${x0.toFixed(2)}pt;width:${(x1 - x0).toFixed(2)}pt;top:${top.toFixed(2)}pt;height:${height.toFixed(2)}pt"
         aria-label="${escapeHtml(label)}"${id === "date" ? ' placeholder="MM/DD/YY"' : ""}>`;
     let out = Object.entries(BLANKS).map(([id, [x0, x1, base]]) => box(id, BLANK_LABELS[id], x0, x1, base - 12.5, 14, "up-left")).join("");
@@ -259,7 +270,15 @@ const UnplannedIssue = (() => {
 
   // The printed copy is kept up to date as the form is filled in (not built
   // when printing starts), so its logo has already loaded by then.
+  // On screen, a long entry shrinks to fit its box the same way.
+  function sizeInputs() {
+    sheet.querySelectorAll("[data-fit-size]").forEach(input => {
+      input.style.fontSize = `${fitSize(input.value, Number(input.dataset.fitSize), Number(input.dataset.fitRoom)).toFixed(2)}pt`;
+    });
+  }
+
   function renderValues() {
+    sizeInputs();
     copy.querySelector(".up-values").innerHTML = valuesSvg();
     sheet.querySelector(".up-values").innerHTML = typeMark();
     sheet.querySelectorAll(".up-type").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.type === state.type)));

@@ -58,6 +58,8 @@ const HoldTag = (() => {
   const BIG_SIZE = 34;
   const BIG_LEADING = 1.15;
   const PAD = 3; // pt each side, as on the screen boxes
+  // The smallest an entry shrinks to; past that, the printout squeezes it in.
+  const MIN_SIZE = 6;
 
   const state = { values: {} };
 
@@ -103,9 +105,12 @@ const HoldTag = (() => {
   // A one-line entry, shrunk if it's wider than its box.
   function layoutLine(text, room) {
     for (let size = VALUE_SIZE; ; size -= 1) {
-      if (widthPt(text, size) <= room || size <= 8) return size;
+      if (widthPt(text, size) <= room || size <= MIN_SIZE) return size;
     }
   }
+  const lineRoom = id => FIELDS[id][1] - FIELDS[id][0] - 2 * PAD;
+  const squeeze = (s, size, room) => (widthPt(s, size) > room
+    ? ` textLength="${room.toFixed(2)}" lengthAdjust="spacingAndGlyphs"` : "");
 
   // A multi-line entry: the largest size whose wrapped lines fit the box.
   function layoutBig(text, room, height) {
@@ -113,7 +118,7 @@ const HoldTag = (() => {
       const lines = wrap(text, size, room);
       const gap = size * BIG_LEADING;
       const fits = lines.length * gap <= height && lines.every(l => widthPt(l, size) <= room);
-      if (fits || size <= 8) return { size, gap, lines };
+      if (fits || size <= MIN_SIZE) return { size, gap, lines };
     }
   }
 
@@ -129,8 +134,8 @@ const HoldTag = (() => {
       const text = String(state.values[id] ?? "").trim();
       if (!text) return "";
       if (!isBig(id)) {
-        const size = layoutLine(text, x1 - x0 - PAD);
-        return `<text x="${x0 + PAD}" y="${base}" font-size="${size}">${escapeHtml(text)}</text>`;
+        const size = layoutLine(text, lineRoom(id));
+        return `<text x="${x0 + PAD}" y="${base}" font-size="${size}"${squeeze(text, size, lineRoom(id))}>${escapeHtml(text)}</text>`;
       }
       // Centred: each line's middle on its slot, the block in the middle of the box.
       const { room, height } = bigBox(id);
@@ -138,7 +143,7 @@ const HoldTag = (() => {
       const cx = (x0 + x1) / 2;
       const first = (top + bottom) / 2 - (lines.length * gap) / 2;
       return lines.map((line, i) => line
-        ? `<text x="${cx.toFixed(2)}" y="${(first + gap * (i + 0.5) + size * 0.32).toFixed(2)}" font-size="${size}" text-anchor="middle">${escapeHtml(line)}</text>`
+        ? `<text x="${cx.toFixed(2)}" y="${(first + gap * (i + 0.5) + size * 0.32).toFixed(2)}" font-size="${size}" text-anchor="middle"${squeeze(line, size, room)}>${escapeHtml(line)}</text>`
         : "").join("");
     }).join("");
   }
@@ -174,8 +179,14 @@ const HoldTag = (() => {
     input.style.paddingTop = `${Math.max(0, (height + 4 - lines.length * gap) / 2).toFixed(2)}pt`;
   }
 
+  // One-line boxes shrink a long entry the same way as the printout.
+  function fitLineInput(input) {
+    input.style.fontSize = `${layoutLine(input.value.trim(), lineRoom(input.dataset.field))}pt`;
+  }
+
   function renderValues() {
     tab.querySelectorAll(".hold-multi").forEach(fitBigInput);
+    tab.querySelectorAll(".hold-input:not(.hold-multi)").forEach(fitLineInput);
     copy.querySelector(".hold-values").innerHTML = valuesSvg();
   }
 

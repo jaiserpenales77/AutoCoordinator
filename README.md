@@ -70,6 +70,11 @@ buttons, and the form names switch straight to another form. What's typed in
 a form stays there while switching between forms and tabs (until the page is
 reloaded).
 
+On every paper form, an entry too long for its box shrinks to fit, the same
+way on screen and on the printout (down to 5 pt on the Unplanned Issue form,
+6 pt on the others); anything longer still is squeezed into its box when
+printed, so nothing runs past the box. Each form's own layout details follow.
+
 - **Unplanned Issue** — the [VALA] Unplanned Issue Request Form (PK007B),
   drawn to the form PDF's exact measurements on one Letter landscape page (the
   spreadsheet's PDF spills the end of its Comments box onto a second page; here
@@ -84,9 +89,7 @@ reloaded).
   drawn to the paper form's exact measurements (logo, fonts, table, blanks,
   footer). Type in the blanks and click a reason to circle it; an empty Date
   blank starts with today's date, and typing an "Other" reason circles Other.
-  An entry too long for its box (e.g. a long Product Description) shrinks to
-  fit, on screen and in the printout (12 pt down to 6 pt; anything longer
-  still is squeezed into the box when printed).
+  Entries are 12 pt and shrink to fit (e.g. a long Product Description).
   **Fill from Yield Sheet** copies the W.O. #, Bulk Item (as Bulk Commodity)
   and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while this
   form is open) prints the form on Letter landscape with the entries on its lines.
