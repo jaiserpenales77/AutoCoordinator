@@ -74,7 +74,6 @@ const ComponentTransfer = (() => {
   function pageSvg() {
     const F = FIELDS;
     return `<svg class="br-svg" viewBox="0 0 792 612" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <image href="assets/pharmavite-logo-qs106a.png" x="43.78" y="37.03" width="53.51" height="62.91"/>
       <g fill="#000" font-family='${SANS}'>
         ${label(TITLE, 396, 74, 22, "middle")}
         ${label("Date:", F.date[0] - 6, F.date[3] - 3, 12, "end")}${line(F.date[0], F.date[2], F.date[3])}
@@ -97,8 +96,6 @@ const ComponentTransfer = (() => {
 
         ${label("Lead Name:", F.lead[0] - 6, F.lead[3] - 3, 12, "end")}${line(F.lead[0], F.lead[2], F.lead[3])}
         ${label("Supervisor Name:", F.supervisor[0] - 6, F.supervisor[3] - 3, 12, "end")}${line(F.supervisor[0], F.supervisor[2], F.supervisor[3])}
-
-        <text x="396" y="573.73" font-size="7" text-anchor="middle">For Pharmavite internal use, only.</text>
       </g>
       <g class="ct-values" fill="#000" font-family='${SANS}' font-weight="700"></g>
     </svg>`;
@@ -161,7 +158,7 @@ const ComponentTransfer = (() => {
   }
 
   // The printed copy is kept up to date as the notice is filled in, so it's
-  // ready (logo loaded) whenever printing starts.
+  // ready whenever printing starts.
   function render() {
     sizeInputs();
     copy.querySelector(".ct-values").innerHTML = valuesSvg();
