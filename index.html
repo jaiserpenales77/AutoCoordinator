@@ -517,12 +517,14 @@
         <div id="brSheet" class="br-sheet"></div>
       </div>
       <aside class="br-more" aria-label="More bulks">
-        <h3>More bulks</h3>
+        <div class="br-more-top">
+          <h3>More bulks</h3>
+          <button type="button" id="brAddBulkBtn" class="primary">+ Add Bulk</button>
+        </div>
         <p class="muted">Each prints as its own page; everything else is copied from the form (Bulk 1).</p>
         <label class="check-inline"><input type="checkbox" id="brSameLot"> <span>Same lot # as Bulk 1</span></label>
         <div class="br-more-head" id="brMoreHead"><span>#</span><span class="br-more-lot">Lot #</span><span>Qty (TH)</span><span></span></div>
         <div id="brMoreList"></div>
-        <button type="button" id="brAddBulkBtn" class="add-btn">+ Add Bulk</button>
       </aside>
     </div>
   </section>

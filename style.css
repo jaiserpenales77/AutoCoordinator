@@ -608,7 +608,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   background: var(--subtle-bg);
   font-size: 0.85rem;
 }
-.br-more h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.br-more-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.br-more h3 { margin: 0; font-size: 0.95rem; }
+.br-more-top button { padding: 4px 10px; font-size: 0.8rem; }
 .br-more p { margin: 0 0 8px; font-size: 0.78rem; }
 .br-more .check-inline { margin: 0 0 8px; font-size: 0.82rem; }
 .br-more-head, .br-more-row { display: grid; grid-template-columns: 18px minmax(0, 1.3fr) minmax(0, 1fr) 24px; gap: 4px; align-items: center; }
@@ -619,7 +621,6 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .br-more-row input { width: 100%; padding: 4px 6px; font-size: 0.85rem; }
 .br-more-name { color: var(--muted); font-weight: 700; text-align: right; }
 .br-more-remove { padding: 2px 0; font-size: 0.75rem; }
-.br-more .add-btn { margin-top: 4px; padding: 6px; }
 @media (max-width: 1100px) {
   .br-with-side { flex-direction: column; align-items: stretch; }
   .br-more { position: static; flex-basis: auto; }

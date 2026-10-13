@@ -91,8 +91,8 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   blank starts with today's date, and typing an "Other" reason circles Other.
   Entries are 12 pt and shrink to fit (e.g. a long Product Description).
   **More bulks** (beside the form; under it on narrow screens) is for returning or rejecting several bulks
-  at once that differ only in Bulk Lot Number and Qty.: **+ Add Bulk** adds
-  one, and printing gives one page per bulk, each a full form with everything
+  at once that differ only in Bulk Lot Number and Qty.: **+ Add Bulk** (next to the
+  panel's heading) adds one, and printing gives one page per bulk, each a full form with everything
   else copied from the form (Bulk 1). Tick **All bulks use the same lot
   number** and the extra bulks only take a Qty.; every page gets the form's
   lot number.
