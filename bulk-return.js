@@ -129,8 +129,10 @@ const BulkReturn = (() => {
   }
   // `extra`: more bulks in the same return, each { lot, qty }; every one that's
   // filled in prints as its own page, the rest copied from the form (Bulk 1).
-  const state = { values: {}, choices: { returnReason: "", rejectReason: "" }, extra: [] };
-  const filledExtras = () => state.extra.filter(b => String(b.lot ?? "").trim() || String(b.qty ?? "").trim());
+  // With `sameLot`, every bulk uses the form's (Bulk 1's) lot number and the
+  // extra bulks only take a quantity.
+  const state = { values: {}, choices: { returnReason: "", rejectReason: "" }, extra: [], sameLot: false };
+  const filledExtras = () => state.extra.filter(b => (!state.sameLot && String(b.lot ?? "").trim()) || String(b.qty ?? "").trim());
 
   function svgText([text, x, base, size, font, end]) {
     const [family, weight] = FONTS[font];
@@ -222,7 +224,7 @@ const BulkReturn = (() => {
   // One page per bulk: the form's own, then one for each bulk added below it.
   function renderPrintCopy() {
     const copy = el("brPrint");
-    const pages = [{}, ...filledExtras().map(b => ({ lot: b.lot ?? "", qty: b.qty ?? "" }))];
+    const pages = [{}, ...filledExtras().map(b => (state.sameLot ? { qty: b.qty ?? "" } : { lot: b.lot ?? "", qty: b.qty ?? "" }))];
     while (copy.children.length < pages.length) copy.insertAdjacentHTML("beforeend", `<div class="br-print-page">${sheetSvg()}</div>`);
     while (copy.children.length > pages.length) copy.lastElementChild.remove();
     [...copy.children].forEach((page, i) => {
@@ -237,7 +239,7 @@ const BulkReturn = (() => {
     el("brMoreList").innerHTML = state.extra.map((b, i) => `
       <div class="br-more-row" data-index="${i}">
         <span class="br-more-name">Bulk ${i + 2}</span>
-        <label>Bulk Lot Number<input type="text" data-extra="lot" value="${escapeHtml(b.lot ?? "")}" autocomplete="off" spellcheck="false"></label>
+        ${state.sameLot ? "" : `<label>Bulk Lot Number<input type="text" data-extra="lot" value="${escapeHtml(b.lot ?? "")}" autocomplete="off" spellcheck="false"></label>`}
         <label>Qty. Per Container (TH)<input type="text" data-extra="qty" value="${escapeHtml(b.qty ?? "")}" autocomplete="off" inputmode="decimal"></label>
         <button type="button" class="calc-remove br-more-remove" title="Remove Bulk ${i + 2}" aria-label="Remove Bulk ${i + 2}">✕</button>
       </div>`).join("");
@@ -330,6 +332,10 @@ const BulkReturn = (() => {
     renderExtras();
     el("brMoreList").lastElementChild.querySelector("input").focus();
   });
+  el("brSameLot").addEventListener("change", e => {
+    state.sameLot = e.target.checked;
+    renderExtras();
+  });
   el("brMoreList").addEventListener("input", e => {
     const row = e.target.closest(".br-more-row");
     if (!row || !e.target.dataset.extra) return;
@@ -345,6 +351,8 @@ const BulkReturn = (() => {
 
   el("brClearBtn").addEventListener("click", () => {
     state.extra = [];
+    state.sameLot = false;
+    el("brSameLot").checked = false;
     renderExtras();
     FIELDS.forEach(id => setValue(id, ""));
     state.choices.returnReason = "";

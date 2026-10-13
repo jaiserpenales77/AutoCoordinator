@@ -93,7 +93,9 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   **More bulks** (under the form) is for returning or rejecting several bulks
   at once that differ only in Bulk Lot Number and Qty.: **+ Add Bulk** adds
   one, and printing gives one page per bulk, each a full form with everything
-  else copied from the form (Bulk 1).
+  else copied from the form (Bulk 1). Tick **All bulks use the same lot
+  number** and the extra bulks only take a Qty.; every page gets the form's
+  lot number.
   **Fill from Yield Sheet** copies the W.O. #, Bulk Item (as Bulk Commodity)
   and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while this
   form is open) prints the form on Letter landscape with the entries on its lines.
