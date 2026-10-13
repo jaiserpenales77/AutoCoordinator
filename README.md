@@ -121,7 +121,9 @@ printed, so nothing runs past the box. Each form's own layout details follow.
 - **Component Transfer** — a Component Transfer Notice (the app's own form;
   there's no paper original): Component, Item Number and Amount; From and To
   Work Order # and Line; Reason for Transfer (a large box that wraps); Lead
-  Name and Supervisor Name; and Date (an empty Date starts with today). Lead
+  Name and Supervisor Name; Date (an empty Date starts with today); and "Did
+  you create an Unplanned Issue Request?", a Yes/No dropdown whose answer
+  prints on its line. Lead
   Name suggests the leads and starts with the signed-in lead, Line suggests
   the lines in Stored Data's line rates. **Fill from Yield Sheet** fills the
   Lead Name, today's date and (if empty) From Work Order # with the yield

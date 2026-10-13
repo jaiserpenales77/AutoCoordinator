@@ -26,6 +26,10 @@ const ComponentTransfer = (() => {
     supervisor: [520, 512, 756, 532, 13, "Supervisor Name"]
   };
   const BLANKS = ["date", "lead", "supervisor"];
+  // "Did you create an Unplanned Issue Request?": a Yes/No dropdown on screen,
+  // the answer written on its line when printed. [x0, y0, x1, y1] of the line.
+  const UIR = { id: "unplannedIssue", box: [300, 98, 380, 118], question: "Did you create an Unplanned Issue Request?",
+    options: ["Yes", "No"] };
   const MULTI = "reason";
   const MIN_SIZE = 6;
   const PAD = 4; // pt each side inside a box
@@ -76,6 +80,7 @@ const ComponentTransfer = (() => {
     return `<svg class="br-svg" viewBox="0 0 792 612" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <g fill="#000" font-family='${SANS}'>
         ${label(TITLE, 396, 74, 22, "middle")}
+        ${label(UIR.question, UIR.box[0] - 6, UIR.box[3] - 3, 12, "end")}${line(UIR.box[0], UIR.box[2], UIR.box[3])}
         ${label("Date:", F.date[0] - 6, F.date[3] - 3, 12, "end")}${line(F.date[0], F.date[2], F.date[3])}
 
         ${rect(36, 142, 756, 162, SHADE)}
@@ -105,6 +110,10 @@ const ComponentTransfer = (() => {
   function valuesSvg() {
     const v = id => String(state.values[id] ?? "").trim();
     let out = "";
+    if (v(UIR.id)) {
+      const [x0, , x1, y1] = UIR.box;
+      out += `<text x="${(x0 + x1) / 2}" y="${y1 - 3}" font-size="12" text-anchor="middle">${escapeHtml(v(UIR.id))}</text>`;
+    }
     for (const [id, [x0, y0, x1, y1]] of Object.entries(FIELDS)) {
       const s = v(id);
       if (!s) continue;
@@ -141,7 +150,12 @@ const ComponentTransfer = (() => {
       return id === MULTI
         ? `<textarea ${attrs}></textarea>`
         : `<input type="text" ${attrs}${id === "date" ? ' placeholder="MM/DD/YY"' : id === "amount" ? ' placeholder="e.g. 2 rolls"' : ""}>`;
-    }).join("") + '<datalist id="ctLeadList"></datalist><datalist id="ctLineList"></datalist>';
+    }).join("") + (() => {
+      const [x0, , x1, y1] = UIR.box;
+      return `<select class="br-input ct-input ct-select" data-field="${UIR.id}" aria-label="${escapeHtml(UIR.question)}"
+        style="left:${x0}pt;width:${x1 - x0}pt;top:${y1 - 19}pt;height:${20}pt">
+        <option value=""></option>${UIR.options.map(o => `<option>${o}</option>`).join("")}</select>`;
+    })() + '<datalist id="ctLeadList"></datalist><datalist id="ctLineList"></datalist>';
   }
 
   const tab = el("ctTab");
@@ -152,6 +166,7 @@ const ComponentTransfer = (() => {
   function sizeInputs() {
     sheet.querySelectorAll("[data-field]").forEach(input => {
       const id = input.dataset.field;
+      if (!FIELDS[id]) return; // the Yes/No dropdown keeps its size
       const s = input.value.trim();
       input.style.fontSize = `${id === MULTI ? (s ? reasonLines(s).size : FIELDS[id][4]) : fitSize(id, s)}pt`;
     });
@@ -246,7 +261,8 @@ const ComponentTransfer = (() => {
     const what = [v("item") || v("component"), v("amount") && `(${v("amount")})`].filter(Boolean).join(" ");
     const from = [v("fromWo") && `WO ${v("fromWo")}`, v("fromLine") && `line ${v("fromLine")}`].filter(Boolean).join(", ");
     const to = [v("toWo") && `WO ${v("toWo")}`, v("toLine") && `line ${v("toLine")}`].filter(Boolean).join(", ");
-    return [what, (from || to) && `${from || "?"} → ${to || "?"}`].filter(Boolean).join(": ");
+    const uir = v(UIR.id) && `Unplanned Issue Request: ${v(UIR.id)}`;
+    return [[what, (from || to) && `${from || "?"} → ${to || "?"}`].filter(Boolean).join(": "), uir].filter(Boolean).join("; ");
   }
 
   render();
