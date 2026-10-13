@@ -302,10 +302,41 @@ const UnplannedIssue = (() => {
   copy.innerHTML = pageSvg();
   new ResizeObserver(fitSheets).observe(el("upSheetWrap"));
 
+  // Total No. of Containers and Actual Qty. follow from Total Qty. Required
+  // and Qty per Container: enough whole containers to cover the total
+  // (rounded up), and what they hold. Something typed into either result
+  // stays until the two inputs change again.
+  const COL = Object.fromEntries(COLS.map(([key], i) => [key, i]));
+  const autoFilled = new Set();
+  const toNumber = s => {
+    const t = String(s ?? "").replace(/,/g, "").trim();
+    return t && Number.isFinite(Number(t)) ? Number(t) : NaN;
+  };
+  const fmtQty = n => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
+  function calcRow(row) {
+    const total = toNumber(state.values[cellId(row, COL.totalQty)]);
+    const per = toNumber(state.values[cellId(row, COL.qtyPerContainer)]);
+    const ok = total > 0 && per > 0;
+    const containers = ok ? Math.ceil(total / per - 1e-9) : null;
+    [[COL.containers, containers], [COL.actualQty, ok ? containers * per : null]].forEach(([col, value]) => {
+      const id = cellId(row, col);
+      if (value !== null) {
+        setValue(id, fmtQty(value));
+        autoFilled.add(id);
+      } else if (autoFilled.has(id)) {
+        setValue(id, "");
+        autoFilled.delete(id);
+      }
+    });
+  }
+
   tab.addEventListener("input", e => {
     const id = e.target.dataset.field;
     if (!id) return;
     state.values[id] = e.target.value;
+    autoFilled.delete(id);
+    const m = /^r(\d+)_(totalQty|qtyPerContainer)$/.exec(id);
+    if (m) calcRow(Number(m[1]));
     renderValues();
   });
   // An empty Date blank starts with today's date.
@@ -340,6 +371,7 @@ const UnplannedIssue = (() => {
   el("upClearBtn").addEventListener("click", () => {
     tab.querySelectorAll("[data-field]").forEach(i => { i.value = ""; });
     state.values = {};
+    autoFilled.clear();
     state.type = "";
     renderValues();
     el("upMsg").textContent = "";

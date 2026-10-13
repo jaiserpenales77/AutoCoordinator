@@ -82,7 +82,11 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   the header blanks, the 10-line table and the comment lines, and click the
   line next to "Unplanned Issue" or "Unplanned Issue to Work Order" to mark it
   with an X. An empty Date starts with today; long table entries print on two
-  lines in their cell. **Fill from Yield Sheet** puts the yield sheet's W.O. #
+  lines in their cell. On each line, typing **Total Qty. Required** and **Qty
+  per Container** fills in **Total No. of Containers** (rounded up to whole
+  containers, e.g. 1,000 ÷ 300 → 4) and **Actual Qty.** (containers × Qty per
+  Container, e.g. 1,200); a number typed over either stays until those two
+  change. **Fill from Yield Sheet** puts the yield sheet's W.O. #
   in Work Order # on every line with a Part No. **Print Unplanned Issue** (or
   printing while this form is open) prints the page.
 - **Bulk Return** — the PK120A [VALA] Packaging - Bulk Return form (QS106A),
