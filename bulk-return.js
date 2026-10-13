@@ -127,7 +127,10 @@ const BulkReturn = (() => {
     if (width <= room(id)) return SIZE;
     return Math.max(MIN_SIZE, Math.floor((SIZE * room(id) / width) * 4) / 4);
   }
-  const state = { values: {}, choices: { returnReason: "", rejectReason: "" } };
+  // `extra`: more bulks in the same return, each { lot, qty }; every one that's
+  // filled in prints as its own page, the rest copied from the form (Bulk 1).
+  const state = { values: {}, choices: { returnReason: "", rejectReason: "" }, extra: [] };
+  const filledExtras = () => state.extra.filter(b => String(b.lot ?? "").trim() || String(b.qty ?? "").trim());
 
   function svgText([text, x, base, size, font, end]) {
     const [family, weight] = FONTS[font];
@@ -157,8 +160,9 @@ const BulkReturn = (() => {
   }
 
   // Entries written on the lines (printout only; on screen they're inputs).
-  function valuesSvg() {
-    const v = id => String(state.values[id] ?? "").trim();
+  // `over` replaces some entries, e.g. another bulk's lot and quantity.
+  function valuesSvg(over = {}) {
+    const v = id => String((id in over ? over[id] : state.values[id]) ?? "").trim();
     const text = (id, x, base, anchor = "middle") => {
       const s = v(id);
       if (!s) return "";
@@ -215,10 +219,29 @@ const BulkReturn = (() => {
 
   // The printed copy is kept up to date as the form is filled in (not built
   // when printing starts), so its logo has already loaded by then.
+  // One page per bulk: the form's own, then one for each bulk added below it.
   function renderPrintCopy() {
     const copy = el("brPrint");
-    copy.querySelector(".br-circles").innerHTML = circlesSvg();
-    copy.querySelector(".br-values").innerHTML = valuesSvg();
+    const pages = [{}, ...filledExtras().map(b => ({ lot: b.lot ?? "", qty: b.qty ?? "" }))];
+    while (copy.children.length < pages.length) copy.insertAdjacentHTML("beforeend", `<div class="br-print-page">${sheetSvg()}</div>`);
+    while (copy.children.length > pages.length) copy.lastElementChild.remove();
+    [...copy.children].forEach((page, i) => {
+      page.querySelector(".br-circles").innerHTML = circlesSvg();
+      page.querySelector(".br-values").innerHTML = valuesSvg(pages[i]);
+    });
+    el("brPrintBtn").textContent = pages.length > 1 ? `Print Bulk Return (${pages.length} pages)` : "Print Bulk Return";
+  }
+
+  // The "More bulks" list under the form.
+  function renderExtras() {
+    el("brMoreList").innerHTML = state.extra.map((b, i) => `
+      <div class="br-more-row" data-index="${i}">
+        <span class="br-more-name">Bulk ${i + 2}</span>
+        <label>Bulk Lot Number<input type="text" data-extra="lot" value="${escapeHtml(b.lot ?? "")}" autocomplete="off" spellcheck="false"></label>
+        <label>Qty. Per Container (TH)<input type="text" data-extra="qty" value="${escapeHtml(b.qty ?? "")}" autocomplete="off" inputmode="decimal"></label>
+        <button type="button" class="calc-remove br-more-remove" title="Remove Bulk ${i + 2}" aria-label="Remove Bulk ${i + 2}">✕</button>
+      </div>`).join("");
+    renderPrintCopy();
   }
 
   function renderCircles() {
@@ -302,7 +325,27 @@ const BulkReturn = (() => {
       Number(returned) > 0 && `Qty. ${returned} TH`].filter(Boolean).join(", ")}.`);
   });
 
+  el("brAddBulkBtn").addEventListener("click", () => {
+    state.extra.push({ lot: "", qty: "" });
+    renderExtras();
+    el("brMoreList").lastElementChild.querySelector("input").focus();
+  });
+  el("brMoreList").addEventListener("input", e => {
+    const row = e.target.closest(".br-more-row");
+    if (!row || !e.target.dataset.extra) return;
+    state.extra[Number(row.dataset.index)][e.target.dataset.extra] = e.target.value;
+    renderPrintCopy();
+  });
+  el("brMoreList").addEventListener("click", e => {
+    const row = e.target.closest(".br-more-remove")?.closest(".br-more-row");
+    if (!row) return;
+    state.extra.splice(Number(row.dataset.index), 1);
+    renderExtras();
+  });
+
   el("brClearBtn").addEventListener("click", () => {
+    state.extra = [];
+    renderExtras();
     FIELDS.forEach(id => setValue(id, ""));
     state.choices.returnReason = "";
     state.choices.rejectReason = "";
@@ -320,5 +363,11 @@ const BulkReturn = (() => {
   });
   onViewShown("bulkReturnTab", () => requestAnimationFrame(fitSheet));
 
-  return { state, BLANKS, CELLS, CHOICES };
+  // For the Activity Log: how many bulks (pages) a print holds.
+  const summary = () => {
+    const n = 1 + filledExtras().length;
+    return n > 1 ? `${n} bulks` : "";
+  };
+
+  return { state, BLANKS, CELLS, CHOICES, summary };
 })();

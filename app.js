@@ -1384,7 +1384,8 @@ window.addEventListener("beforeprint", () => {
   const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
   if (PRINT_ACTIONS[open]) {
     const item = open === "bulkCalcTab" ? el("calcBulkItem").value.trim().toUpperCase()
-      : open === "ctTab" && typeof ComponentTransfer !== "undefined" ? ComponentTransfer.summary() : "";
+      : open === "ctTab" && typeof ComponentTransfer !== "undefined" ? ComponentTransfer.summary()
+      : open === "bulkReturnTab" && typeof BulkReturn !== "undefined" ? BulkReturn.summary() : "";
     logActivity(PRINT_ACTIONS[open], item);
   } else {
     // Every other tab prints the yield sheet.
