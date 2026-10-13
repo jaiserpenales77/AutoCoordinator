@@ -107,6 +107,26 @@ const BulkReturn = (() => {
   };
 
   const FIELDS = [...Object.keys(BLANKS), ...Object.keys(CELLS)];
+
+  // Entries are 12pt; a longer one shrinks to fit its box (on screen and in
+  // the printout), down to MIN_SIZE. Past that, the printout squeezes it into
+  // the box.
+  const SIZE = 12;
+  const MIN_SIZE = 6;
+  const measureCtx = document.createElement("canvas").getContext("2d");
+  function textWidth(text, size) {
+    measureCtx.font = `700 ${size}pt ${SANS}`;
+    return measureCtx.measureText(text).width * 0.75; // px to pt
+  }
+  // The "Other" blanks start where the circle around "Other:" ends.
+  const INSET = { returnOther: 6, rejectOther: 6 };
+  // Room for the text, in pt: the box (see inputsHtml) less its padding.
+  const room = id => (BLANKS[id] ? BLANKS[id][1] - BLANKS[id][0] - 4 - (INSET[id] ?? 0) : CELLS[id][1] - CELLS[id][0] - 10);
+  function fitSize(id, text) {
+    const width = text ? textWidth(text, SIZE) : 0;
+    if (width <= room(id)) return SIZE;
+    return Math.max(MIN_SIZE, Math.floor((SIZE * room(id) / width) * 4) / 4);
+  }
   const state = { values: {}, choices: { returnReason: "", rejectReason: "" } };
 
   function svgText([text, x, base, size, font, end]) {
@@ -139,13 +159,20 @@ const BulkReturn = (() => {
   // Entries written on the lines (printout only; on screen they're inputs).
   function valuesSvg() {
     const v = id => String(state.values[id] ?? "").trim();
-    const text = (s, x, base, anchor = "middle") => s
-      ? `<text x="${x.toFixed(2)}" y="${base}" font-size="12" font-family='${SANS}' font-weight="700" text-anchor="${anchor}">${escapeHtml(s)}</text>`
-      : "";
-    return Object.entries(BLANKS).map(([id, [x0, x1, base]]) => text(v(id), (x0 + x1) / 2, base - 1.5)).join("")
+    const text = (id, x, base, anchor = "middle") => {
+      const s = v(id);
+      if (!s) return "";
+      const size = fitSize(id, s);
+      const squeeze = textWidth(s, size) > room(id)
+        ? ` textLength="${room(id).toFixed(2)}" lengthAdjust="spacingAndGlyphs"` : "";
+      return `<text x="${x.toFixed(2)}" y="${base.toFixed(2)}" font-size="${size}" font-family='${SANS}' font-weight="700"`
+        + ` text-anchor="${anchor}"${squeeze}>${escapeHtml(s)}</text>`;
+    };
+    // Blank entries stay on their line; smaller table entries stay centred in the row.
+    return Object.entries(BLANKS).map(([id, [x0, x1, base]]) => text(id, (x0 + (INSET[id] ?? 0) + x1) / 2, base - 1.5)).join("")
       + Object.entries(CELLS).map(([id, [x0, x1]]) => id === "qty"
-        ? text(v(id), x1 - 2, 344.65, "end")
-        : text(v(id), (x0 + x1) / 2, ROW.baseline)).join("");
+        ? text(id, x1 - 2, 344.65, "end")
+        : text(id, (x0 + x1) / 2, ROW.baseline - 0.358 * (SIZE - fitSize(id, v(id))))).join("");
   }
 
   // The form itself; `.br-circles` and `.br-values` are filled in as it's used.
@@ -201,10 +228,18 @@ const BulkReturn = (() => {
     renderPrintCopy();
   }
 
+  // On screen, the box's text shrinks the same way.
+  function sizeInput(input) {
+    input.style.fontSize = `${fitSize(input.dataset.field, input.value)}pt`;
+  }
+
   function setValue(id, value) {
     state.values[id] = value;
     const input = sheet.querySelector(`[data-field="${id}"]`);
-    if (input) input.value = value;
+    if (input) {
+      input.value = value;
+      sizeInput(input);
+    }
     renderPrintCopy();
   }
 
@@ -224,6 +259,7 @@ const BulkReturn = (() => {
     const id = e.target.dataset.field;
     if (!id) return;
     state.values[id] = e.target.value;
+    sizeInput(e.target);
     renderPrintCopy();
     // Typing an "Other" reason circles Other.
     if (id === "returnOther" || id === "rejectOther") {

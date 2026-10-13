@@ -84,6 +84,9 @@ reloaded).
   drawn to the paper form's exact measurements (logo, fonts, table, blanks,
   footer). Type in the blanks and click a reason to circle it; an empty Date
   blank starts with today's date, and typing an "Other" reason circles Other.
+  An entry too long for its box (e.g. a long Product Description) shrinks to
+  fit, on screen and in the printout (12 pt down to 6 pt; anything longer
+  still is squeezed into the box when printed).
   **Fill from Yield Sheet** copies the W.O. #, Bulk Item (as Bulk Commodity)
   and Bulk Returned (as Qty.). **Print Bulk Return** (or printing while this
   form is open) prints the form on Letter landscape with the entries on its lines.
