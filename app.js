@@ -22,7 +22,7 @@ const ROLE_ORDER = ["plt", "mlt", "lead", "admin", "owner"];
 const ROLE_LABELS = { plt: "PLT", mlt: "MLT", lead: "Lead", admin: "Admin", owner: "Owner" };
 const LIMITED_VIEWS = {
   plt: ["formsTab", "unplannedTab", "bulkReturnTab", "bulkCalcTab"],
-  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "bulkCalcTab"]
+  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "ctTab", "bulkCalcTab"]
 };
 // Views only Admins and Owners open.
 const ADMIN_VIEWS = ["adminTab", "activityTab"];
@@ -1301,7 +1301,7 @@ function renderAccess() {
   document.querySelectorAll("#formsTab [data-form], .form-nav [data-view]").forEach(b =>
     b.classList.toggle("hidden", !canOpen(b.dataset.form ?? b.dataset.view)));
   // Filling a form from the yield sheet needs the yield sheet.
-  ["upFillBtn", "brFillBtn", "holdFillBtn", "swFillBtn"].forEach(id => el(id).classList.toggle("hidden", !hasDatabaseAccess()));
+  ["upFillBtn", "brFillBtn", "holdFillBtn", "swFillBtn", "ctFillBtn"].forEach(id => el(id).classList.toggle("hidden", !hasDatabaseAccess()));
   if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();
   const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
   if (!canOpen(open)) showView(canOpen("sheetTab") ? "sheetTab" : "formsTab");
@@ -1377,12 +1377,14 @@ const PRINT_ACTIONS = {
   bulkReturnTab: "Printed a Bulk Return form",
   holdTab: "Printed a Hold Tag",
   swTab: "Printed Standard Work",
+  ctTab: "Printed a Component Transfer Notice",
   bulkCalcTab: "Printed a Bulk Calculator report"
 };
 window.addEventListener("beforeprint", () => {
   const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
   if (PRINT_ACTIONS[open]) {
-    const item = open === "bulkCalcTab" ? el("calcBulkItem").value.trim().toUpperCase() : "";
+    const item = open === "bulkCalcTab" ? el("calcBulkItem").value.trim().toUpperCase()
+      : open === "ctTab" && typeof ComponentTransfer !== "undefined" ? ComponentTransfer.summary() : "";
     logActivity(PRINT_ACTIONS[open], item);
   } else {
     // Every other tab prints the yield sheet.

@@ -118,6 +118,15 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   VideoJet count, and (if empty) the total bottles from the yield sheet.
   **Print Standard Work** prints both sides, front then back, for
   double-sided printing.
+- **Component Transfer** — a Component Transfer Notice (the app's own form;
+  there's no paper original): Component, Item Number and Amount; From and To
+  Work Order # and Line; Reason for Transfer (a large box that wraps); Lead
+  Name and Supervisor Name; and Date (an empty Date starts with today). Lead
+  Name suggests the leads and starts with the signed-in lead, Line suggests
+  the lines in Stored Data's line rates. **Fill from Yield Sheet** fills the
+  Lead Name, today's date and (if empty) From Work Order # with the yield
+  sheet's W.O. #. **Print Transfer Notice** prints it on one Letter landscape
+  page, and the Activity Log records what was transferred.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -481,6 +490,7 @@ remove someone's access, delete (or disable) their user.
 - `unplanned-issue.js` — the Forms tab's Unplanned Issue form.
 - `hold-tag.js` — the Forms tab's Hold Tag.
 - `standard-work.js` — the Forms tab's two-sided Standard Work sheet.
+- `component-transfer.js` — the Forms tab's Component Transfer Notice.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.

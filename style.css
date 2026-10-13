@@ -606,6 +606,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   text-align: right;
 }
 .up-print { display: none; }
+.ct-print { display: none; }
+.br-input.ct-input { padding: 0 4pt; }
+.br-input.ct-reason { resize: none; text-align: left; line-height: 1.25; padding: 4pt; }
 
 /* HOLD TAG: the red QA hold tag, using the Bulk Return sheet styles. */
 .hold-sheet { background: #ff0000; }
@@ -811,7 +814,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="bulkReturn"] .print-sheet,
   body[data-print="unplanned"] .print-sheet,
   body[data-print="hold"] .print-sheet,
-  body[data-print="standardWork"] .print-sheet { display: none !important; }
+  body[data-print="standardWork"] .print-sheet,
+  body[data-print="componentTransfer"] .print-sheet { display: none !important; }
+  body[data-print="componentTransfer"] .ct-print { display: block; }
   body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }

@@ -44,7 +44,8 @@ other way.
 - Files: `index.html`, `style.css`, `app.js` (yield sheet, tabs, access, Stored
   Data UI, Activity Log), `stored-data.js`, `cloud-sync.js` (sign-in, account
   types, sync), `pdf-import.js`, and one file per form (`bulk-return.js`,
-  `unplanned-issue.js`, `hold-tag.js`, `standard-work.js`, `bulk-calc.js`).
+  `unplanned-issue.js`, `hold-tag.js`, `standard-work.js`,
+  `component-transfer.js`, `bulk-calc.js`).
 - Keep README.md up to date with each change.
 - The Firestore rules are kept in README.md and pasted into the Firebase console
   by the owner. They also hold the JDE Sched rules (`jde-sched`, locked to the

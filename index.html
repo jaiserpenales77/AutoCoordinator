@@ -468,6 +468,11 @@
         <span class="form-card-code">Front &amp; back</span>
         <span class="form-card-desc">Team Lead Standard Work and Steady State Tasks &amp; Habits</span>
       </button>
+      <button type="button" class="form-card" data-form="ctTab">
+        <span class="form-card-name">Component Transfer</span>
+        <span class="form-card-code">Transfer notice</span>
+        <span class="form-card-desc">Components moved between work orders and lines, with the reason and the lead's and supervisor's names</span>
+      </button>
       <button type="button" class="form-card" data-form="bulkCalcTab">
         <span class="form-card-name">Bulk Calculator</span>
         <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
@@ -509,6 +514,24 @@
     <p id="brMsg" class="form-msg"></p>
     <div id="brSheetWrap" class="br-sheet-wrap">
       <div id="brSheet" class="br-sheet"></div>
+    </div>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="ctTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Component Transfer</h2>
+      <div class="actions br-actions">
+        <button type="button" id="ctFillBtn">Fill from Yield Sheet</button>
+        <button type="button" id="ctClearBtn">Clear</button>
+        <button type="button" id="ctPrintBtn" class="primary">Print Transfer Notice</button>
+      </div>
+    </div>
+    <p class="muted">Component Transfer Notice: what component (and its item number) and how much moved, from and to which work order and line, why, and the lead's and supervisor's names. Long entries shrink to fit; it prints on one page.</p>
+    <p id="ctMsg" class="form-msg"></p>
+    <div id="ctSheetWrap" class="br-sheet-wrap">
+      <div id="ctSheet" class="br-sheet"></div>
     </div>
   </section>
 </div>
@@ -618,6 +641,9 @@
 <div id="upPrint" class="up-print">
   <div id="upPrintPage" class="br-print-page"></div>
 </div>
+<div id="ctPrint" class="ct-print">
+  <div id="ctPrintPage" class="br-print-page"></div>
+</div>
 
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>
@@ -628,5 +654,6 @@
 <script src="unplanned-issue.js"></script>
 <script src="hold-tag.js"></script>
 <script src="standard-work.js"></script>
+<script src="component-transfer.js"></script>
 </body>
 </html>
