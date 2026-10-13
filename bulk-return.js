@@ -234,14 +234,17 @@ const BulkReturn = (() => {
     el("brPrintBtn").textContent = pages.length > 1 ? `Print Bulk Return (${pages.length} pages)` : "Print Bulk Return";
   }
 
-  // The "More bulks" list under the form.
+  // The "More bulks" list beside the form: one compact line per bulk.
   function renderExtras() {
+    const side = el("brMoreList").closest(".br-more");
+    side.classList.toggle("br-same-lot", state.sameLot);
+    el("brMoreHead").classList.toggle("hidden", state.extra.length === 0);
     el("brMoreList").innerHTML = state.extra.map((b, i) => `
       <div class="br-more-row" data-index="${i}">
-        <span class="br-more-name">Bulk ${i + 2}</span>
-        ${state.sameLot ? "" : `<label>Bulk Lot Number<input type="text" data-extra="lot" value="${escapeHtml(b.lot ?? "")}" autocomplete="off" spellcheck="false"></label>`}
-        <label>Qty. Per Container (TH)<input type="text" data-extra="qty" value="${escapeHtml(b.qty ?? "")}" autocomplete="off" inputmode="decimal"></label>
-        <button type="button" class="calc-remove br-more-remove" title="Remove Bulk ${i + 2}" aria-label="Remove Bulk ${i + 2}">✕</button>
+        <span class="br-more-name">${i + 2}</span>
+        ${state.sameLot ? "" : `<input type="text" class="br-more-lot" data-extra="lot" value="${escapeHtml(b.lot ?? "")}" autocomplete="off" spellcheck="false" aria-label="Bulk ${i + 2} lot number">`}
+        <input type="text" data-extra="qty" value="${escapeHtml(b.qty ?? "")}" autocomplete="off" inputmode="decimal" aria-label="Bulk ${i + 2} quantity (TH)">
+        <button type="button" class="br-more-remove" title="Remove Bulk ${i + 2}" aria-label="Remove Bulk ${i + 2}">✕</button>
       </div>`).join("");
     renderPrintCopy();
   }
