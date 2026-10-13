@@ -39,6 +39,15 @@ multiple work orders, alongside fillable, printable copies of the paper forms
   VideoJet Count line, By: shows the Created By lead's initials and Date: the
   print date. When both **Layers** and **Boxes** are entered, the
   configuration blank reads e.g. "5 Layers + 2 Boxes".
+- **Required before printing:** FG Item, WO #, Bulk Item, Quantity Completed,
+  Retains, Donations, Count, Issued Bulk, Bulk Piece Wt and Packaging Scrap #1
+  (0 counts as filled in). With any of them blank, **Print Yield Sheet**
+  doesn't print. It highlights the blank fields in red, lists them under the
+  buttons and jumps to the first one. The highlights clear as each field is
+  filled in, and **New / Clear** removes them. Ctrl+P and the browser's
+  print menu can't be stopped, so they print a page listing the missing
+  fields instead of the sheet. A blocked print isn't recorded in the
+  Activity Log.
 
 ## Light and dark theme
 

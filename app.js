@@ -46,6 +46,16 @@ const fields = [
   "videoJetCount", "palletLayers", "palletBoxes"
 ];
 
+// The yield sheet won't print until these are filled in (0 counts as filled).
+const REQUIRED_FOR_PRINT = [
+  ["fgItem", "FG Item"], ["woNumber", "WO #"], ["bulkItem", "Bulk Item"],
+  ["qtyCompleted", "Quantity Completed"], ["retains", "Retains"], ["donations", "Donations"],
+  ["fillRate", "Count"], ["bulkIssued", "Issued Bulk"], ["pieceWt", "Bulk Piece Wt"],
+  ["scrap1", "Packaging Scrap #1"]
+];
+// Set by the first print attempt; from then on the highlights follow the form.
+let printChecked = false;
+
 const SCRAP_FIELDS = [
   { id: "scrap1", key: "Packaging Scrap #1" },
   { id: "scrap2", key: "Packaging Scrap #2" },
@@ -209,6 +219,7 @@ function recalc() {
   el("totalPackaged").value = data.totalPackaged;
   renderResults(r, data);
   updatePrintReports();
+  markMissing();
 }
 
 fields.forEach(id => {
@@ -333,6 +344,7 @@ function clearForm() {
   resetAutoFills();
   createdByPicked = false;
   applyDefaultCreatedBy();
+  printChecked = false;
   recalc();
 }
 
@@ -658,16 +670,49 @@ function buildPrintSheet() {
   updatePrintReports();
 }
 
+function missingForPrint() {
+  return REQUIRED_FOR_PRINT.filter(([id]) => el(id).value.trim() === "");
+}
+
+function markMissing() {
+  const missing = printChecked ? missingForPrint() : [];
+  const ids = new Set(missing.map(([id]) => id));
+  REQUIRED_FOR_PRINT.forEach(([id]) => {
+    el(id).classList.toggle("missing", ids.has(id));
+    el(id).closest("label").classList.toggle("missing", ids.has(id));
+  });
+  const msg = el("printMissingMsg");
+  msg.textContent = missing.length ? `Can't print yet. Fill in: ${missing.map(([, label]) => label).join(", ")}.` : "";
+  msg.classList.toggle("hidden", !missing.length);
+  return missing;
+}
+
 // Also covers Ctrl+P and the browser's File > Print, not just the button.
 window.addEventListener("beforeprint", () => {
   // Tabs with their own printout (bulk-calc.js, bulk-return.js) set this
   // after this listener when they're the open tab; otherwise the yield sheet prints.
   delete document.body.dataset.print;
   buildPrintSheet();
+  const open = VIEWS.find(v => !el(v).classList.contains("hidden"));
+  if (PRINT_ACTIONS[open]) return;
+  printChecked = true;
+  const missing = markMissing();
+  if (!missing.length) return;
+  // The browser's print can't be cancelled from here, so print a note instead.
+  document.body.dataset.print = "blocked";
+  el("printBlocked").innerHTML = `<h1>Yield sheet not printed</h1><p>Fill in these fields first: ${
+    escapeHtml(missing.map(([, label]) => label).join(", "))}.</p>`;
 });
 window.addEventListener("afterprint", () => delete document.body.dataset.print);
 
 el("printBtn").addEventListener("click", async () => {
+  printChecked = true;
+  const missing = markMissing();
+  if (missing.length) {
+    el(missing[0][0]).focus();
+    el(missing[0][0]).scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
   buildPrintSheet();
   await Promise.all([...document.querySelectorAll("#reportPages img")].map(img => img.decode().catch(() => {})));
   window.print();
@@ -1387,7 +1432,7 @@ window.addEventListener("beforeprint", () => {
       : open === "ctTab" && typeof ComponentTransfer !== "undefined" ? ComponentTransfer.summary()
       : open === "bulkReturnTab" && typeof BulkReturn !== "undefined" ? BulkReturn.summary() : "";
     logActivity(PRINT_ACTIONS[open], item);
-  } else {
+  } else if (document.body.dataset.print !== "blocked") {
     // Every other tab prints the yield sheet.
     logActivity("Printed a yield sheet", sheetLabel({ woNumber: el("woNumber").value.trim(), fgItem: el("fgItem").value.trim() }));
   }

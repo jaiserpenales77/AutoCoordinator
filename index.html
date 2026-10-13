@@ -210,6 +210,7 @@
         <button type="button" id="newBtn">New / Clear</button>
         <button type="button" id="printBtn">Print Yield Sheet</button>
       </div>
+      <p id="printMissingMsg" class="form-msg hint-err hidden" role="alert"></p>
       <label id="printReportsWrap" class="check-inline hidden">
         <input type="checkbox" id="printReports" checked>
         <span>Print the imported reports after the yield sheet (<span id="printReportsCount"></span>)</span>
@@ -641,6 +642,7 @@
   </div>
 </div>
 <div id="reportPages" class="print-sheet"></div>
+<div id="printBlocked" class="print-blocked"></div>
 <div id="calcPrint" class="calc-print"></div>
 <div id="brPrint" class="br-print"></div>
 <div id="swPrint" class="sw-print">

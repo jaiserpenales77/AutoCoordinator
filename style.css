@@ -849,7 +849,9 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="unplanned"] .print-sheet,
   body[data-print="hold"] .print-sheet,
   body[data-print="standardWork"] .print-sheet,
-  body[data-print="componentTransfer"] .print-sheet { display: none !important; }
+  body[data-print="componentTransfer"] .print-sheet,
+  body[data-print="blocked"] .print-sheet { display: none !important; }
+  body[data-print="blocked"] .print-blocked { display: block; }
   body[data-print="componentTransfer"] .ct-print { display: block; }
   body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
@@ -859,6 +861,18 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   html, body { background: #fff; margin: 0; height: auto; }
   .print-sheet { display: block; }
 }
+
+/* Yield sheet fields required before printing, highlighted after a print
+   attempt while they're blank. Ctrl+P can't be stopped, so it prints a note
+   instead of the sheet. */
+input.missing, select.missing {
+  border-color: var(--warn-text);
+  background: var(--warn-bg);
+}
+label.missing { color: var(--warn-text); font-weight: 600; }
+label.missing small { color: var(--hint); font-weight: normal; }
+.print-blocked { display: none; padding: 40px; font: 16px/1.5 Arial, sans-serif; color: #000; }
+.print-blocked h1 { font-size: 22px; margin: 0 0 12px; }
 
 /* Imported JDE reports, one page each after the yield sheet, at actual size:
    no page margins of their own, so the reports keep the margins built into
