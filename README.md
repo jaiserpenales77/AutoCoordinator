@@ -120,7 +120,7 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   double-sided printing.
 - **Component Transfer** — a Component Transfer Notice (the app's own form;
   there's no paper original): Component, Item Number and Amount; From and To
-  Work Order # and Line; Reason for Transfer (a large box that wraps); Lead
+  Work Order # and Line; Reason for Transfer (a large box; the text wraps and is centred); Lead
   Name and Supervisor Name; Date (an empty Date starts with today); and "Did
   you create an Unplanned Issue Request?", a Yes/No dropdown whose answer
   prints on its line. Lead

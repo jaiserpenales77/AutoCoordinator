@@ -118,11 +118,14 @@ const ComponentTransfer = (() => {
       const s = v(id);
       if (!s) continue;
       if (id === MULTI) {
+        // Centred: each line across the box, the block of lines top to bottom.
         const { size, lines } = reasonLines(s);
+        const gap = size * 1.25;
+        const first = (y0 + y1) / 2 - (lines.length * gap) / 2;
         lines.forEach((l, i) => {
           if (!l) return;
           const squeeze = widthPt(l, size) > room(id) ? ` textLength="${room(id).toFixed(2)}" lengthAdjust="spacingAndGlyphs"` : "";
-          out += `<text x="${x0 + inset(id) + PAD}" y="${(y0 + inset(id) + PAD + size * (1.25 * i + 1)).toFixed(2)}" font-size="${size}"${squeeze}>${escapeHtml(l)}</text>`;
+          out += `<text x="${(x0 + x1) / 2}" y="${(first + gap * (i + 0.5) + size * 0.36).toFixed(2)}" font-size="${size}" text-anchor="middle"${squeeze}>${escapeHtml(l)}</text>`;
         });
         continue;
       }
@@ -168,7 +171,15 @@ const ComponentTransfer = (() => {
       const id = input.dataset.field;
       if (!FIELDS[id]) return; // the Yes/No dropdown keeps its size
       const s = input.value.trim();
-      input.style.fontSize = `${id === MULTI ? (s ? reasonLines(s).size : FIELDS[id][4]) : fitSize(id, s)}pt`;
+      if (id === MULTI) {
+        // Centred like the printout: the lines' block in the middle of the box.
+        const { size, lines } = s ? reasonLines(s) : { size: FIELDS[id][4], lines: [""] };
+        const height = FIELDS[id][3] - FIELDS[id][1] - 2 * inset(id);
+        input.style.fontSize = `${size}pt`;
+        input.style.paddingTop = `${Math.max(PAD, (height - lines.length * size * 1.25) / 2).toFixed(2)}pt`;
+        return;
+      }
+      input.style.fontSize = `${fitSize(id, s)}pt`;
     });
   }
 
