@@ -151,9 +151,10 @@ printed, so nothing runs past the box. Each form's own layout details follow.
 - **Training Sign-in Sheet** — the TR002B [CA] Training Sign-in Sheet (Employee
   Training Program, QS016A), redrawn from the paper form's own measurements:
   two Letter portrait pages with the logo, headings, shading and footer as
-  on the original. Print it blank for people to fill in by hand, or type in
-  any of its boxes first: Department(s), Contract Number, Course Number
-  (wraps), Date (an empty Date starts with today), Start, End and Total
+  on the original. Department(s) starts filled in with PACKAGING (Clear
+  puts it back; it can still be changed). Print it like that for people to
+  fill in by hand, or type in any of its boxes first: Contract Number,
+  Course Number (wraps), Date (an empty Date starts with today), Start, End and Total
   Time, the Other (Describe) lines, two instructors, and the employees'
   Job Number, names and ID # (18 on page 1, 31 more on page 2). Signatures
   stay blank. Click a Delivery Method to circle it and a Training Type to

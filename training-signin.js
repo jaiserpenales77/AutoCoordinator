@@ -85,6 +85,8 @@ const TrainingSignIn = (() => {
   const INSET = 1.5; // the screen boxes sit this far inside the cell lines
 
   const state = { values: {}, delivery: "", training: "" };
+  // Filled in from the start (and again by Clear); it can still be changed.
+  const DEFAULTS = { department: "PACKAGING" };
   const typed = new Set(); // mirrored fields typed over
 
   // Start Time, End Time and Total Time: any two give the third. The two
@@ -439,6 +441,7 @@ const TrainingSignIn = (() => {
   el("trClearBtn").addEventListener("click", () => {
     tab.querySelectorAll(".tr-input").forEach(i => { i.value = ""; });
     state.values = {};
+    Object.entries(DEFAULTS).forEach(([id, value]) => setValue(id, value));
     state.delivery = "";
     state.training = "";
     typed.clear();
@@ -465,6 +468,7 @@ const TrainingSignIn = (() => {
     return [v("course"), v("date"), count && `${count} employee${count === 1 ? "" : "s"}`].filter(Boolean).join(", ");
   }
 
+  Object.entries(DEFAULTS).forEach(([id, value]) => setValue(id, value));
   render();
   return { state, FIELDS, summary };
 })();
