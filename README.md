@@ -159,6 +159,16 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   stay blank. Click a Delivery Method to circle it and a Training Type to
   tick it (one of each; click again to clear); describing an Other training
   ticks Other. Page 2's Course # and Date follow page 1's until typed over.
+  Start Time, End Time and Total Time work each other out: type any two
+  and the third fills in (start and end give the total, start and total
+  the end, end and total the start). The two typed most recently decide
+  which one is worked out, and a worked-out time clears again when one of
+  its two goes. Times can be typed as "4:00 AM", "4am", "4:30 p.m.",
+  "16:30" or "1630" (no AM/PM means 24-hour time), and lengths as "1 hour",
+  "1.5 hours", "90 min", "1 hr 30 min", "1:30" or a plain number of hours.
+  A worked-out time is written like "04:00 AM"; a total like "1 HOUR",
+  "2 HOURS", "45 MINUTES" or "1 HR 30 MIN". An end time earlier than the
+  start counts as past midnight.
   Entries print in plain Arial like the paper form's, shrinking to fit their
   box. **Print Sign-in Sheet** prints both pages, or page 1 only with
   **Print page 2** off, and the Activity Log records the course, date and

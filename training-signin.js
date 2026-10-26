@@ -87,6 +87,69 @@ const TrainingSignIn = (() => {
   const state = { values: {}, delivery: "", training: "" };
   const typed = new Set(); // mirrored fields typed over
 
+  // Start Time, End Time and Total Time: any two give the third. The two
+  // typed most recently drive it; a time worked out here is cleared again
+  // when what it came from is no longer complete.
+  const TIMES = ["start", "end", "total"];
+  let recentTimes = []; // typed time fields, oldest first (at most two)
+  let calculated = null; // the time field filled in by the calculation
+  const DAY = 24 * 60;
+  const pad2 = n => String(n).padStart(2, "0");
+  // A time of day in minutes after midnight: "4:00 AM", "04:00AM", "4am",
+  // "4:30 p.m.", "16:30", "1630" or "4" (no AM/PM: 24-hour). NaN otherwise.
+  function parseTime(text) {
+    const m = String(text).toUpperCase().replace(/\./g, "").trim().match(/^(\d{1,2})(?::?(\d{2}))?\s*(?:([AP])M?)?$/);
+    if (!m) return NaN;
+    const [h, min] = [Number(m[1]), Number(m[2] ?? 0)];
+    if (min > 59) return NaN;
+    if (m[3]) return h >= 1 && h <= 12 ? (h % 12 + (m[3] === "P" ? 12 : 0)) * 60 + min : NaN;
+    return h <= 23 ? h * 60 + min : NaN;
+  }
+  // Written like the paper form's, e.g. "04:00 AM".
+  const formatTime = t => `${pad2(Math.floor(t / 60) % 12 || 12)}:${pad2(t % 60)} ${t < 12 * 60 ? "AM" : "PM"}`;
+  // A length of time in minutes: "1 HOUR", "1.5 hours", "90 min", "1 hr 30 min",
+  // "1:30" or a plain number of hours. NaN unless it's more than 0 and under a day.
+  function parseDuration(text) {
+    const t = String(text).toUpperCase().replace(/,|\bAND\b/g, " ").trim();
+    let total = NaN;
+    const clock = t.match(/^(\d{1,2}):(\d{2})$/);
+    if (clock && Number(clock[2]) < 60) total = Number(clock[1]) * 60 + Number(clock[2]);
+    else if (/^\d+(\.\d+)?$/.test(t)) total = Number(t) * 60;
+    else if (/^(\s*\d+(\.\d+)?\s*(HOURS?|HRS?|H|MINUTES?|MINS?|M)(?![A-Z]))+$/.test(t)) {
+      total = 0;
+      for (const [, n, unit] of t.matchAll(/(\d+(?:\.\d+)?)\s*(HOURS?|HRS?|H|MINUTES?|MINS?|M)(?![A-Z])/g)) {
+        total += Number(n) * (unit.startsWith("H") ? 60 : 1);
+      }
+    }
+    total = Math.round(total);
+    return total > 0 && total < DAY ? total : NaN;
+  }
+  // e.g. "1 HOUR", "2 HOURS", "45 MINUTES", "1 HR 30 MIN".
+  function formatDuration(t) {
+    const [h, min] = [Math.floor(t / 60), t % 60];
+    if (!min) return `${h} HOUR${h === 1 ? "" : "S"}`;
+    if (!h) return `${min} MINUTE${min === 1 ? "" : "S"}`;
+    return `${h} HR ${min} MIN`;
+  }
+  // Times past midnight wrap round (a session from 11 PM to 1 AM is 2 hours).
+  function calcTimes() {
+    const target = recentTimes.length === 2 ? TIMES.find(id => !recentTimes.includes(id)) : null;
+    const v = id => state.values[id] ?? "";
+    let value = "";
+    if (target === "total") {
+      const length = (parseTime(v("end")) - parseTime(v("start")) + DAY) % DAY;
+      if (length > 0) value = formatDuration(length);
+    } else if (target === "end") {
+      const t = parseTime(v("start")) + parseDuration(v("total"));
+      if (Number.isFinite(t)) value = formatTime(t % DAY);
+    } else if (target === "start") {
+      const t = parseTime(v("end")) - parseDuration(v("total"));
+      if (Number.isFinite(t)) value = formatTime((t + DAY) % DAY);
+    }
+    if (calculated && calculated !== target) { setValue(calculated, ""); calculated = null; }
+    if (value) { setValue(target, value); calculated = target; } else if (calculated) { setValue(calculated, ""); calculated = null; }
+  }
+
   const measureCtx = document.createElement("canvas").getContext("2d");
   const widthPt = (s, size) => {
     measureCtx.font = `400 ${size}pt ${ARIAL}`;
@@ -344,6 +407,12 @@ const TrainingSignIn = (() => {
     if (MIRRORS[id]) {
       if (e.target.value.trim()) typed.add(id); else typed.delete(id);
     }
+    if (TIMES.includes(id)) {
+      if (calculated === id) calculated = null; // typed over
+      recentTimes = recentTimes.filter(t => t !== id);
+      if (e.target.value.trim()) recentTimes = [...recentTimes, id].slice(-2);
+      calcTimes();
+    }
     // Describing an Other training ticks Other when nothing else is ticked.
     if ((id === "other1" || id === "other2") && e.target.value.trim() && !state.training) state.training = "other";
     render();
@@ -373,6 +442,8 @@ const TrainingSignIn = (() => {
     state.delivery = "";
     state.training = "";
     typed.clear();
+    recentTimes = [];
+    calculated = null;
     render();
   });
 
