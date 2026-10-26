@@ -22,7 +22,7 @@ const ROLE_ORDER = ["plt", "mlt", "lead", "admin", "owner"];
 const ROLE_LABELS = { plt: "PLT", mlt: "MLT", lead: "Lead", admin: "Admin", owner: "Owner" };
 const LIMITED_VIEWS = {
   plt: ["formsTab", "unplannedTab", "bulkReturnTab", "bulkCalcTab"],
-  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "ctTab", "bulkCalcTab"]
+  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "ctTab", "trainingTab", "bulkCalcTab"]
 };
 // Views only Admins and Owners open.
 const ADMIN_VIEWS = ["adminTab", "activityTab"];
@@ -1423,6 +1423,7 @@ const PRINT_ACTIONS = {
   holdTab: "Printed a Hold Tag",
   swTab: "Printed Standard Work",
   ctTab: "Printed a Component Transfer Notice",
+  trainingTab: "Printed a Training Sign-In Sheet",
   bulkCalcTab: "Printed a Bulk Calculator report"
 };
 window.addEventListener("beforeprint", () => {
@@ -1430,6 +1431,7 @@ window.addEventListener("beforeprint", () => {
   if (PRINT_ACTIONS[open]) {
     const item = open === "bulkCalcTab" ? el("calcBulkItem").value.trim().toUpperCase()
       : open === "ctTab" && typeof ComponentTransfer !== "undefined" ? ComponentTransfer.summary()
+      : open === "trainingTab" && typeof TrainingSignIn !== "undefined" ? TrainingSignIn.summary()
       : open === "bulkReturnTab" && typeof BulkReturn !== "undefined" ? BulkReturn.summary() : "";
     logActivity(PRINT_ACTIONS[open], item);
   } else if (document.body.dataset.print !== "blocked") {

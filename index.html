@@ -474,6 +474,11 @@
         <span class="form-card-code">Transfer notice</span>
         <span class="form-card-desc">Components moved between work orders and lines, with the reason and the lead's and supervisor's names</span>
       </button>
+      <button type="button" class="form-card" data-form="trainingTab">
+        <span class="form-card-name">Training Sign-In</span>
+        <span class="form-card-code">TR002B · QS016A</span>
+        <span class="form-card-desc">[CA] Training Sign-In Sheet for the Employee Training Program: course, delivery method, training type, instructor and employee sign-in (2 pages)</span>
+      </button>
       <button type="button" class="form-card" data-form="bulkCalcTab">
         <span class="form-card-name">Bulk Calculator</span>
         <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
@@ -545,6 +550,26 @@
     <p id="ctMsg" class="form-msg"></p>
     <div id="ctSheetWrap" class="br-sheet-wrap">
       <div id="ctSheet" class="br-sheet"></div>
+    </div>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="trainingTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Training Sign-In</h2>
+      <div class="actions br-actions">
+        <button type="button" id="trClearBtn">Clear</button>
+        <button type="button" id="trPrintBtn" class="primary">Print Sign-In Sheet</button>
+      </div>
+    </div>
+    <p class="muted">TR002B [CA] Training Sign-In Sheet. Print it blank for people to fill in by hand, or type in any boxes first. Click a Delivery Method to circle it and a Training Type to tick it; click again to clear. Page 2 has room for 31 more names and picks up page 1's Course # and Date.</p>
+    <label class="check-inline"><input type="checkbox" id="trPage2" checked> <span>Print page 2</span></label>
+    <div id="trSheetWrap" class="br-sheet-wrap">
+      <p class="sheet-page-label">Page 1</p>
+      <div id="trSheet1" class="br-sheet tr-sheet"></div>
+      <p class="sheet-page-label">Page 2</p>
+      <div id="trSheet2" class="br-sheet tr-sheet"></div>
     </div>
   </section>
 </div>
@@ -658,6 +683,10 @@
 <div id="ctPrint" class="ct-print">
   <div id="ctPrintPage" class="br-print-page"></div>
 </div>
+<div id="trPrint" class="tr-print">
+  <div id="trPrintPage1" class="tr-print-page"></div>
+  <div id="trPrintPage2" class="tr-print-page"></div>
+</div>
 
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>
@@ -669,5 +698,6 @@
 <script src="hold-tag.js"></script>
 <script src="standard-work.js"></script>
 <script src="component-transfer.js"></script>
+<script src="training-signin.js"></script>
 </body>
 </html>

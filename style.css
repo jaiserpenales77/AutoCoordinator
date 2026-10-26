@@ -642,6 +642,14 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .ct-print { display: none; }
 .br-input.ct-input { padding: 0 4pt; }
 .br-input.ct-reason { resize: none; text-align: center; line-height: 1.25; padding: 4pt; }
+/* Training Sign-In: the TR002B sheet, two Letter portrait pages, entries in
+   plain Arial like the paper form's. */
+.tr-sheet { width: 612pt; height: 792pt; }
+.tr-sheet + .sheet-page-label { margin-top: 20px; }
+.br-input.tr-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
+.br-input.tr-multi { resize: none; overflow: hidden; line-height: 1.15; padding: 1pt 3pt; }
+.br-choice.tr-choice { border-radius: 3pt; }
+.tr-print { display: none; }
 .br-input.ct-select { padding: 0 2pt; font-size: 12pt; text-align: center; text-align-last: center; cursor: pointer; }
 
 /* HOLD TAG: the red QA hold tag, using the Bulk Return sheet styles. */
@@ -795,6 +803,22 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .br-print-page .br-svg { position: absolute; inset: 0; width: 11in; height: 8.5in; }
 
+/* The Training Sign-In Sheet: Letter portrait pages without margins, since
+   the sheet is drawn with the paper form's margins. */
+@page training {
+  size: letter portrait;
+  margin: 0;
+}
+.tr-print-page {
+  page: training;
+  position: relative;
+  width: 8.5in;
+  height: 11in;
+  overflow: hidden;
+}
+.tr-print-page + .tr-print-page { break-before: page; }
+.tr-print-page .br-svg { position: absolute; inset: 0; width: 8.5in; height: 11in; }
+
 /* The Bulk Calculator report: one portrait page per bulk, like the original
    calculator's printout; shown instead of the yield sheet when printing from
    that tab. */
@@ -850,9 +874,11 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="hold"] .print-sheet,
   body[data-print="standardWork"] .print-sheet,
   body[data-print="componentTransfer"] .print-sheet,
+  body[data-print="training"] .print-sheet,
   body[data-print="blocked"] .print-sheet { display: none !important; }
   body[data-print="blocked"] .print-blocked { display: block; }
   body[data-print="componentTransfer"] .ct-print { display: block; }
+  body[data-print="training"] .tr-print { display: block; }
   body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }
