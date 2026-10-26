@@ -1,4 +1,4 @@
-// Training Sign-In tab: the TR002B [CA] Training Sign-In Sheet (Employee
+// Training Sign-in Sheet tab: the TR002B [CA] Training Sign-in Sheet (Employee
 // Training Program, QS016A), two Letter portrait pages drawn from the paper
 // form's own measurements (in pt from the top-left of the page). On screen
 // the cells are fillable, a Delivery Method is circled and a Training Type

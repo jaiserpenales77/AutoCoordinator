@@ -1423,7 +1423,7 @@ const PRINT_ACTIONS = {
   holdTab: "Printed a Hold Tag",
   swTab: "Printed Standard Work",
   ctTab: "Printed a Component Transfer Notice",
-  trainingTab: "Printed a Training Sign-In Sheet",
+  trainingTab: "Printed a Training Sign-in Sheet",
   bulkCalcTab: "Printed a Bulk Calculator report"
 };
 window.addEventListener("beforeprint", () => {

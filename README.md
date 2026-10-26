@@ -148,7 +148,7 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   Lead Name, today's date and (if empty) From Work Order # with the yield
   sheet's W.O. #. **Print Transfer Notice** prints it on one Letter landscape
   page, and the Activity Log records what was transferred.
-- **Training Sign-In** — the TR002B [CA] Training Sign-In Sheet (Employee
+- **Training Sign-in Sheet** — the TR002B [CA] Training Sign-in Sheet (Employee
   Training Program, QS016A), redrawn from the paper form's own measurements:
   two Letter portrait pages with the logo, headings, shading and footer as
   on the original. Print it blank for people to fill in by hand, or type in
@@ -160,7 +160,7 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   tick it (one of each; click again to clear); describing an Other training
   ticks Other. Page 2's Course # and Date follow page 1's until typed over.
   Entries print in plain Arial like the paper form's, shrinking to fit their
-  box. **Print Sign-In Sheet** prints both pages, or page 1 only with
+  box. **Print Sign-in Sheet** prints both pages, or page 1 only with
   **Print page 2** off, and the Activity Log records the course, date and
   number of employees.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
@@ -527,11 +527,11 @@ remove someone's access, delete (or disable) their user.
 - `hold-tag.js` — the Forms tab's Hold Tag.
 - `standard-work.js` — the Forms tab's two-sided Standard Work sheet.
 - `component-transfer.js` — the Forms tab's Component Transfer Notice.
-- `training-signin.js` — the Forms tab's Training Sign-In Sheet.
+- `training-signin.js` — the Forms tab's Training Sign-in Sheet.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.
-- `assets/pharmavite-logo-qs016a.png` — logo taken from the Training Sign-In Sheet.
+- `assets/pharmavite-logo-qs016a.png` — logo taken from the Training Sign-in Sheet.
 - `assets/standard-work-front.png`, `assets/standard-work-back.png` — the
   Standard Work sheet's two sides, from the 600 dpi scans (straightened,
   cleaned, 300 dpi).
