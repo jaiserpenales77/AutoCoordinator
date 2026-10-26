@@ -298,6 +298,16 @@ buttons turns them off. The PDFs stay in the browser tab, not in the saved
 sheet, so a sheet loaded later prints without them unless they're imported
 again.
 
+**Printing on both sides:** with **Printing on both sides: start each report
+on a new sheet** ticked (shown under the buttons when reports will print; on
+by default and remembered on that computer), each PDF starts on the front of
+a fresh sheet. The yield sheet is two pages, so it fills one sheet; a report
+with an odd number of pages gets a blank back page when another report
+follows it, and the checkbox says how many blank pages that adds. Untick it
+when printing single-sided. Turn on two-sided printing in the print dialog
+itself (in Chrome: **More settings → Two-sided**); a web page can't switch
+it on for you.
+
 Fields the original "PDF Import Setup" sheet notes as **not automatable**
 (Count/Fill Rate, Bulk Piece Wt, and the four scrap weights) aren't in any
 source PDF. Bulk Piece Wt and Count fill from the Stored Data tab when the

@@ -1,4 +1,5 @@
 const STORAGE_KEY = "pk030_yield_sheets";
+const TWO_SIDED_KEY = "pk030_two_sided";
 const LOW_YIELD_THRESHOLD = 0.945;
 const HIGH_YIELD_THRESHOLD = 1.024999;
 
@@ -334,6 +335,7 @@ function clearForm() {
   editingId = null;
   editingBadge.classList.add("hidden");
   form.reset();
+  restoreTwoSided();
   syncOtherLead();
   el("dateCreated").value = todayISO();
   el("tareWeight").value = 6;
@@ -726,6 +728,15 @@ function reportsToPrint() {
   return importedReports.filter(r => r.woNumber === wo);
 }
 
+// Printing on both sides, each PDF (the yield sheet, then each report)
+// starts on the front of a new sheet: a report with an odd number of pages
+// gets a blank back page when another report follows it. The yield sheet is
+// always two pages, so it fills one sheet. Remembered on this computer (and
+// put back after New / Clear resets the form).
+function restoreTwoSided() {
+  try { el("printTwoSided").checked = localStorage.getItem(TWO_SIDED_KEY) !== "off"; } catch { /* stays on */ }
+}
+
 function updatePrintReports() {
   const reports = reportsToPrint();
   const pages = reports.reduce((n, r) => n + r.urls.length, 0);
@@ -736,6 +747,19 @@ function updatePrintReports() {
   document.querySelectorAll("#reportPages .report-page").forEach(page => {
     page.classList.toggle("hidden", !shown.has(importedReports[page.dataset.report]));
   });
+  document.querySelectorAll("#reportPages .report-blank").forEach(blank => blank.remove());
+  const printing = importedReports.map((r, i) => [r, i]).filter(([r]) => shown.has(r));
+  let blanks = 0;
+  if (el("printTwoSided").checked) {
+    printing.slice(0, -1).forEach(([r, i]) => {
+      if (r.urls.length % 2 === 0) return;
+      const pagesOf = document.querySelectorAll(`#reportPages .report-page[data-report="${i}"]`);
+      pagesOf[pagesOf.length - 1]?.insertAdjacentHTML("afterend", '<div class="report-page report-blank" aria-hidden="true"></div>');
+      blanks++;
+    });
+  }
+  el("printTwoSidedWrap").classList.toggle("hidden", printing.length === 0);
+  el("printBlankCount").textContent = blanks ? ` (adds ${blanks} blank page${blanks === 1 ? "" : "s"})` : "";
 }
 
 function renderReportPages() {
@@ -766,6 +790,10 @@ async function addImportedReports(accepted, woNumber, isCurrent) {
 }
 
 el("printReports").addEventListener("change", updatePrintReports);
+el("printTwoSided").addEventListener("change", () => {
+  try { localStorage.setItem(TWO_SIDED_KEY, el("printTwoSided").checked ? "on" : "off"); } catch { /* still applies for this visit */ }
+  updatePrintReports();
+});
 
 const IMPORT_FIELDS = ["fgItem", "woNumber", "bulkItem", "qtyCompleted", "bulkIssued", "bulkReturned"];
 
