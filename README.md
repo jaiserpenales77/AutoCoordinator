@@ -174,6 +174,22 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   box. **Print Sign-in Sheet** prints both pages, or page 1 only with
   **Print page 2** off, and the Activity Log records the course, date and
   number of employees.
+- **Trouble Shooting Template** — the form started when there's an
+  equipment failure. There's no file of the original, only a photo of the
+  printed page, so it's redrawn from the photo's proportions on one Letter
+  portrait page, with its wording and layout: the heading box (title,
+  instructions, DATE and TIME blanks, Brief description of the Problem);
+  Lead / MLL / MLT / PLT Name(s), Line / Area, Equipment and Downtime; "After
+  15 minutes of downtime call for a mechanic" with 13 rows of SME / Mechanic
+  Checked and Did This Correct The Issue; Corrective Action; and the notes
+  underneath. Print it blank to fill in by hand, or type in any box first
+  (an empty Date starts with today, an empty Time with the time now; Line /
+  Area suggests the lines in Stored Data's line rates). The round button
+  beside a row circles that check as the cause, as the form asks (one row;
+  click again to clear). Entries print in plain Arial, shrinking to fit their
+  box; the description, names and corrective action wrap. **Print Trouble
+  Shooting** prints it, and the Activity Log records the line, equipment
+  and problem.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -549,6 +565,7 @@ remove someone's access, delete (or disable) their user.
 - `standard-work.js` — the Forms tab's two-sided Standard Work sheet.
 - `component-transfer.js` — the Forms tab's Component Transfer Notice.
 - `training-signin.js` — the Forms tab's Training Sign-in Sheet.
+- `troubleshooting.js` — the Forms tab's Trouble Shooting Template.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.

@@ -650,6 +650,24 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .br-input.tr-multi { resize: none; overflow: hidden; line-height: 1.15; padding: 1pt 3pt; }
 .br-choice.tr-choice { border-radius: 3pt; }
 .tr-print { display: none; }
+/* Trouble Shooting Template: one Letter portrait page (the Training Sign-in
+   Sheet's page styles), entries in plain Arial. */
+.br-input.ts-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
+.br-input.ts-multi { resize: none; overflow: hidden; line-height: 1.2; padding: 1pt 3pt; text-align: left; }
+/* The "circle as the cause" button beside each check row (screen only). */
+.ts-cause {
+  position: absolute;
+  width: 14pt;
+  height: 14pt;
+  padding: 0;
+  border: 1.5px solid #9aa5b1;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+.ts-cause:hover, .ts-cause:focus-visible { border-color: #2563eb; outline: none; }
+.ts-cause[aria-pressed="true"] { border-color: #2563eb; background: #2563eb; box-shadow: inset 0 0 0 2px #fff; }
+.ts-print { display: none; }
 .br-input.ct-select { padding: 0 2pt; font-size: 12pt; text-align: center; text-align-last: center; cursor: pointer; }
 
 /* HOLD TAG: the red QA hold tag, using the Bulk Return sheet styles. */
@@ -875,10 +893,12 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="standardWork"] .print-sheet,
   body[data-print="componentTransfer"] .print-sheet,
   body[data-print="training"] .print-sheet,
+  body[data-print="troubleshooting"] .print-sheet,
   body[data-print="blocked"] .print-sheet { display: none !important; }
   body[data-print="blocked"] .print-blocked { display: block; }
   body[data-print="componentTransfer"] .ct-print { display: block; }
   body[data-print="training"] .tr-print { display: block; }
+  body[data-print="troubleshooting"] .ts-print { display: block; }
   body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }

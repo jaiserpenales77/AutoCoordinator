@@ -483,6 +483,11 @@
         <span class="form-card-code">TR002B · QS016A</span>
         <span class="form-card-desc">[CA] Training Sign-in Sheet for the Employee Training Program: course, delivery method, training type, instructor and employee sign-in (2 pages)</span>
       </button>
+      <button type="button" class="form-card" data-form="tsTab">
+        <span class="form-card-name">Trouble Shooting Template</span>
+        <span class="form-card-code">Equipment failure</span>
+        <span class="form-card-desc">Trouble Shooting Template: the problem, line, equipment and downtime, what the SME or mechanic checked and whether it fixed it, and the corrective action</span>
+      </button>
       <button type="button" class="form-card" data-form="bulkCalcTab">
         <span class="form-card-name">Bulk Calculator</span>
         <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
@@ -574,6 +579,22 @@
       <div id="trSheet1" class="br-sheet tr-sheet"></div>
       <p class="sheet-page-label">Page 2</p>
       <div id="trSheet2" class="br-sheet tr-sheet"></div>
+    </div>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="tsTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Trouble Shooting Template</h2>
+      <div class="actions br-actions">
+        <button type="button" id="tsClearBtn">Clear</button>
+        <button type="button" id="tsPrintBtn" class="primary">Print Trouble Shooting</button>
+      </div>
+    </div>
+    <p class="muted">Start this form when there's an equipment failure. Print it blank to fill in by hand, or type in any boxes first; an empty Date and Time start with today's date and the time now. Click the circle beside a row to circle that check as the cause (click again to clear).</p>
+    <div id="tsSheetWrap" class="br-sheet-wrap">
+      <div id="tsSheet" class="br-sheet tr-sheet"></div>
     </div>
   </section>
 </div>
@@ -687,6 +708,9 @@
 <div id="ctPrint" class="ct-print">
   <div id="ctPrintPage" class="br-print-page"></div>
 </div>
+<div id="tsPrint" class="ts-print">
+  <div id="tsPrintPage" class="tr-print-page"></div>
+</div>
 <div id="trPrint" class="tr-print">
   <div id="trPrintPage1" class="tr-print-page"></div>
   <div id="trPrintPage2" class="tr-print-page"></div>
@@ -703,5 +727,6 @@
 <script src="standard-work.js"></script>
 <script src="component-transfer.js"></script>
 <script src="training-signin.js"></script>
+<script src="troubleshooting.js"></script>
 </body>
 </html>
