@@ -187,7 +187,8 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   Area suggests the lines in Stored Data's line rates). The round button
   beside a row circles that check as the cause, as the form asks (one row;
   click again to clear). Entries print in plain Arial, shrinking to fit their
-  box; the description, names and corrective action wrap. **Print Trouble
+  box; the description, names and corrective action wrap, and every entry is
+  centred in its box. **Print Trouble
   Shooting** prints it, and the Activity Log records the line, equipment
   and problem.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece

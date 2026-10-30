@@ -22,7 +22,8 @@ const Troubleshooting = (() => {
 
   // Fill-in areas: id -> { box: [x0, y0, x1, y1], size, label, kind }.
   // Cells are centred in their box; "line" entries sit on their underline
-  // (y1 is the baseline); "multi" entries wrap, left-aligned from the top.
+  // (y1 is the baseline); "multi" entries wrap, their lines centred across
+  // the box and the block of lines centred top to bottom.
   const FIELDS = {};
   const field = (id, box, size, label, kind = "cell") => { FIELDS[id] = { box, size, label, kind }; };
   field("date", [383, 77, 467, 91], 11, "Date", "line");
@@ -142,8 +143,10 @@ const Troubleshooting = (() => {
       const squeeze = (line, size) => (widthPt(line, size) > room(id) ? ` textLength="${fmt(room(id))}" lengthAdjust="spacingAndGlyphs"` : "");
       if (kind === "multi") {
         const { size, lines } = wrapLines(id, s);
+        const gap = size * 1.2;
+        const first = (y0 + y1) / 2 - (lines.length * gap) / 2;
         lines.forEach((l, i) => {
-          if (l) out += text(l, fmt(x0 + INSET + PAD), fmt(y0 + INSET + 1 + size * (1.2 * i + 0.95)), size, ARIAL, squeeze(l, size));
+          if (l) out += text(l, fmt((x0 + x1) / 2), fmt(first + gap * (i + 0.5) + size * 0.36), size, ARIAL, middle + squeeze(l, size));
         });
         continue;
       }
@@ -181,7 +184,15 @@ const Troubleshooting = (() => {
     sheet.querySelectorAll(".ts-input").forEach(input => {
       const id = input.dataset.field;
       const s = input.value.trim();
-      input.style.fontSize = `${FIELDS[id].kind === "multi" ? (s ? wrapLines(id, s).size : FIELDS[id].size) : fitSize(id, s)}pt`;
+      if (FIELDS[id].kind === "multi") {
+        // Centred like the printout: the lines' block in the middle of the box.
+        const { size, lines } = s ? wrapLines(id, s) : { size: FIELDS[id].size, lines: [""] };
+        const height = FIELDS[id].box[3] - FIELDS[id].box[1] - 2 * INSET;
+        input.style.fontSize = `${size}pt`;
+        input.style.paddingTop = `${fmt(Math.max(1, (height - lines.length * size * 1.2) / 2))}pt`;
+        return;
+      }
+      input.style.fontSize = `${fitSize(id, s)}pt`;
     });
   }
 

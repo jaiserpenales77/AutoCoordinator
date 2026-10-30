@@ -653,7 +653,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 /* Trouble Shooting Template: one Letter portrait page (the Training Sign-in
    Sheet's page styles), entries in plain Arial. */
 .br-input.ts-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
-.br-input.ts-multi { resize: none; overflow: hidden; line-height: 1.2; padding: 1pt 3pt; text-align: left; }
+.br-input.ts-multi { resize: none; overflow: hidden; line-height: 1.2; padding: 1pt 3pt 0; text-align: center; }
 /* The "circle as the cause" button beside each check row (screen only). */
 .ts-cause {
   position: absolute;
