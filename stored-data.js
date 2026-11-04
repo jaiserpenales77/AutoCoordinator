@@ -1,5 +1,5 @@
 // Leads (and the sign-in username linked to each), bulk item piece weights,
-// FG item counts and line rates entered on the Stored Data tab. localStorage is the working copy; each local change is reported to
+// FG item counts, line rates and the cotton list entered on the Stored Data tab. localStorage is the working copy; each local change is reported to
 // `StoredData.onChange(field, key, value)` (value null = removed) so it can be
 // synced, and `replaceAll` takes in the synced copy without reporting back.
 const StoredData = (() => {
@@ -92,6 +92,39 @@ const StoredData = (() => {
     };
   })();
 
+  // Cotton: the FG items that take cotton, and which ("Yes", or the cotton it
+  // takes, e.g. "Large coil"), as { item, cotton } keyed by FG item; synced
+  // as cottonItems["FG ITEM"] = "Yes" / the cotton. JDE Sched (LineUp) reads
+  // it for its Add / Change / Remove Cotton changeover notes.
+  const cotton = (() => {
+    const KEY = "pk030_cotton";
+    const text = v => String(v ?? "").trim().replace(/\s+/g, " ");
+    const valid = i => !!i && normItem(i.item) !== "" && text(i.cotton) !== "";
+    const clean = i => ({ item: normItem(i.item), cotton: text(i.cotton) });
+    const all = () => read(KEY).filter(valid).map(clean).sort((a, b) => a.item.localeCompare(b.item, undefined, { numeric: true, sensitivity: "base" }));
+    const without = item => all().filter(i => i.item !== normItem(item));
+    return {
+      all,
+      save(item, value) {
+        const i = clean({ item, cotton: value });
+        localStorage.setItem(KEY, JSON.stringify([...without(i.item), i]));
+        notify("cottonItems", i.item, i.cotton);
+      },
+      remove(item) {
+        localStorage.setItem(KEY, JSON.stringify(without(item)));
+        notify("cottonItems", normItem(item), null);
+      },
+      replace(list) {
+        localStorage.setItem(KEY, JSON.stringify((list ?? []).filter(valid).map(clean)));
+      },
+      find(item) {
+        const k = normItem(item);
+        return k ? all().find(i => i.item === k) ?? null : null;
+      },
+      valid
+    };
+  })();
+
   const LEADS_KEY = "pk030_leads";
   const LEAD_USERS_KEY = "pk030_lead_users";
   const bulkItems = itemStore("pk030_items", "pieceWt", "bulkItems");
@@ -170,17 +203,19 @@ const StoredData = (() => {
     bulkItems.replace(data.bulkItems);
     fgItems.replace(data.fgItems);
     lineRates.replace(data.lineRates);
+    cotton.replace(data.cotton);
   }
 
   function exportJson() {
     return JSON.stringify({ leads: leads(), leadUsers: leadUsers(), items: bulkItems.all(), fgItems: fgItems.all(),
-      lineRates: lineRates.all() }, null, 2);
+      lineRates: lineRates.all(), cotton: cotton.all() }, null, 2);
   }
 
-  // Merges a file made by exportJson (files from before FG items or line rates
-  // existed have no fgItems or lineRates); returns how many of each it took in. Leads and their
-  // usernames are only taken in with `withLeads` (admins), else left out
-  // (leads: null). With `addOnly` (Leads), items already stored keep their
+  // Merges a file made by exportJson (files from before FG items, line rates
+  // or cotton existed have no fgItems, lineRates or cotton); returns how many
+  // of each it took in. Leads and their usernames, and the cotton list, are
+  // only taken in with `withLeads` (admins), else left out (leads: null,
+  // cotton: null). With `addOnly` (Leads), items already stored keep their
   // value and are counted as `kept`.
   function importJson(text, { withLeads = true, addOnly = false } = {}) {
     let data;
@@ -208,10 +243,14 @@ const StoredData = (() => {
     const ratesAll = (Array.isArray(data.lineRates) ? data.lineRates : []).filter(lineRates.valid);
     const rates = ratesAll.filter(r => !addOnly || !lineRates.find(r.line, r.fgItem));
     rates.forEach(r => lineRates.save(r));
+    // Only admins may change the cotton list.
+    const cottonAll = withLeads && Array.isArray(data.cotton) ? data.cotton.filter(cotton.valid) : [];
+    cottonAll.forEach(i => cotton.save(i.item, i.cotton));
     return { leads: withLeads ? data.leads.length : null, items: bulk.length, fgItems: fg.length, lineRates: rates.length,
+      cotton: withLeads ? cottonAll.length : null,
       kept: bulkAll.length - bulk.length + fgAll.length - fg.length + ratesAll.length - rates.length };
   }
 
-  const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, lineRates, replaceAll, exportJson, importJson, onChange: null };
+  const api = { leads, addLead, removeLead, leadUsers, usernameForLead, leadForUser, setLeadUsername, validUsername, normUser, bulkItems, fgItems, lineRates, cotton, replaceAll, exportJson, importJson, onChange: null };
   return api;
 })();

@@ -723,6 +723,18 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   .line-rate-form button { grid-column: 1 / -1; }
 }
 
+/* Cotton: FG Item and Cotton side by side. */
+.cotton-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+.cotton-form input { width: 100%; min-width: 0; }
+@media (max-width: 700px) {
+  .cotton-form { grid-template-columns: minmax(0, 1fr); }
+}
+
 .form-msg { min-height: 1em; margin: 8px 0 0; font-size: 0.82rem; }
 .hint-ok { color: var(--ok-text); }
 .hint-err { color: var(--warn-text); }
