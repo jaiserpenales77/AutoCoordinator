@@ -7,7 +7,7 @@ aren't stored yet (never changes or removes one), writes one Activity Log
 entry per entry added, then reads the data back to confirm. Standard library
 only.
 
-  python3 tools/pk030_db.py show fgItems            # or bulkItems / lineRates
+  python3 tools/pk030_db.py show fgItems            # or bulkItems / lineRates / cottonItems
   python3 tools/pk030_db.py add entries.json --dry-run
   python3 tools/pk030_db.py add entries.json
 
@@ -16,7 +16,9 @@ out):
   {"fgItems":   [{"item": "2676", "count": 180}],
    "items":     [{"item": "BU001565", "pieceWt": 1781}],
    "lineRates": [{"line": "10", "fgItem": "2676", "fullHour": 3000,
-                  "lunch": 1500, "break": null}]}
+                  "lunch": 1500, "break": null}],
+   "cotton":    [{"item": "2741", "cotton": "Yes"}]}
+(Cotton needs an Admin or Owner account: the database refuses it from a Lead.)
 
 The password and the sign-in token are never printed. For testing against the
 Firestore emulator, set PK030_EMULATOR=host:port (and PK030_PROJECT); sign-in
@@ -44,7 +46,8 @@ BASE = (f"http://{EMULATOR}" if EMULATOR else "https://firestore.googleapis.com"
 # Field: (label for messages, Activity Log action, unit).
 FIELDS = {"fgItems": ("FG items", "Added an FG item", ""),
           "bulkItems": ("bulk items", "Added a bulk item", " mg"),
-          "lineRates": ("line rates", "Added a line rate", "")}
+          "lineRates": ("line rates", "Added a line rate", ""),
+          "cottonItems": ("cotton", "Added cotton", "")}
 
 
 class Fail(Exception):
@@ -198,6 +201,14 @@ def wanted_entries(data):
         out["lineRates"][key] = {"fullHour": number(r.get("fullHour"), f"Full Hour for {key}", allow_zero=True),
                                  "lunch": number(r.get("lunch"), f"Lunch for {key}", True, True),
                                  "break": number(r.get("break"), f"Break for {key}", True, True)}
+    for i in data.get("cotton", []):
+        key = norm_item(i.get("item"))
+        cotton = " ".join(str(i.get("cotton") or "").split()) or "Yes"
+        if not key:
+            raise Fail(f"Cotton without an FG item: {i}")
+        if cotton.upper() in ("N", "NO", "0", "-", "FALSE", "NONE"):
+            raise Fail(f"Cotton for {key} says none ({cotton!r}): leave the item out instead.")
+        out["cottonItems"][key] = cotton[:40]
     return out
 
 
@@ -219,6 +230,8 @@ def describe(field, key, value):
 def same(a, b):
     if isinstance(a, dict) and isinstance(b, dict):
         return a.keys() == b.keys() and all(same(a[k], b[k]) for k in a)
+    if isinstance(a, str) or isinstance(b, str):
+        return str(a).strip().upper() == str(b).strip().upper()
     return a == b if a is None or b is None else float(a) == float(b)
 
 
@@ -260,8 +273,8 @@ def add(path, dry_run):
         except Fail as err:
             if " 403 " in str(err):
                 raise Fail(f"The database refused the change for {username}: the account must be a Lead "
-                           "(or Admin/Owner) in the app's Admin tab, and someone may have stored one of these "
-                           "in the meantime. Nothing was changed.") from None
+                           "(or Admin/Owner) in the app's Admin tab (cotton: an Admin or Owner), and someone may "
+                           "have stored one of these in the meantime. Nothing was changed.") from None
             raise
         # One Activity Log entry per entry added, timed by the server.
         writes = []
