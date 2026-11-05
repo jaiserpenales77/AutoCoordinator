@@ -671,6 +671,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 /* Pulse Check Conversation: one Letter portrait page; answers in plain Arial
    on the ruled lines, left-aligned like handwriting. */
 .br-input.pc-input { resize: none; overflow: hidden; padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; text-align: left; background: rgba(37, 99, 235, 0.05); }
+.br-input.pc-blank { padding: 0 2pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
 .pc-print { display: none; }
 .br-input.ct-select { padding: 0 2pt; font-size: 12pt; text-align: center; text-align-last: center; cursor: pointer; }
 

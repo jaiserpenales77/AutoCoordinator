@@ -198,7 +198,9 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   heading, the WHAT (teal), HOW (purple) and SUPPORT (copper) bands, the five
   questions (Accomplishment, Goal progress, Amplify impact, Manager support,
   Communication) with their hints, prompts and ruled lines, and the closing
-  line and footer. Print it blank to jot on by hand, or type each answer
+  line and footer. Under the heading it adds Name, Shift and Date blanks
+  (not on the photographed sheet; an empty Date starts with today's date).
+  Print it blank to jot on by hand, or type each answer
   first: it's written on the ruled lines, left-aligned like handwriting,
   carries on down the box when it's longer, and shrinks to fit when it's
   longer than the box. **Print Pulse Check** prints it (colours included).

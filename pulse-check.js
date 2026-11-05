@@ -6,7 +6,7 @@
 // lines; printing gives the sheet with the answers written in, or the blank
 // sheet. Long answers wrap and shrink to fit their box, the same on screen
 // and printed.
-// Uses el, escapeHtml and onViewShown from app.js.
+// Uses el, escapeHtml, todayISO, formatDateMMDDYY and onViewShown from app.js.
 const PulseCheck = (() => {
   const ARIAL = `Arial, "Liberation Sans", Helvetica, sans-serif`;
   const CALIBRI = `Calibri, Carlito, "Segoe UI", Arial, sans-serif`;
@@ -41,6 +41,21 @@ const PulseCheck = (() => {
   const SIZE = 8.5;
   const MIN_SIZE = 5;
   const PAD = 3;
+  // Name, Shift and Date blanks between the heading and the first band (not
+  // on the photographed sheet; added so a printed sheet says whose it is):
+  // id -> [label, label x, line x0, line x1].
+  const BLANKS = {
+    name: ["Name:", LEFT, 68, 300],
+    shift: ["Shift:", 316, 343, 430],
+    date: ["Date:", 446, 471, RIGHT]
+  };
+  const BLANK_BASE = 104; // the blanks' baseline; their lines sit just under it
+  const BLANK_SIZE = 9;
+  const blankSize = (id, s) => {
+    const [, , x0, x1] = BLANKS[id];
+    const width = s ? widthPt(s, BLANK_SIZE) : 0;
+    return width > x1 - x0 - 4 ? Math.max(6, Math.floor(BLANK_SIZE * (x1 - x0 - 4) / width * 4) / 4) : BLANK_SIZE;
+  };
 
   const state = { values: {} };
 
@@ -89,6 +104,8 @@ const PulseCheck = (() => {
         ${text("Take 5–10 minutes to jot down a few words and bring this with you.", 152.5, 61.5, 8, ` fill="${GRAY}"`)}
         ${text("This is a short conversation about your progress, how you are growing, and what support you need. You do not need perfect", 152.5, 71.5, 8)}
         ${text("wording—just come ready with a real example and what would help.", 152.5, 80.5, 8)}
+        ${Object.values(BLANKS).map(([label, lx, x0, x1]) => `${text(label, lx, BLANK_BASE, 9, ' font-weight="700"')}
+          <line x1="${x0}" y1="${BLANK_BASE + 1.5}" x2="${x1}" y2="${BLANK_BASE + 1.5}" stroke="#000" stroke-width="0.5"/>`).join("")}
         ${BANDS.map((b, i) => `${rect(LEFT, b.top, RIGHT, b.bottom, b.colour, "")}
           ${text(b.label, LEFT + 3, fmt(b.bottom - (b.bottom - b.top) / 2 + 2.8), 8, ' font-weight="700" fill="#fff"')}
           ${rect(LEFT, b.bottom, RIGHT, bandBottoms[i])}`).join("")}
@@ -108,6 +125,10 @@ const PulseCheck = (() => {
   // The answers, written onto their rules (printout only; on screen they're inputs).
   function valuesSvg() {
     let out = "";
+    for (const [id, [, , x0, x1]] of Object.entries(BLANKS)) {
+      const s = String(state.values[id] ?? "").trim();
+      if (s) out += `<text x="${fmt((x0 + x1) / 2)}" y="${BLANK_BASE}" font-size="${blankSize(id, s)}" font-family='${ARIAL}' text-anchor="middle">${escapeHtml(s)}</text>`;
+    }
     for (const [id, { box: [x0], rule: first }] of Object.entries(FIELDS)) {
       const s = String(state.values[id] ?? "").trim();
       if (!s) continue;
@@ -123,7 +144,10 @@ const PulseCheck = (() => {
 
   // The fillable layer on screen: one box per answer, its lines on the rules.
   function inputsHtml() {
-    return Object.entries(FIELDS).map(([id, { box: [x0, y0, x1, y1], label }]) =>
+    return Object.entries(BLANKS).map(([id, [label, , x0, x1]]) =>
+      `<input type="text" class="br-input pc-blank" data-field="${id}" autocomplete="off" spellcheck="false" aria-label="${label.replace(":", "")}"
+        ${id === "date" ? 'placeholder="MM/DD/YY" ' : ""}style="left:${x0}pt;width:${x1 - x0}pt;top:${BLANK_BASE - BLANK_SIZE - 3}pt;height:${BLANK_SIZE + 6}pt;font-size:${BLANK_SIZE}pt">`).join("")
+      + Object.entries(FIELDS).map(([id, { box: [x0, y0, x1, y1], label }]) =>
       `<textarea class="br-input pc-input" data-field="${id}" autocomplete="off" spellcheck="true" aria-label="${escapeHtml(label)}"
         style="left:${x0}pt;width:${x1 - x0}pt;top:${fmt(y0)}pt;height:${fmt(y1 - y0)}pt;font-size:${SIZE}pt;line-height:${RULE_GAP}pt"></textarea>`).join("");
   }
@@ -134,6 +158,9 @@ const PulseCheck = (() => {
 
   // On screen, long answers shrink the same way as on the printout.
   function sizeInputs() {
+    sheet.querySelectorAll(".pc-blank").forEach(input => {
+      input.style.fontSize = `${blankSize(input.dataset.field, input.value.trim())}pt`;
+    });
     sheet.querySelectorAll(".pc-input").forEach(input => {
       const s = input.value.trim();
       const { size, gap } = s ? wrapLines(input.dataset.field, s) : { size: SIZE, gap: RULE_GAP };
@@ -167,8 +194,17 @@ const PulseCheck = (() => {
     render();
   });
 
+  // An empty Date starts with today's date.
+  tab.addEventListener("focusin", e => {
+    if (e.target.dataset.field === "date" && !e.target.value) {
+      e.target.value = state.values.date = formatDateMMDDYY(todayISO());
+      render();
+      e.target.select();
+    }
+  });
+
   el("pcClearBtn").addEventListener("click", () => {
-    sheet.querySelectorAll(".pc-input").forEach(i => { i.value = ""; });
+    sheet.querySelectorAll(".pc-input, .pc-blank").forEach(i => { i.value = ""; });
     state.values = {};
     render();
   });
