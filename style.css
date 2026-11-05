@@ -668,6 +668,10 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .ts-cause:hover, .ts-cause:focus-visible { border-color: #2563eb; outline: none; }
 .ts-cause[aria-pressed="true"] { border-color: #2563eb; background: #2563eb; box-shadow: inset 0 0 0 2px #fff; }
 .ts-print { display: none; }
+/* Pulse Check Conversation: one Letter portrait page; answers in plain Arial
+   on the ruled lines, left-aligned like handwriting. */
+.br-input.pc-input { resize: none; overflow: hidden; padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; text-align: left; background: rgba(37, 99, 235, 0.05); }
+.pc-print { display: none; }
 .br-input.ct-select { padding: 0 2pt; font-size: 12pt; text-align: center; text-align-last: center; cursor: pointer; }
 
 /* HOLD TAG: the red QA hold tag, using the Bulk Return sheet styles. */
@@ -894,11 +898,13 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="componentTransfer"] .print-sheet,
   body[data-print="training"] .print-sheet,
   body[data-print="troubleshooting"] .print-sheet,
+  body[data-print="pulseCheck"] .print-sheet,
   body[data-print="blocked"] .print-sheet { display: none !important; }
   body[data-print="blocked"] .print-blocked { display: block; }
   body[data-print="componentTransfer"] .ct-print { display: block; }
   body[data-print="training"] .tr-print { display: block; }
   body[data-print="troubleshooting"] .ts-print { display: block; }
+  body[data-print="pulseCheck"] .pc-print { display: block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body[data-print="standardWork"] .sw-print { display: block; }
   body[data-print="hold"] .hold-print { display: block; }
   body[data-print="unplanned"] .up-print { display: block; }

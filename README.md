@@ -191,6 +191,19 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   centred in its box. **Print Trouble
   Shooting** prints it, and the Activity Log records the line, equipment
   and problem.
+- **Pulse Check Conversation** — "Prepare for Your Pulse Check
+  Conversation", the prep sheet for a pulse check with a manager. There's no
+  file of the original, only a photo of the printed page, so it's redrawn
+  from the photo's proportions on one Letter portrait page: the logo and
+  heading, the WHAT (teal), HOW (purple) and SUPPORT (copper) bands, the five
+  questions (Accomplishment, Goal progress, Amplify impact, Manager support,
+  Communication) with their hints, prompts and ruled lines, and the closing
+  line and footer. Print it blank to jot on by hand, or type each answer
+  first: it's written on the ruled lines, left-aligned like handwriting,
+  carries on down the box when it's longer, and shrinks to fit when it's
+  longer than the box. **Print Pulse Check** prints it (colours included).
+  Answers aren't saved or sent anywhere, and the Activity Log records only
+  that the sheet was printed, not what's on it.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -567,6 +580,7 @@ remove someone's access, delete (or disable) their user.
 - `component-transfer.js` — the Forms tab's Component Transfer Notice.
 - `training-signin.js` — the Forms tab's Training Sign-in Sheet.
 - `troubleshooting.js` — the Forms tab's Trouble Shooting Template.
+- `pulse-check.js` — the Forms tab's Pulse Check Conversation prep sheet.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.

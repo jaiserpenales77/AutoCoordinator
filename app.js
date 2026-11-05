@@ -23,7 +23,7 @@ const ROLE_ORDER = ["plt", "mlt", "lead", "admin", "owner"];
 const ROLE_LABELS = { plt: "PLT", mlt: "MLT", lead: "Lead", admin: "Admin", owner: "Owner" };
 const LIMITED_VIEWS = {
   plt: ["formsTab", "unplannedTab", "bulkReturnTab", "bulkCalcTab"],
-  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "ctTab", "trainingTab", "tsTab", "bulkCalcTab"]
+  mlt: ["formsTab", "unplannedTab", "bulkReturnTab", "swTab", "ctTab", "trainingTab", "tsTab", "pcTab", "bulkCalcTab"]
 };
 // Views only Admins and Owners open.
 const ADMIN_VIEWS = ["adminTab", "activityTab"];
@@ -1453,6 +1453,7 @@ const PRINT_ACTIONS = {
   ctTab: "Printed a Component Transfer Notice",
   trainingTab: "Printed a Training Sign-in Sheet",
   tsTab: "Printed a Trouble Shooting Template",
+  pcTab: "Printed a Pulse Check Conversation sheet",
   bulkCalcTab: "Printed a Bulk Calculator report"
 };
 window.addEventListener("beforeprint", () => {
