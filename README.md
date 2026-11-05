@@ -249,7 +249,7 @@ first), with a search box, a time range (today, last 7 or 30 days, all) and
 Logged: signing in, signing out and creating an account; saving, updating,
 deleting, printing and exporting yield sheets; importing JDE report PDFs;
 adding, changing and removing bulk items (also from the Bulk Calculator), FG
-items and line rates; importing and exporting Stored Data; adding and removing leads
+items, line rates and cotton; importing and exporting Stored Data; adding and removing leads
 and linking usernames; changing account types; and printing each form and
 the Bulk Calculator report.
 
@@ -271,6 +271,13 @@ people do through the app; it isn't a tamper-proof audit trail.
   empty for a line that runs through lunch or breaks (they show as "—"). Line keeps its value after saving, so several
   FG items can be entered for one line; the FG Item box suggests the stored FG
   items. Search finds lines and FG items.
+- **Cotton** — the FG items that take cotton, and which: "Yes" (Cotton left
+  empty) or the cotton it takes (e.g. "Large coil"). Several FG items can be
+  saved at once, with commas between them; the FG Item box suggests the stored
+  FG items. LineUp (JDE Sched) reads this list for its changeover notes (Add
+  Cotton, Change Cotton, Remove Cotton). Only Admins and Owners add, change and
+  remove cotton (the database allows Leads only new bulk and FG items); Leads
+  see the list.
 
 A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
@@ -281,8 +288,8 @@ buttons (the database refuses it too). **Admins and Owners** can add, edit and r
 
 Stored Data is shared through the database (see below). **Export Stored Data**
 saves a JSON backup; **Import Stored Data** adds a backup's entries back
-(its leads and usernames only for admins; for Leads, items already stored keep
-their values).
+(its leads, usernames and cotton only for admins; for Leads, items already
+stored keep their values).
 
 ## Importing the JDE report PDFs
 
@@ -364,7 +371,10 @@ same Firebase Firestore database as the JDE Sched app (project
 
 - each yield sheet is a document in the `pk030-yield-sheets` collection;
 - leads, username links (`leadUsers`, username → lead name), bulk piece
-  weights and FG counts are maps in `pk030/storedData`.
+  weights, FG counts, line rates (`lineRates`, "LINE|FG ITEM" → Full Hour,
+  Lunch, Break) and cotton (`cottonItems`, FG item → "Yes" or the cotton) are
+  maps in `pk030/storedData`. JDE Sched's shift accounts read it too, for its
+  estimated times and cotton notes.
 
 The status under the title shows **Synced**, **Saving…**, **Offline** (changes
 are kept and sent when the connection returns, even across reloads) or a
@@ -588,7 +598,7 @@ remove someone's access, delete (or disable) their user.
 - `assets/standard-work-front.png`, `assets/standard-work-back.png` — the
   Standard Work sheet's two sides, from the 600 dpi scans (straightened,
   cleaned, 300 dpi).
-- `stored-data.js` — leads (Admin tab), bulk piece weights and FG counts (Stored Data tab).
+- `stored-data.js` — leads (Admin tab), bulk piece weights, FG counts, line rates and cotton (Stored Data tab).
 - `cloud-sync.js` — sign-in and sign-up, account types, and syncing sheets and Stored Data with Firestore.
 - `tools/pk030_db.py` — adds FG items, bulk items and line rates to Stored Data
   from a file in the export format, signed in as the account in

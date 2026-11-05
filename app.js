@@ -992,6 +992,7 @@ function renderStoredData() {
 
   ITEM_PANELS.forEach(renderItemPanel);
   renderLineRates();
+  renderCotton();
 
   populateLeads();
   // The Bulk Calculator's item suggestions (bulk-calc.js loads after this file).
@@ -1206,6 +1207,81 @@ el("lineRateTableBody").addEventListener("click", e => {
   }
 });
 
+// Cotton: the FG items that take cotton ("Yes", or the cotton it takes), for
+// LineUp's changeover notes. Only admins add, change or remove it; Leads see
+// the list (the database rules let Leads add only bulk and FG items).
+const NO_COTTON = ["N", "NO", "0", "-", "FALSE", "NONE"];
+
+function renderCotton() {
+  const all = StoredData.cotton.all();
+  const query = el("cottonSearch").value.trim().toUpperCase();
+  const list = query ? all.filter(i => `${i.item} ${i.cotton.toUpperCase()}`.includes(query)) : all;
+  const change = canChangeStoredItems();
+  el("cottonForm").classList.toggle("hidden", !change);
+  el("cottonMsg").classList.toggle("hidden", !change);
+  el("cottonViewOnlyNote").classList.toggle("hidden", change);
+  el("cottonTableBody").innerHTML = list.map(i => `
+    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(i.cotton)}</td>
+      <td class="row-actions">${change ? `
+        <button type="button" data-action="edit" data-item="${escapeHtml(i.item)}">Edit</button>
+        <button type="button" data-action="remove" data-item="${escapeHtml(i.item)}">Remove</button>` : ""}
+      </td></tr>`).join("");
+  el("noCottonMsg").textContent = all.length
+    ? `No cotton matches "${el("cottonSearch").value.trim()}".`
+    : "No cotton yet.";
+  el("noCottonMsg").classList.toggle("hidden", list.length > 0);
+  el("cottonSearch").classList.toggle("hidden", all.length === 0);
+  // Suggestions: the stored FG items.
+  el("cottonFgList").innerHTML = StoredData.fgItems.all()
+    .map(i => `<option value="${escapeHtml(i.item)}">`).join("");
+}
+
+el("cottonSearch").addEventListener("input", renderCotton);
+el("cottonForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if (!canChangeStoredItems()) return;
+  const items = [...new Set(el("cottonFg").value.split(/[\s,;]+/).map(s => s.trim().toUpperCase()).filter(Boolean))];
+  const cotton = el("cottonType").value.trim().replace(/\s+/g, " ") || "Yes";
+  if (!items.length) {
+    showMsg("cottonMsg", "Type an FG item.", false);
+    return;
+  }
+  if (NO_COTTON.includes(cotton.toUpperCase())) {
+    showMsg("cottonMsg", "To take an FG item off the cotton list, click Remove next to it.", false);
+    return;
+  }
+  const saved = items.map(item => ({ item, was: StoredData.cotton.find(item) }));
+  saved.forEach(({ item, was }) => {
+    StoredData.cotton.save(item, cotton);
+    logActivity(`${was ? "Changed" : "Added"} cotton`, `${item}: ${cotton}${was ? ` (was ${was.cotton})` : ""}`);
+  });
+  showMsg("cottonMsg", saved.length === 1
+    ? `${saved[0].was ? "Updated" : "Added"} ${saved[0].item}: ${cotton}.`
+    : `Saved ${saved.length} FG items: ${cotton}.`);
+  el("cottonFg").value = "";
+  el("cottonType").value = "";
+  renderStoredData();
+  el("cottonFg").focus();
+});
+
+el("cottonTableBody").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn || !canChangeStoredItems()) return;
+  const hit = StoredData.cotton.find(btn.dataset.item);
+  if (!hit) return;
+  if (btn.dataset.action === "edit") {
+    el("cottonFg").value = hit.item;
+    el("cottonType").value = hit.cotton === "Yes" ? "" : hit.cotton;
+    el("cottonType").focus();
+    showMsg("cottonMsg", `Editing ${hit.item} — change the cotton and click Save Cotton.`);
+  } else if (confirm(`Take ${hit.item} off the cotton list?`)) {
+    StoredData.cotton.remove(hit.item);
+    logActivity("Removed cotton", `${hit.item}: ${hit.cotton}`);
+    showMsg("cottonMsg", `Removed ${hit.item}.`);
+    renderStoredData();
+  }
+});
+
 el("exportStoredBtn").addEventListener("click", () => {
   logActivity("Exported Stored Data");
   const blob = new Blob([StoredData.exportJson()], { type: "application/json" });
@@ -1225,7 +1301,8 @@ el("importStoredInput").addEventListener("change", async e => {
     // Only admins may change leads and stored items, so for everyone else
     // leads are left out and items already stored keep their values.
     const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
-    const counts = `${n.items} bulk item(s), ${n.fgItems} FG item(s) and ${n.lineRates} line rate(s)`;
+    const counts = `${n.items} bulk item(s), ${n.fgItems} FG item(s), ${n.lineRates} line rate(s)`
+      + (n.cotton !== null ? ` and ${n.cotton} cotton item(s)` : "");
     logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${counts}`);
     const kept = n.kept ? ` ${n.kept} already stored ${n.kept === 1 ? "entry" : "entries"} kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
@@ -1650,7 +1727,8 @@ CloudSync.start({
     leadUsers: StoredData.leadUsers(),
     bulkItems: StoredData.bulkItems.all(),
     fgItems: StoredData.fgItems.all(),
-    lineRates: StoredData.lineRates.all()
+    lineRates: StoredData.lineRates.all(),
+    cotton: StoredData.cotton.all()
   }),
   onSheets(records) {
     saveRecords(records);

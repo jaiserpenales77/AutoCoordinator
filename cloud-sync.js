@@ -1,8 +1,8 @@
 // Signs users in and syncs saved yield sheets and Stored Data through the
 // Firestore database the JDE Sched app uses (project jde-schedule-database):
 // each sheet is a document in `pk030-yield-sheets`, and leads, their linked
-// usernames, bulk items, FG items and line rates are maps in the
-// `pk030/storedData` document.
+// usernames, bulk items, FG items, line rates and the cotton list
+// (cottonItems) are maps in the `pk030/storedData` document.
 // Each account has a `pk030-users/{uid}` record with its account type (role):
 // PLT (what everyone who signs up starts as) and MLT only use the forms and
 // never reach the database; Lead and up sync sheets and Stored Data; Admin and
@@ -117,7 +117,8 @@ const CloudSync = (() => {
       leadUsers: { ...(data.leadUsers || {}) },
       bulkItems: Object.entries(data.bulkItems || {}).map(([item, pieceWt]) => ({ item, pieceWt })),
       fgItems: Object.entries(data.fgItems || {}).map(([item, count]) => ({ item, count })),
-      lineRates: Object.entries(data.lineRates || {}).map(([key, rate]) => ({ ...StoredData.lineRates.fromKey(key), ...rate }))
+      lineRates: Object.entries(data.lineRates || {}).map(([key, rate]) => ({ ...StoredData.lineRates.fromKey(key), ...rate })),
+      cotton: Object.entries(data.cottonItems || {}).map(([item, cotton]) => ({ item, cotton: cotton === true ? "Yes" : String(cotton ?? "") }))
     };
   }
 
@@ -141,10 +142,12 @@ const CloudSync = (() => {
     const rateKey = r => `${r.line}|${r.fgItem}`;
     const missingRates = (local.lineRates ?? []).filter(r => !remote.lineRates.some(x => rateKey(x) === rateKey(r)));
     missingRates.forEach(r => add("lineRates", rateKey(r), { fullHour: r.fullHour, lunch: r.lunch, break: r.break }));
-    // Leads go in their own write: only admins may change them, and a refused
-    // write must not take the items with it.
-    const { leads, leadUsers, ...items } = merge;
-    const leadMerge = { ...(leads && { leads }), ...(leadUsers && { leadUsers }) };
+    const missingCotton = (local.cotton ?? []).filter(i => !remote.cotton.some(r => r.item === i.item));
+    missingCotton.forEach(i => add("cottonItems", i.item, i.cotton));
+    // Leads and the cotton list go in their own write: only admins may change
+    // them, and a refused write must not take the items with it.
+    const { leads, leadUsers, cottonItems, ...items } = merge;
+    const leadMerge = { ...(leads && { leads }), ...(leadUsers && { leadUsers }), ...(cottonItems && { cottonItems }) };
     if (Object.keys(items).length) write(() => fs.setDoc(storedRef(), items, { merge: true }));
     if (Object.keys(leadMerge).length) write(() => fs.setDoc(storedRef(), leadMerge, { merge: true }));
     localStorage.setItem(MIGRATED.stored, "1");
@@ -153,7 +156,8 @@ const CloudSync = (() => {
       leadUsers: { ...remote.leadUsers, ...(merge.leadUsers || {}) },
       bulkItems: [...remote.bulkItems, ...missing(local.bulkItems, remote.bulkItems)],
       fgItems: [...remote.fgItems, ...missing(local.fgItems, remote.fgItems)],
-      lineRates: [...remote.lineRates, ...missingRates]
+      lineRates: [...remote.lineRates, ...missingRates],
+      cotton: [...remote.cotton, ...missingCotton]
     };
   }
 

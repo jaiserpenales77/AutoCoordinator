@@ -370,6 +370,31 @@
     <p id="noLineRatesMsg" class="muted">No line rates yet.</p>
   </section>
 
+  <section class="panel cotton-panel">
+    <h2>Cotton</h2>
+    <p class="muted">The FG items that take cotton, and which. LineUp (JDE Sched) uses this list for its changeover notes: Add Cotton, Change Cotton and Remove Cotton. Leave Cotton empty for "Yes", or type the cotton it takes. Several FG items can go in at once, with commas between them.</p>
+    <p id="cottonViewOnlyNote" class="muted hidden">Only an admin can add, change or remove cotton.</p>
+    <form id="cottonForm" class="cotton-form" autocomplete="off">
+      <label>FG Item
+        <input type="text" id="cottonFg" list="cottonFgList" placeholder="e.g. 2676, or 2676, 2883" required>
+        <datalist id="cottonFgList"></datalist>
+      </label>
+      <label>Cotton
+        <input type="text" id="cottonType" maxlength="40" placeholder="Yes">
+      </label>
+      <button type="submit" class="primary">Save Cotton</button>
+    </form>
+    <p id="cottonMsg" class="form-msg"></p>
+    <input type="search" id="cottonSearch" class="stored-search" placeholder="Search cotton…" aria-label="Search the cotton list">
+    <div class="table-scroll stored-table">
+      <table>
+        <thead><tr><th>FG Item</th><th>Cotton</th><th></th></tr></thead>
+        <tbody id="cottonTableBody"></tbody>
+      </table>
+    </div>
+    <p id="noCottonMsg" class="muted">No cotton yet.</p>
+  </section>
+
   <section class="panel">
     <h2>Back Up / Share</h2>
     <p class="muted">Stored Data and saved yield sheets are shared with every computer through the database. Export Stored Data to a file as a backup; importing a file adds its entries back.</p>
