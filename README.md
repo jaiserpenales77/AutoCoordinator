@@ -366,7 +366,9 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   card and recipe panel is the bottle-size colour from the paper guides.
 - Tap a recipe for every setting, grouped as on the sheet, with Count,
   Precount, Bottles/min and Dosing speed shown first. From there: Copy, Print
-  (always one page, Letter or A4, settings in two columns), or Compare; the panel also links the same FG on the other line.
+  (always one page, Letter or A4: a header with the size colour, the four key
+  numbers, settings in two columns, and the source sheet and print date), or
+  Compare; the panel also links the same FG on the other line.
 - Add 2–4 recipes to Compare to see them side by side with differences
   highlighted ("Only differences" hides the rest).
 - Light / dark theme (remembered in the browser).

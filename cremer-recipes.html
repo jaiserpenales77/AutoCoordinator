@@ -186,28 +186,46 @@ tr.d td:not(:first-child){background:var(--diff);font-weight:800}
   .p-fg{font-size:34px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
-@page{size:auto;margin:10mm}
+.print-only{display:none}
+@page{size:auto;margin:12mm 12mm 10mm}
 @media print{
-  html,body{background:#fff!important;color:#000}
-  .bgfx,.wrap,footer,.scrim,.tray,.p-foot,.iconbtn,.modal,.toast,.sec.also-sec{display:none!important}
-  *{animation:none!important;transition:none!important;box-shadow:none!important}
+  html,body{background:#fff!important;color:#14161d}
+  *{animation:none!important;transition:none!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bgfx,.wrap,footer,.scrim,.tray,.p-foot,.iconbtn,.modal,.toast,.sec.also-sec,.note,.p-tag{display:none!important}
+  .print-only{display:block}
   .panel{position:static;transform:none!important;opacity:1;visibility:visible;width:100%;max-height:none;border-radius:0;overflow:visible;background:#fff;display:block}
-  .p-head{padding:0 0 6px;border:0;border-bottom:2px solid var(--c);text-align:left;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .p-fg{font-size:32px}.p-bulk{font-size:17px;margin:0}
-  .p-tag{margin:0 0 0 auto;padding:0;background:none;font-size:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .p-body{overflow:visible;padding:8px 0 0}
-  .keys{gap:6px;margin:0 0 8px}
-  .key{padding:4px;border-radius:6px;border:1px solid #ccc}
-  .key b{font-size:22px}.key span{font-size:11px}
-  .p-body{columns:2;column-gap:14px}
-  .keys,.note{column-span:all}
-  .sec{break-inside:avoid;margin:0 0 10px}
-  .sec h3{font-size:11px;margin:0 0 3px 2px;color:#555}
-  .box{border:1px solid #ccc;border-radius:6px}
-  .kv{padding:4px 9px;border-top:1px solid #e3e3e3}
-  .kv .k{font-size:12.5px;color:#333}.kv .v{font-size:13.5px}
-  .on-off{padding:0;background:none!important;font-size:12px}
-  .note{font-size:9.5px;margin-top:4px;text-align:left;color:#666}
+  /* header */
+  .p-head{display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 16px;text-align:left;padding:0 0 12px;border:0;border-bottom:1px solid #d9dce3;background:#fff}
+  .p-kicker{grid-column:1/-1;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#8a90a0}
+  .p-name{display:flex;align-items:baseline;gap:12px}
+  .p-fg{font-size:40px;font-weight:900;letter-spacing:-.03em;line-height:.95}
+  .p-bulk{font-size:18px;font-weight:600;color:#5b6172;margin:0}
+  .p-size{text-align:right}
+  .p-size .pill{display:inline-block;background:var(--c);color:#fff;font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px}
+  .p-size .paper{display:block;margin-top:4px;font-size:10px;color:#8a90a0;font-weight:600}
+  /* key numbers */
+  .p-body{overflow:visible;padding:14px 0 0}
+  .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}
+  .key{border:0;border-radius:12px;padding:10px 12px;text-align:left;background:color-mix(in srgb,var(--c) 10%,#fff)}
+  .key b{font-size:26px;font-weight:900;color:#14161d;line-height:1.05}
+  .key span{display:block;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5b6172;margin-top:2px}
+  /* settings */
+  .p-body{columns:2;column-gap:28px}
+  .keys,.p-print-foot{column-span:all}
+  .sec{break-inside:avoid;margin:0 0 12px}
+  .sec h3{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#14161d;margin:0 0 4px;padding-bottom:4px;border-bottom:2px solid #14161d}
+  .sec h3::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c)}
+  .box{border:0;border-radius:0;background:none}
+  .kv{padding:4px 2px;border-top:0;border-bottom:1px solid #eceef2}
+  .kv:last-child{border-bottom:0}
+  .kv .k{font-size:12px;color:#4b5161}.kv .v{font-size:13.5px;font-weight:800;color:#14161d}
+  .v.blank{color:#b0b5c0}
+  .on-off{font-size:10px;padding:1px 8px;border-radius:999px}
+  .on-off.on{background:#dcf5e9!important;color:#08794a}
+  .on-off.off{background:#eef0f3!important;color:#8a90a0}
+  /* footer */
+  .p-print-foot{display:flex;justify-content:space-between;gap:16px;margin-top:6px;padding-top:8px;border-top:1px solid #d9dce3;font-size:9px;color:#8a90a0}
+  .p-print-foot b{color:#5b6172}
 }
 </style>
 </head>
@@ -339,7 +357,9 @@ function open(uid){
   const others = R.filter(x=>x.uid!==uid&&x.fg===r.fg);
   let h = `<div class="p-head">
       <button class="iconbtn" id="pClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      <div class="p-fg">${esc(r.fg)}</div><div class="p-bulk">${esc(r.bulk)}</div>
+      <div class="p-kicker print-only">Cremer recipe · Counter settings</div>
+      <div class="p-name"><div class="p-fg">${esc(r.fg)}</div><div class="p-bulk">${esc(r.bulk)}</div></div>
+      <div class="p-size print-only"><span class="pill"${r.line+'-'+r.size==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="paper">${PAPER[r.line+'-'+r.size]} sheet</span></div>
       <span class="p-tag">Line ${r.line} · ${r.size} cc · ${PAPER[r.line+'-'+r.size]} sheet</span></div>
     <div class="p-body">
     <div class="keys">${KEYS.map(([k,l])=>`<div class="key"><b class="num">${esc(text(k,r[k]))}</b><span>${l}</span></div>`).join('')}</div>`;
@@ -348,7 +368,8 @@ function open(uid){
     h += `<div class="sec" style="animation-delay:${gi*35}ms"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>`<div class="kv"><span class="k">${esc(f.label)}</span>${html(f.key,r[f.key])}</div>`).join('')}</div></div>`;
   });
   if (others.length) h += `<div class="sec also-sec" style="--s:${col(r)}"><h3>Same FG, other recipe</h3><div class="also">${others.map(x=>`<button class="chip size" data-go="${x.uid}" style="--c:${col(x)}"><span class="dot"></span>Line ${x.line} · ${x.size}cc${x.bulk!==r.bulk?' · '+esc(x.bulk):''}</button>`).join('')}</div></div>`;
-  h += `<div class="note">Workbook sheet: “${esc(r.sheet)}”</div></div>
+  h += `<div class="note">Workbook sheet: “${esc(r.sheet)}”</div>
+    <div class="p-print-foot print-only"><span>Source: <b>Cremer Recipe Guide Line ${r.line} (10.06.26)</b> · sheet “${esc(r.sheet)}”</span><span>Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
     <div class="p-foot"><button class="btn primary" id="pCopy">Copy</button><button class="btn" id="pCmp">${cmpLabel(uid)}</button><button class="btn" id="pPrint">Print</button></div>`;
   const p=$('#panel'); p.style.setProperty('--c',col(r)); p.innerHTML=h; p.classList.add('show'); p.setAttribute('aria-hidden','false'); $('#scrim').classList.add('show');
   $('#pClose').onclick=close; $('#pPrint').onclick=()=>print(); $('#pCopy').onclick=()=>copy(r);
