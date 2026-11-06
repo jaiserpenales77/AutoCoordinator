@@ -352,6 +352,30 @@ Fields the original "PDF Import Setup" sheet notes as **not automatable**
 source PDF. Bulk Piece Wt and Count fill from the Stored Data tab when the
 item is stored there; the rest are entered by hand.
 
+## Cremer Recipe Finder
+
+`cremer-recipes.html` is a standalone page (open it on its own, from disk or
+GitHub Pages — no sign-in, no database) for looking up the Cremer counter
+settings on Line 9 and Line 10. It holds the 157 recipes from the
+*Cremer Recipe Guide Line 9* and *Line 10* workbooks (10.06.26): Line 9 225,
+300, 400 and 500 cc; Line 10 150 and 225 cc.
+
+- Search by FG item, bulk item or sheet name (several words narrow it down;
+  press `/` to jump to the search box), filter by line and bottle size, sort by
+  FG, bulk, count, BPM or size.
+- Each card's colour stripe is the bottle-size colour from the paper guides.
+  Tap a card for every setting, grouped as on the sheet, with a quick
+  "find a setting" filter, copy-to-clipboard and print. It also lists the same
+  FG on other recipes and other FGs on the same bulk (a starting point for a
+  new item's vibratory and dosing settings).
+- Tick **Compare** on 2–4 recipes to see them side by side with differences
+  highlighted ("Only differences" hides the rest).
+- Favorites and the theme are kept in the browser.
+
+Values are copied exactly as typed on the sheets (blank cells show "—"). To
+update it, re-export the workbooks' data into the `DATA` object near the top
+of the page's script.
+
 ## Running it
 
 No build step or server-side code is required — it's a static HTML/CSS/JS app.
@@ -606,6 +630,8 @@ remove someone's access, delete (or disable) their user.
   from a file in the export format, signed in as the account in
   `PK030_USERNAME` / `PK030_PASSWORD` (add-only, with Activity Log entries);
   used by Claude Code sessions (see `CLAUDE.md`).
+- `cremer-recipes.html` — the standalone Cremer Recipe Finder (Line 9 and 10
+  counter settings, data embedded).
 - `CLAUDE.md` — instructions Claude Code reads at the start of each session.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth
