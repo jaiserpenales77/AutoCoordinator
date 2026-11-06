@@ -186,10 +186,28 @@ tr.d td:not(:first-child){background:var(--diff);font-weight:800}
   .p-fg{font-size:34px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@page{size:auto;margin:10mm}
 @media print{
-  body{background:#fff}.bgfx,.wrap,footer,.scrim,.tray,.p-foot,.iconbtn{display:none!important}
-  .panel{position:static;transform:none;width:100%;max-height:none;box-shadow:none;border-radius:0;overflow:visible}.p-body{overflow:visible}.sec{break-inside:avoid}
-  .p-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#fff!important;color:#000}
+  .bgfx,.wrap,footer,.scrim,.tray,.p-foot,.iconbtn,.modal,.toast,.sec.also-sec{display:none!important}
+  *{animation:none!important;transition:none!important;box-shadow:none!important}
+  .panel{position:static;transform:none!important;opacity:1;visibility:visible;width:100%;max-height:none;border-radius:0;overflow:visible;background:#fff;display:block}
+  .p-head{padding:0 0 6px;border:0;border-bottom:2px solid var(--c);text-align:left;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .p-fg{font-size:32px}.p-bulk{font-size:17px;margin:0}
+  .p-tag{margin:0 0 0 auto;padding:0;background:none;font-size:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .p-body{overflow:visible;padding:8px 0 0}
+  .keys{gap:6px;margin:0 0 8px}
+  .key{padding:4px;border-radius:6px;border:1px solid #ccc}
+  .key b{font-size:22px}.key span{font-size:11px}
+  .p-body{columns:2;column-gap:14px}
+  .keys,.note{column-span:all}
+  .sec{break-inside:avoid;margin:0 0 10px}
+  .sec h3{font-size:11px;margin:0 0 3px 2px;color:#555}
+  .box{border:1px solid #ccc;border-radius:6px}
+  .kv{padding:4px 9px;border-top:1px solid #e3e3e3}
+  .kv .k{font-size:12.5px;color:#333}.kv .v{font-size:13.5px}
+  .on-off{padding:0;background:none!important;font-size:12px}
+  .note{font-size:9.5px;margin-top:4px;text-align:left;color:#666}
 }
 </style>
 </head>
@@ -329,7 +347,7 @@ function open(uid){
     const [c,ic]=gs(g);
     h += `<div class="sec" style="animation-delay:${gi*35}ms"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>`<div class="kv"><span class="k">${esc(f.label)}</span>${html(f.key,r[f.key])}</div>`).join('')}</div></div>`;
   });
-  if (others.length) h += `<div class="sec" style="--s:${col(r)}"><h3>Same FG, other recipe</h3><div class="also">${others.map(x=>`<button class="chip size" data-go="${x.uid}" style="--c:${col(x)}"><span class="dot"></span>Line ${x.line} · ${x.size}cc${x.bulk!==r.bulk?' · '+esc(x.bulk):''}</button>`).join('')}</div></div>`;
+  if (others.length) h += `<div class="sec also-sec" style="--s:${col(r)}"><h3>Same FG, other recipe</h3><div class="also">${others.map(x=>`<button class="chip size" data-go="${x.uid}" style="--c:${col(x)}"><span class="dot"></span>Line ${x.line} · ${x.size}cc${x.bulk!==r.bulk?' · '+esc(x.bulk):''}</button>`).join('')}</div></div>`;
   h += `<div class="note">Workbook sheet: “${esc(r.sheet)}”</div></div>
     <div class="p-foot"><button class="btn primary" id="pCopy">Copy</button><button class="btn" id="pCmp">${cmpLabel(uid)}</button><button class="btn" id="pPrint">Print</button></div>`;
   const p=$('#panel'); p.style.setProperty('--c',col(r)); p.innerHTML=h; p.classList.add('show'); p.setAttribute('aria-hidden','false'); $('#scrim').classList.add('show');
