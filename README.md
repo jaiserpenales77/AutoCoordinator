@@ -361,9 +361,9 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 300, 400 and 500 cc; Line 10 150 and 225 cc.
 
 - Search by FG item, bulk item or sheet name (press `/` to jump to the
-  search box), and narrow it with the line and bottle-size chips. Results are
-  colour cards; each size chip and card uses the bottle-size colour from the
-  paper guides, and the recipe panel's header takes the same colour.
+  search box), and narrow it with the line and bottle-size chips. The page
+  uses one accent colour; the coloured dot or bar on each size chip, result
+  card and recipe panel is the bottle-size colour from the paper guides.
 - Tap a recipe for every setting, grouped as on the sheet, with Count,
   Precount, Bottles/min and Dosing speed shown first. From there: Copy, Print,
   or Compare; the panel also links the same FG on the other line.
