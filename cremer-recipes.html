@@ -108,8 +108,9 @@ footer{text-align:center;color:var(--ink3);font-size:12.5px;padding:34px 16px 10
 /* detail panel */
 .scrim{position:fixed;inset:0;background:rgba(20,10,40,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
 .scrim.show{opacity:1;pointer-events:auto}
-.panel{--c:var(--g1);position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--bg);z-index:21;transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
-.panel.show{transform:none;box-shadow:-12px 0 40px rgba(0,0,0,.18)}
+.panel{--c:var(--g1);position:fixed;left:50%;top:50%;width:min(560px,calc(100% - 32px));max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);background:var(--bg);z-index:21;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.28);opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.96);transition:opacity .22s,transform .28s cubic-bezier(.2,.8,.2,1),visibility .28s}
+.panel.show{opacity:1;visibility:visible;transform:translate(-50%,-50%)}
+.panel .p-head,.panel .p-foot{flex:none}.panel .p-body{min-height:0}
 .p-head{position:relative;overflow:hidden;padding:24px 20px 18px;text-align:center;background:var(--card);border-bottom:1px solid var(--line);border-top:5px solid var(--c)}
 .p-head .iconbtn{position:absolute;right:14px;top:14px}
 .p-fg{position:relative;font-size:40px;font-weight:900;letter-spacing:-.03em;line-height:1}
@@ -177,6 +178,7 @@ tr.d td:not(:first-child){background:var(--diff);font-weight:800}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:560px){
+  .panel{width:calc(100% - 20px);max-height:calc(100dvh - 20px);border-radius:18px}
   header{padding-top:30px}header .iconbtn{top:24px}
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .card{padding:16px 8px 14px}.card .fg{font-size:20px}
@@ -186,7 +188,7 @@ tr.d td:not(:first-child){background:var(--diff);font-weight:800}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media print{
   body{background:#fff}.bgfx,.wrap,footer,.scrim,.tray,.p-foot,.iconbtn{display:none!important}
-  .panel{position:static;transform:none;width:100%;box-shadow:none}.p-body{overflow:visible}.sec{break-inside:avoid}
+  .panel{position:static;transform:none;width:100%;max-height:none;box-shadow:none;border-radius:0;overflow:visible}.p-body{overflow:visible}.sec{break-inside:avoid}
   .p-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
