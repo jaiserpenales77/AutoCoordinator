@@ -368,9 +368,15 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   Precount, Bottles/min and Dosing speed shown first. From there: Copy, Print
   (always one page, Letter or A4: a header with the size colour, the four key
   numbers, settings in two columns, and the source sheet and print date), or
-  Compare; the panel also links the same FG on the other line.
-- Add 2–4 recipes to Compare to see them side by side with differences
-  highlighted ("Only differences" hides the rest).
+  **Have better settings?**; the window also links the same FG on the other
+  line.
+- **Have better settings?** turns every setting into a box: the person types
+  the values they'd change (changed ones show old → new), adds their name and
+  why, and sends it. Suggestions land in the **Suggestions** tab (count badge
+  on the tab, a 💡 badge on the recipe card and a banner in the recipe), where
+  they can be filtered Open / Done / All, marked done, deleted, copied as text
+  or downloaded as a CSV for Excel. They are saved in that browser only
+  (localStorage), not in the database, so each device has its own list.
 - Light / dark theme (remembered in the browser).
 
 Values are copied exactly as typed on the sheets (blank cells show "—"). To
