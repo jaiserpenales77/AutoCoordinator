@@ -360,17 +360,15 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 *Cremer Recipe Guide Line 9* and *Line 10* workbooks (10.06.26): Line 9 225,
 300, 400 and 500 cc; Line 10 150 and 225 cc.
 
-- Search by FG item, bulk item or sheet name (several words narrow it down;
-  press `/` to jump to the search box), filter by line and bottle size, sort by
-  FG, bulk, count, BPM or size.
-- Each card's colour stripe is the bottle-size colour from the paper guides.
-  Tap a card for every setting, grouped as on the sheet, with a quick
-  "find a setting" filter, copy-to-clipboard and print. It also lists the same
-  FG on other recipes and other FGs on the same bulk (a starting point for a
-  new item's vibratory and dosing settings).
-- Tick **Compare** on 2–4 recipes to see them side by side with differences
+- Search by FG item, bulk item or sheet name (press `/` to jump to the
+  search box), and narrow it with the line and bottle-size chips. The dot on
+  each size and each recipe is the bottle-size colour from the paper guides.
+- Tap a recipe for every setting, grouped as on the sheet, with Count,
+  Precount, Bottles/min and Dosing speed shown first. From there: Copy, Print,
+  or Compare; the panel also links the same FG on the other line.
+- Add 2–4 recipes to Compare to see them side by side with differences
   highlighted ("Only differences" hides the rest).
-- Favorites and the theme are kept in the browser.
+- Light / dark theme (remembered in the browser).
 
 Values are copied exactly as typed on the sheets (blank cells show "—"). To
 update it, re-export the workbooks' data into the `DATA` object near the top
