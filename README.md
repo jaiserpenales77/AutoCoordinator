@@ -362,9 +362,9 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 
 - Branded as part of LineUp: a slim dark top bar (it stays while scrolling)
   with LineUp's logo (three amber bottles on a conveyor) and the LineUp
-  wordmark — gold motion slashes, "Line" in Sora Light and "Up" in gold Sora
-  ExtraBold, on a gold conveyor belt with rollers. The wordmark is drawn as
-  shapes inside the page (Sora is SIL Open Font License), so it looks the same
+  wordmark — "LINE" in heavy caps with "UP" in gold, the U and P each
+  stepping higher (Archivo Black). The wordmark is drawn as
+  shapes inside the page (Archivo is SIL Open Font License), so it looks the same
   everywhere without the font installed; the intro uses it too. **Cremer
   Recipes** sits beside it (under it on phones) as the sub-app, with the Recipes /
   Manage tabs and light/dark switch on the right. Below: a short headline, the search bar (it sticks under the top bar)
