@@ -205,6 +205,46 @@ header.topbar .iconbtn{position:static;width:36px;height:36px;border-radius:10px
 @media (max-width:560px){ .tb-wordmark{height:20px} }
 @media (max-width:380px){ .tb-wordmark{height:16px} }
 
+/* "Updated …" row on cards */
+.card .upd{position:relative;margin-top:9px;font-size:11.5px;font-weight:600;color:var(--ink3)}
+.card .upd.recent{color:var(--g1)}
+.card .upd.recent::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g1);margin-right:5px;vertical-align:1px}
+.note b{color:var(--ink2)}
+/* update history panel */
+.hist{display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;text-align:left}
+.h-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--line)}
+.h-head b{display:block;font-size:15px}.h-head small{font-size:12px;color:var(--ink3);font-weight:600}
+.h-close{width:30px;height:30px;border-radius:9px}
+.h-list{overflow:auto;padding:4px 8px 10px;flex:1;min-height:0}
+.h-day{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:12px 8px 4px}
+.h-item{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;border:0;background:none;padding:8px;border-radius:10px;transition:background .12s}
+button.h-item:hover{background:var(--bg)}
+.h-item .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c,var(--ink3));margin-top:6px}
+.h-item.base .dot{background:var(--ink3)}
+.h-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.h-t{font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.h-t b{color:var(--ink)}
+.h-main small{font-size:11.5px;color:var(--ink3)}.h-main em{font-style:normal;font-weight:700;color:var(--warn)}
+.h-f{color:var(--ink2)!important}
+.h-act{flex:none;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;margin-top:2px}
+.h-act.edited{background:color-mix(in srgb,var(--g1) 13%,var(--card));color:var(--g1)}
+.h-act.added{background:color-mix(in srgb,var(--ok) 14%,var(--card));color:var(--ok)}
+.h-act.removed{background:color-mix(in srgb,#dc2626 12%,var(--card));color:#dc2626}
+.h-act.restored,.h-act.base{background:var(--bg);color:var(--ink2)}
+.h-more{margin:8px auto 2px;font-size:13px;padding:6px 14px}
+.h-foot{padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--ink2);background:var(--bg)}
+.hist-fab{position:fixed;right:16px;bottom:16px;z-index:15;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(15,23,42,.16);transition:transform .12s}
+.hist-fab:active{transform:scale(.95)}
+@media (min-width:1180px){
+  .wrap{max-width:1400px;display:grid;grid-template-columns:minmax(0,1fr) 290px;column-gap:28px;align-items:start}
+  .wrap>section{grid-column:1;min-width:0}
+  .hist{display:flex;grid-column:2;grid-row:1 / span 3;position:sticky;top:78px;max-height:calc(100vh - 96px);margin-top:30px}
+  .h-close,.hist-fab{display:none}
+  .sticky::before{inset:0 -14px;border-radius:0 0 18px 18px}
+}
+@media (max-width:1179.98px){
+  .hist.open{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:25;box-shadow:0 24px 60px rgba(15,23,42,.30);animation:pop .25s both}
+}
+
 /* tabs + suggestions */
 .tabs{display:flex;gap:4px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;width:max-content;box-shadow:var(--shadow)}
 .tabs button{border:0;background:none;padding:8px 18px;border-radius:999px;font-weight:700;color:var(--ink2);display:inline-flex;gap:8px;align-items:center;transition:background .2s,color .2s}
@@ -579,7 +619,7 @@ select.vin{text-align:left;padding-right:4px}
   .ps.lots .ps-kv{font-size:9px}
   html,body{background:#fff!important;color:#14161d}
   *{animation:none!important;transition:none!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .bgfx,.topbar,.wrap,footer,.scrim,.p-foot,.iconbtn,.toast,.sec.also-sec,.note,.p-tag,.sbanner{display:none!important}
+  .bgfx,.topbar,.hist,.hist-fab,.wrap,footer,.scrim,.p-foot,.iconbtn,.toast,.sec.also-sec,.note,.p-tag,.sbanner{display:none!important}
   .print-only{display:block}
   body.print-sugg .panel,body.print-sugg .scrim{display:none!important}
   body.print-sugg .ps{display:block}
@@ -683,7 +723,9 @@ select.vin{text-align:left;padding-right:4px}
   <div id="results"></div>
   </section>
   <section id="viewManage" hidden></section>
+  <aside class="hist" id="hist" aria-label="Update history"></aside>
 </div>
+<button class="hist-fab" id="histFab" type="button" aria-controls="hist">🕘 History</button>
 <footer>From the Cremer Recipe Guides, Line 9 &amp; Line 10 (10.06.26), plus recipes added in Manage. Always confirm settings on the machine.</footer>
 
 <div class="scrim" id="scrim"></div>
@@ -745,7 +787,13 @@ $('#theme').onclick = () => {
 
 /* ---- recipes = the built-in data + changes made in Manage on this device ---- */
 const EKEY = 'edits.'+REV;   // a downloaded updated file has a new rev, so it starts clean
-const edits = () => { const e=store.get(EKEY,null)||{}; return {added:e.added||[], edited:e.edited||{}, removed:e.removed||[]}; };
+const edits = () => { const e=store.get(EKEY,null)||{}; return {added:e.added||[], edited:e.edited||{}, removed:e.removed||[], log:e.log||[]}; };
+/* ---- update history: the guide import, plus every change made in Manage ---- */
+const GUIDE_DATE = DATA.guideDate || '2026-10-06';   // the Cremer Recipe Guides are dated 10.06.26
+const GUIDE_COUNT = DATA.guideCount || DATA.recipes.length;
+const fmtDay = iso => new Date(String(iso).length===10 ? iso+'T12:00:00' : iso).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+const allHistory = () => [...(DATA.history||[]).map(h=>({...h,local:false})), ...edits().log.map(h=>({...h,local:true}))].sort((a,b)=>b.at.localeCompare(a.at));
+const logChange = (e, entry) => { (e.log=e.log||[]).push({at:new Date().toISOString(), ...entry}); };
 const saveEdits = e => store.set(EKEY, e);
 const nChanges = e => Object.keys(e.edited).length + e.added.length + e.removed.length;
 const RECORD_KEYS = ['id','fg','bulk','line','size','sheet',...FIELDS.map(f=>f.key)];
@@ -761,13 +809,15 @@ function buildRecipes(){
   e.added.forEach(a=>list.push({...a, status:'new'}));
   list.forEach((r,i)=>{ r.uid=i; r.hay=[r.id,r.fg,r.bulk,r.sheet].join(' ').toLowerCase(); });
   list.sort((a,b)=>nat(a.fg,b.fg)||a.line-b.line||a.size-b.size).forEach((r,i)=>r.order=i);
+  const last={}; allHistory().forEach(h=>{ if(!(h.k in last)) last[h.k]=h; });
+  list.forEach(r=>{ const h=last[r.k]; r.updated = h && h.action!=='removed' ? h.at : GUIDE_DATE; r.updLocal = !!(h && h.local); });
   R=list; byUid=Object.fromEntries(R.map(r=>[r.uid,r])); byKey=Object.fromEntries(R.map(r=>[r.k,r]));
   $('#badgeT').textContent = `${linesInUse().map(l=>'Line '+l).join(' · ')} · ${R.length} recipes`;
 }
 const rKey = r => r.k;
 const linesInUse = () => [...new Set([9,10,...R.map(r=>+r.line)])].sort((a,b)=>a-b);
 const sourceOf = r => r.status==='new' ? 'Added in Manage' : `Cremer Recipe Guide Line ${String(r.k).split('|')[0]} (10.06.26) · sheet “${esc(r.sheet)}”`+(r.status==='edited'?' · edited in Manage':'');
-function refreshAll(){ buildRecipes(); renderFilters(); render(); if(state.tab==='manage') renderManage(); }
+function refreshAll(){ buildRecipes(); renderFilters(); render(); renderHistory(); if(state.tab==='manage') renderManage(); }
 
 /* ---- Manage tab lock (same password as the Cremer Excel sheets) ----
    Excel keeps only a salted hash of its sheet password, so the password is set
@@ -891,6 +941,7 @@ function render(){
       <div class="bulk">${hl(r.bulk||'—',toks)}</div>
       <span class="tag">Line ${r.line} · ${r.size} cc</span>
       <div class="mini"><span>Count <b class="num">${esc(text('count',r.count))}</b></span><span>BPM <b class="num">${esc(text('bpm',r.bpm))}</b></span></div>
+      <div class="upd${r.updated!==GUIDE_DATE?' recent':''}">Updated ${esc(fmtDay(r.updated))}</div>
     </button>`).join('')}</div>` + (list.length>shown.length?`<button class="more" id="more">Show ${list.length-shown.length} more</button>`:'');
   const m=$('#more'); if(m) m.onclick=()=>{state.limit=1e9;render();};
 }
@@ -919,8 +970,8 @@ function open(uid){
     h += `<div class="sec" style="animation-delay:${gi*35}ms"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>`<div class="kv"><span class="k">${esc(f.label)}</span>${html(f.key,r[f.key])}</div>`).join('')}</div></div>`;
   });
   if (others.length) h += `<div class="sec also-sec"><h3>Same FG, other recipe</h3><div class="also">${others.map(x=>`<button class="chip size" data-go="${x.uid}" style="--c:${col(x)}"><span class="dot"></span>Line ${x.line} · ${x.size}cc${x.bulk!==r.bulk?' · '+esc(x.bulk):''}</button>`).join('')}</div></div>`;
-  h += `<div class="note">Workbook sheet: “${esc(r.sheet)}”${r.status?` · ${r.status==='new'?'added':'edited'} in Manage on this device`:''}</div>
-    <div class="p-print-foot print-only"><span>Source: <b>${sourceOf(r)}</b></span><span>Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
+  h += `<div class="note">Last updated <b>${esc(fmtDay(r.updated))}</b> · workbook sheet “${esc(r.sheet)}”${r.status?` · ${r.status==='new'?'added':'edited'} in Manage on this device`:''}</div>
+    <div class="p-print-foot print-only"><span>Source: <b>${sourceOf(r)}</b></span><span>Updated ${esc(fmtDay(r.updated))} · Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
     <div class="p-foot"><button class="btn" id="pCopy">Copy</button><button class="btn primary grow" id="pBetter">💡 Have better settings?</button><button class="btn" id="pPrint">Print</button></div>`;
   const p = showPanel(r,h);
   $('#pPrint').onclick=()=>{ document.body.classList.remove('print-sugg'); print(); }; $('#pCopy').onclick=()=>copy(r);
@@ -1055,7 +1106,7 @@ function renderManage(){
     <div class="m-list">${list.slice(0,state.mLimit||60).map(r=>`
       <div class="m-row" style="--c:${col(r)}">
         <span class="dot"></span>
-        <div class="m-main"><b>${esc(r.fg)}</b> <span>${esc(r.bulk)}</span><div class="m-sub">Line ${r.line} · ${r.size} cc${r.status?` · <em class="m-st ${r.status}">${r.status==='new'?'New':'Edited'}</em>`:''}</div></div>
+        <div class="m-main"><b>${esc(r.fg)}</b> <span>${esc(r.bulk)}</span><div class="m-sub">Line ${r.line} · ${r.size} cc · updated ${esc(fmtDay(r.updated))}${r.status?` · <em class="m-st ${r.status}">${r.status==='new'?'New':'Edited'}</em>`:''}</div></div>
         <button class="btn" data-medit="${esc(r.k)}">Edit</button>
         <button class="btn danger" data-mdel="${esc(r.k)}">Remove</button>
       </div>`).join('')||'<div class="empty">No recipe matches.</div>'}</div>
@@ -1072,10 +1123,12 @@ $('#viewManage').addEventListener('click', e => {
   if (b.id==='mNew') editRecipe(null);
   else if (b.dataset.medit) editRecipe(b.dataset.medit);
   else if (b.dataset.mdel) removeRecipe(b.dataset.mdel);
-  else if (b.dataset.mrestore){ const e=edits(); e.removed=e.removed.filter(k=>k!==b.dataset.mrestore); saveEdits(e); refreshAll(); toast('Restored'); }
+  else if (b.dataset.mrestore){ const e=edits(), k=b.dataset.mrestore, r0=DATA.recipes.find(x=>(x.line+'|'+x.sheet)===k);
+    e.removed=e.removed.filter(x=>x!==k); if(r0) logChange(e,{action:'restored', k, fg:r0.fg, bulk:r0.bulk, line:r0.line, size:r0.size});
+    saveEdits(e); refreshAll(); toast('Restored'); }
   else if (b.id==='mMore'){ state.mLimit=1e9; renderManage(); }
   else if (b.id==='mExport') exportFile();
-  else if (b.id==='mUndo'){ if(confirm('Undo all recipe changes made on this device? This puts every recipe back to how it is in the file.')){ saveEdits({added:[],edited:{},removed:[]}); refreshAll(); toast('All changes undone'); } }
+  else if (b.id==='mUndo'){ if(confirm('Undo all recipe changes made on this device? This puts every recipe back to how it is in the file.')){ saveEdits({added:[],edited:{},removed:[],log:[]}); refreshAll(); toast('All changes undone'); } }
   else if (b.id==='mSetPw'||b.id==='mChgPw') passwordDialog(b.id==='mChgPw');
   else if (b.id==='mLock'){ setUnlocked(false); renderManage(); toast('Locked'); }
 });
@@ -1125,6 +1178,12 @@ function editRecipe(k, prefill){
     const rec = {fg, bulk, line, size, id:(fg+' '+bulk).trim()};
     p.querySelectorAll('.vin').forEach(i=>{ const v=toVal(i.value); if(!blank(v)) rec[i.dataset.k]=v; });
     const e=edits();
+    const was = v => blank(v) ? '' : String(v);
+    const fields = isNew ? [] : [
+      ...(String(cur.fg).toUpperCase()!==fg ? ['FG item'] : []), ...(String(cur.bulk||'').toUpperCase()!==bulk ? ['Bulk item'] : []),
+      ...(+cur.line!==line ? ['Line'] : []), ...(+cur.size!==size ? ['Bottle size'] : []),
+      ...FIELDS.filter(f=>was(cur[f.key])!==was(rec[f.key])).map(f=>f.label)];
+    if (!isNew && !fields.length){ close(true); toast('Nothing changed'); return; }
     if (isNew){
       const nk='new|'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
       rec.sheet=uniqueSheet(rec.id, line, nk); rec.k=nk; e.added.push(clean(rec)); e.added[e.added.length-1].k=nk; k=nk;
@@ -1137,6 +1196,7 @@ function editRecipe(k, prefill){
       const same = JSON.stringify(clean(rec))===JSON.stringify(clean({...base}));
       if (same) delete e.edited[k]; else e.edited[k]=clean(rec);
     }
+    logChange(e, {action:isNew?'added':'edited', k, fg, bulk, line, size, fields});
     saveEdits(e);
     close(true); refreshAll(); toast(isNew?'✓ Recipe added':'✓ Changes saved');
   };
@@ -1148,11 +1208,15 @@ function removeRecipe(k){
   const e=edits();
   if (r.status==='new') e.added=e.added.filter(a=>a.k!==k);
   else { delete e.edited[k]; if(!e.removed.includes(k)) e.removed.push(k); }
+  logChange(e, {action:'removed', k, fg:r.fg, bulk:r.bulk, line:r.line, size:r.size});
   saveEdits(e); refreshAll(); toast('Recipe removed'); return true;
 }
 function exportFile(){
   const recs = [...R].sort((a,b)=>a.order-b.order).map(clean);
-  const data = {fields: DATA.fields, recipes: recs, rev: Date.now().toString(36)};
+  // in the downloaded file every recipe's key becomes line|sheet, so point its history at the new key
+  const newKey = Object.fromEntries(R.map(r=>[r.k, r.line+'|'+r.sheet]));
+  const history = allHistory().reverse().map(({local, ...h})=>({...h, k: newKey[h.k] || h.k}));
+  const data = {fields: DATA.fields, recipes: recs, rev: Date.now().toString(36), guideDate: GUIDE_DATE, guideCount: GUIDE_COUNT, history};
   const json = JSON.stringify(data).replace(/</g,'\\u003c');
   const m = PAGE_SRC.match(/const DATA = .*;\n/);
   if (!m){ toast('Could not build the file'); return; }
@@ -1175,6 +1239,39 @@ addEventListener('storage', e => {
 });
 
 buildRecipes(); renderFilters(); render();
+
+/* update history panel (sticky on wide screens; a drawer from the History button on smaller ones) */
+const ACT = {added:'Added', edited:'Edited', removed:'Removed', restored:'Restored'};
+let histAll = false;
+function renderHistory(){
+  const all = allHistory(), shown = histAll ? all : all.slice(0, 40);
+  const days = []; shown.forEach(h=>{ const d=fmtDay(h.at); if(!days.length || days[days.length-1].d!==d) days.push({d, items:[]}); days[days.length-1].items.push(h); });
+  const local = all.filter(h=>h.local).length;
+  $('#hist').innerHTML = `<div class="h-head"><div><b>Update history</b><small>${all.length ? all.length+' change'+(all.length>1?'s':'') : 'No changes yet'}</small></div>
+      <button class="iconbtn h-close" id="histClose" aria-label="Close">${CLOSE_SVG}</button></div>
+    <div class="h-list">
+      ${days.map(g=>`<div class="h-day">${esc(g.d)}</div>${g.items.map(h=>`
+        <button class="h-item" data-hk="${esc(h.k)}" style="--c:${col(h)}" type="button">
+          <span class="dot"></span>
+          <span class="h-main"><span class="h-t"><b>${esc(h.fg)}</b> ${esc(h.bulk||'')}</span>
+            <small>Line ${esc(h.line)} · ${esc(h.size)} cc${h.local?' · <em>this device</em>':''}</small>
+            ${h.fields&&h.fields.length?`<small class="h-f">${esc(h.fields.join(', '))}</small>`:''}</span>
+          <span class="h-act ${h.action}">${ACT[h.action]||esc(h.action)}</span>
+        </button>`).join('')}`).join('')}
+      ${all.length>shown.length?`<button class="more h-more" id="histMore" type="button">Show all ${all.length}</button>`:''}
+      <div class="h-day">${esc(fmtDay(GUIDE_DATE))}</div>
+      <div class="h-item base"><span class="dot"></span><span class="h-main"><span class="h-t"><b>Cremer Recipe Guides</b></span><small>Line 9 &amp; Line 10 · ${GUIDE_COUNT} recipes imported</small></span><span class="h-act base">Guide</span></div>
+    </div>
+    ${local?`<div class="h-foot">${local} change${local>1?'s':''} on this device only. Share them with <b>Download updated file</b> in Manage.</div>`:''}`;
+}
+$('#hist').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if (b.id==='histClose'){ $('#hist').classList.remove('open'); return; }
+  if (b.id==='histMore'){ histAll=true; renderHistory(); return; }
+  if (b.dataset.hk){ const r=byKey[b.dataset.hk]; if(!r){ toast('That recipe was removed'); return; } $('#hist').classList.remove('open'); open(r.uid); }
+});
+$('#histFab').onclick = () => $('#hist').classList.toggle('open');
+renderHistory();
 const stk=$('.sticky'); addEventListener('scroll',()=>stk.classList.toggle('stuck',stk.getBoundingClientRect().top<=parseFloat(getComputedStyle(stk).top)+1&&scrollY>40),{passive:true});
 </script>
 </body>
