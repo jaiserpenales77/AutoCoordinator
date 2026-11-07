@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cremer Recipes</title>
-<script>/* intro: plays when the app is opened, not on a refresh, never with reduced motion */
-try{ if(!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('cremer-intro-played')){
-  sessionStorage.setItem('cremer-intro-played','1'); document.documentElement.classList.add('intro-on'); } }catch(e){}</script>
+<script>/* intro: plays every time the app is opened (never with reduced motion) */
+try{ if(!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('intro-on'); }catch(e){}</script>
 <meta name="description" content="Look up Cremer counter settings by FG item or bulk item.">
 <style>
 :root{

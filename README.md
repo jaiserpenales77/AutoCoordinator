@@ -362,8 +362,8 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 
 - Opens with the same short intro as LineUp: bottles ride in on a conveyor, a
   cap drops onto the middle one and "Welcome to Cremer Recipes" rises in, then
-  it fades into the app (about 3 seconds). It plays when the app is opened, not
-  on a refresh, never on devices set to reduce motion; a click or any key skips
+  it fades into the app (about 3 seconds). It plays every time the app is
+  opened (never on devices set to reduce motion); a click or any key skips
   it.
 - Search by FG item, bulk item or sheet name (press `/` to jump to the
   search box), and narrow it with the line and bottle-size chips. The page
