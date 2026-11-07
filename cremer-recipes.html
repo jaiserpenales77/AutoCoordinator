@@ -245,6 +245,46 @@ button.h-item:hover{background:var(--bg)}
   .hist.open{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:25;box-shadow:0 24px 60px rgba(15,23,42,.30);animation:pop .25s both}
 }
 
+/* recipe window laid out like the printout (screen only; the printout keeps its own rules) */
+@media screen{
+  .panel.view{width:min(1000px,calc(100% - 32px))}
+  .panel.view .p-head{display:grid;grid-template-columns:1fr auto;align-items:end;gap:6px 20px;text-align:left;padding:22px 70px 18px 28px;border-top:5px solid var(--c)}
+  .panel.view .p-kicker{display:block;grid-column:1/-1;font-size:10.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3)}
+  .panel.view .p-name{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .panel.view .p-fg{font-size:46px;letter-spacing:-.03em}
+  .panel.view .p-bulk{font-size:21px;margin:0}
+  .panel.view .p-size{display:block;text-align:right}
+  .panel.view .p-size .pill{display:inline-block;background:var(--c);color:#fff;font-weight:800;font-size:14.5px;padding:7px 16px;border-radius:999px}
+  .panel.view .p-size .paper{display:block;margin-top:5px;font-size:12px;color:var(--ink3);font-weight:600}
+  .panel.view .p-tag{display:none}
+  .panel.view .p-body{padding:22px 28px 26px;columns:2;column-gap:40px}
+  .panel.view .keys{column-span:all;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+  .panel.view .key{border:0;border-radius:14px;padding:14px 16px 12px;text-align:left;background:color-mix(in srgb,var(--c) 13%,var(--card))}
+  .panel.view .key b{font-size:34px;font-weight:900;line-height:1.05;color:var(--ink)}
+  .panel.view .key span{display:block;margin-top:3px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+  .panel.view .sec{break-inside:avoid;margin:0 0 20px}
+  .panel.view .sec h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;padding:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--ink);border-bottom:2px solid var(--ink)}
+  .panel.view .sec h3::before{content:"";flex:none;width:9px;height:9px;border-radius:2px;background:var(--c)}
+  .panel.view .box{border:0;border-radius:0;background:none;overflow:visible}
+  .panel.view .kv{padding:9px 2px;border-top:0;border-bottom:1px solid var(--line)}
+  .panel.view .kv:last-child{border-bottom:0}
+  .panel.view .kv .k{font-size:15px}
+  .panel.view .kv .v{font-size:18px;font-weight:800}
+  .panel.view .on-off{font-size:12px;padding:3px 11px}
+  .panel.view .also-sec,.panel.view .note{column-span:all}
+  .panel.view .also{justify-content:flex-start}
+  .panel.view .note{margin-top:4px;padding-top:12px;border-top:1px solid var(--line);text-align:left;font-size:13px}
+}
+@media screen and (max-width:720px){
+  .panel.view{width:calc(100% - 20px)}
+  .panel.view .p-head{grid-template-columns:1fr;padding:18px 58px 14px 18px}
+  .panel.view .p-size{text-align:left}
+  .panel.view .p-fg{font-size:38px}.panel.view .p-bulk{font-size:18px}
+  .panel.view .p-body{columns:1;padding:16px 18px 22px}
+  .panel.view .keys{grid-template-columns:repeat(2,1fr);gap:8px}
+  .panel.view .key b{font-size:28px}
+}
+
 /* tabs + suggestions */
 .tabs{display:flex;gap:4px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;width:max-content;box-shadow:var(--shadow)}
 .tabs button{border:0;background:none;padding:8px 18px;border-radius:999px;font-weight:700;color:var(--ink2);display:inline-flex;gap:8px;align-items:center;transition:background .2s,color .2s}
@@ -958,7 +998,7 @@ function headHtml(r){
       <span class="p-tag">Line ${r.line} · ${r.size} cc${paperOf(r)?' · '+paperOf(r):''}</span></div>`;
 }
 function showPanel(r,h){
-  const p=$('#panel'); p.style.setProperty('--c',col(r)); p.innerHTML=h; p.dataset.dirty=''; p.classList.add('show'); p.setAttribute('aria-hidden','false'); $('#scrim').classList.add('show');
+  const p=$('#panel'); p.classList.remove('view'); p.style.setProperty('--c',col(r)); p.innerHTML=h; p.dataset.dirty=''; p.classList.add('show'); p.setAttribute('aria-hidden','false'); $('#scrim').classList.add('show');
   p.querySelector('.p-body').scrollTop=0; $('#pClose').onclick=()=>close(); return p;
 }
 function open(uid){
@@ -973,7 +1013,7 @@ function open(uid){
   h += `<div class="note">Last updated <b>${esc(fmtDay(r.updated))}</b> · workbook sheet “${esc(r.sheet)}”${r.status?` · ${r.status==='new'?'added':'edited'} in Manage on this device`:''}</div>
     <div class="p-print-foot print-only"><span>Source: <b>${sourceOf(r)}</b></span><span>Updated ${esc(fmtDay(r.updated))} · Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
     <div class="p-foot"><button class="btn" id="pCopy">Copy</button><button class="btn primary grow" id="pBetter">💡 Have better settings?</button><button class="btn" id="pPrint">Print</button></div>`;
-  const p = showPanel(r,h);
+  const p = showPanel(r,h); p.classList.add('view');
   $('#pPrint').onclick=()=>{ document.body.classList.remove('print-sugg'); print(); }; $('#pCopy').onclick=()=>copy(r);
   $('#pBetter').onclick=()=>suggest(uid);
   p.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>open(+b.dataset.go));

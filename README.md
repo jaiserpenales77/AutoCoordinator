@@ -381,8 +381,10 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   search box), and narrow it with the line and bottle-size chips. The page
   uses one accent colour; the coloured dot or bar on each size chip, result
   card and recipe panel is the bottle-size colour from the paper guides.
-- Tap a recipe for every setting, grouped as on the sheet, with Count,
-  Precount, Bottles/min and Dosing speed shown first. From there: Copy, Print
+- Tap a recipe for every setting in a large window laid out like the printout:
+  the FG and bulk item with the line/size pill, Count, Precount, Bottles/min and
+  Dosing speed in tinted tiles, then the settings in two columns (one on
+  phones) grouped as on the sheet. From there: Copy, Print
   (always one page, Letter or A4: a header with the size colour, the four key
   numbers, settings in two columns, and the source sheet and print date), or
   **Have better settings?**; the window also links the same FG on the other
