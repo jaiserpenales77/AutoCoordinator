@@ -215,7 +215,16 @@ header.topbar .iconbtn{position:static;width:36px;height:36px;border-radius:10px
 .card .upd.recent::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g1);margin-right:5px;vertical-align:1px}
 .note b{color:var(--ink2)}
 /* update history panel */
-.hist{display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;text-align:left}
+.hist{display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:visible;text-align:left}
+.h-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;border-radius:inherit}
+/* the pull tab on the panel's left edge: stays peeking out at the screen edge when the panel is collapsed */
+.hist-tab{position:absolute;left:-36px;top:18px;width:36px;padding:12px 0 14px;display:flex;flex-direction:column;align-items:center;gap:9px;
+  border:1px solid var(--line);border-right:0;border-radius:12px 0 0 12px;background:var(--glass);color:var(--ink2);box-shadow:-8px 6px 18px -10px rgba(15,23,42,.35);transition:color .15s}
+.hist-tab:hover{color:var(--g1)}
+.hist-tab svg{transform:rotate(180deg);transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+.hist-tab .lbl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.hist-tab .n{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--g1);color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center}
+.hist-tab .n:empty{display:none}
 .h-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--line)}
 .h-head b{display:block;font-size:15px}.h-head small{font-size:12px;color:var(--ink3);font-weight:600}
 .h-close{width:30px;height:30px;border-radius:9px}
@@ -237,22 +246,19 @@ button.h-item:hover{background:var(--bg)}
 .h-act.restored,.h-act.base{background:var(--bg);color:var(--ink2)}
 .h-more{margin:8px auto 2px;font-size:13px;padding:6px 14px}
 .h-foot{padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--ink2);background:var(--bg)}
-.hist-fab{position:fixed;right:16px;bottom:16px;z-index:15;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(15,23,42,.16);transition:transform .12s}
-.hist-fab:active{transform:scale(.95)}
 @media (min-width:1180px){
   /* docked sidebar: full height on the right, under the top bar; the page is centred in the space left of it */
   .wrap,footer{margin-right:var(--side-now);transition:margin-right .34s cubic-bezier(.2,.8,.2,1)}
-  .hist-hidden{--side-now:0px}
+  .hist-hidden{--side-now:36px}
   .wrap{max-width:none;padding:0 28px}
   .wrap>section{max-width:1080px;margin:0 auto}
   .hist{display:flex;position:fixed;top:58px;right:0;bottom:0;width:var(--side);z-index:7;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;background:var(--glass);
-    transition:transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s linear 0s}
-  .hist-hidden .hist{transform:translateX(100%);visibility:hidden;transition:transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s linear .34s}
+    transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+  .hist-hidden .hist{transform:translateX(100%)}
+  .hist-hidden .hist-tab svg{transform:none}
   .h-head{padding:16px 18px 12px}
   .h-list{padding:4px 10px 14px}
-  .h-close .x{display:none}.h-close .hide{display:block}
-  .hist-fab{opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .26s cubic-bezier(.2,.9,.3,1.3)}
-  .hist-hidden .hist-fab{opacity:1;transform:none;pointer-events:auto;transition-delay:.18s}
+  .h-close{display:none}
   /* app-style header: logo at the far left, tabs at the far right */
   .tb-in{max-width:none;padding:9px 24px}
   /* the pinned search strip spans the page area and meets the sidebar's edge */
@@ -261,9 +267,10 @@ button.h-item:hover{background:var(--bg)}
 }
 @media (min-width:1500px){ :root{--side:330px} }
 @media (max-width:1179.98px){
-  .hist{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:25;box-shadow:0 24px 60px rgba(15,23,42,.30);
-    transform:translateX(calc(100% + 24px));visibility:hidden;transition:transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s linear .34s}
-  .hist.open{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s}
+  .hist{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 60px));z-index:25;box-shadow:none;
+    transform:translateX(calc(100% + 12px));transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s cubic-bezier(.2,.8,.2,1)}
+  .hist.open{transform:none;box-shadow:0 24px 60px rgba(15,23,42,.30)}
+  .hist:not(.open) .hist-tab svg{transform:none}
   .h-close .hide{display:none}
 }
 
@@ -684,7 +691,7 @@ select.vin{text-align:left;padding-right:4px}
   .ps.lots .ps-kv{font-size:9px}
   html,body{background:#fff!important;color:#14161d}
   *{animation:none!important;transition:none!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .bgfx,.topbar,.hist,.hist-fab,.wrap,footer,.scrim,.p-foot,.iconbtn,.toast,.sec.also-sec,.note,.p-tag,.sbanner{display:none!important}
+  .bgfx,.topbar,.hist,.wrap,footer,.scrim,.p-foot,.iconbtn,.toast,.sec.also-sec,.note,.p-tag,.sbanner{display:none!important}
   .print-only{display:block}
   body.print-sugg .panel,body.print-sugg .scrim{display:none!important}
   body.print-sugg .ps{display:block}
@@ -788,9 +795,8 @@ select.vin{text-align:left;padding-right:4px}
   <div id="results"></div>
   </section>
   <section id="viewManage" hidden></section>
-  <aside class="hist" id="hist" aria-label="Update history"></aside>
+  <aside class="hist" id="hist" aria-label="Update history"><button class="hist-tab" id="histTab" type="button" aria-controls="histBody" aria-expanded="true" title="Hide update history"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg><span class="lbl">History</span><span class="n" id="histN"></span></button><div class="h-wrap" id="histBody"></div></aside>
 </div>
-<button class="hist-fab" id="histFab" type="button" aria-controls="hist">🕘 History</button>
 <footer>From the Cremer Recipe Guides, Line 9 &amp; Line 10 (10.06.26), plus recipes added in Manage. Always confirm settings on the machine.</footer>
 
 <div class="scrim" id="scrim"></div>
@@ -1312,7 +1318,8 @@ function renderHistory(){
   const all = allHistory(), shown = histAll ? all : all.slice(0, 40);
   const days = []; shown.forEach(h=>{ const d=fmtDay(h.at); if(!days.length || days[days.length-1].d!==d) days.push({d, items:[]}); days[days.length-1].items.push(h); });
   const local = all.filter(h=>h.local).length;
-  $('#hist').innerHTML = `<div class="h-head"><div><b>Update history</b><small>${all.length ? all.length+' change'+(all.length>1?'s':'') : 'No changes yet'}</small></div>
+  $('#histN').textContent = all.length || '';
+  $('#histBody').innerHTML = `<div class="h-head"><div><b>Update history</b><small>${all.length ? all.length+' change'+(all.length>1?'s':'') : 'No changes yet'}</small></div>
       <button class="iconbtn h-close" id="histClose" aria-label="Hide history" title="Hide history"><span class="x">${CLOSE_SVG}</span><svg class="hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 6 6 6-6 6"/><path d="M5 6v12"/></svg></button></div>
     <div class="h-list">
       ${days.map(g=>`<div class="h-day">${esc(g.d)}</div>${g.items.map(h=>`
@@ -1331,15 +1338,19 @@ function renderHistory(){
 }
 $('#hist').addEventListener('click', e => {
   const b = e.target.closest('button'); if(!b) return;
-  if (b.id==='histClose' || b.closest('#histClose')){ if (wideHist()) setHistHidden(true); else $('#hist').classList.remove('open'); return; }
+  if (b.id==='histTab'){ toggleHist(); return; }
+  if (b.id==='histClose'){ $('#hist').classList.remove('open'); syncHist(); return; }
   if (b.id==='histMore'){ histAll=true; renderHistory(); return; }
-  if (b.dataset.hk){ const r=byKey[b.dataset.hk]; if(!r){ toast('That recipe was removed'); return; } $('#hist').classList.remove('open'); open(r.uid); }
+  if (b.dataset.hk){ const r=byKey[b.dataset.hk]; if(!r){ toast('That recipe was removed'); return; } $('#hist').classList.remove('open'); syncHist(); open(r.uid); }
 });
 const wideHist = () => matchMedia('(min-width:1180px)').matches;
-function setHistHidden(h){ document.documentElement.classList.toggle('hist-hidden', h); store.set('histHidden', h); }
-$('#histFab').onclick = () => { if (wideHist()) setHistHidden(false); else $('#hist').classList.toggle('open'); };
+const histCollapsed = () => wideHist() ? document.documentElement.classList.contains('hist-hidden') : !$('#hist').classList.contains('open');
+function syncHist(){ const c=histCollapsed(), t=$('#histTab'); $('#histBody').inert=c; t.setAttribute('aria-expanded', String(!c)); t.title = c ? 'Show update history' : 'Hide update history'; }
+function setHistHidden(h){ document.documentElement.classList.toggle('hist-hidden', h); store.set('histHidden', h); syncHist(); }
+function toggleHist(){ if (wideHist()) setHistHidden(!document.documentElement.classList.contains('hist-hidden')); else { $('#hist').classList.toggle('open'); syncHist(); } }
+matchMedia('(min-width:1180px)').addEventListener('change', syncHist);
 requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('no-anim')));
-renderHistory();
+renderHistory(); syncHist();
 /* the search strip gets its background once it is pinned under the top bar — watched with an
    IntersectionObserver instead of measuring the page on every scroll event */
 const stk=$('.sticky'), sentinel=document.createElement('div'); sentinel.style.cssText='height:1px;margin-bottom:-1px'; stk.before(sentinel);

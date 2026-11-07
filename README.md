@@ -412,11 +412,11 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   file's data.
 - **Update history:** a sidebar docked on the right, full height under the top
   bar, on wide screens (the page is centred beside it and the pinned search
-  strip meets its edge); a **History** button opens it on laptops and phones.
-  On wide screens the arrow in its header slides it away (the page widens to
-  fill the space) and a **History** button brings it back; the choice is
-  remembered in the browser. On smaller screens it slides in and out as a
-  drawer. It lists, newest first and
+  strip meets its edge); on laptops and phones it is a drawer. A small
+  **HISTORY** pull tab (with the number of changes) on the panel's left edge
+  collapses it: the panel slides off to the right leaving only the tab at the
+  screen edge, and the page widens; the tab slides it back. On wide screens the
+  collapsed/open choice is remembered in the browser. It lists, newest first and
   grouped by date, every recipe added, edited (with the settings that changed),
   removed or restored in Manage, ending with the Cremer Recipe Guides import
   (dated 10.06.26, read as Oct 6, 2026). Tapping an entry opens the recipe.
