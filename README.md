@@ -361,7 +361,8 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 300, 400 and 500 cc; Line 10 150 and 225 cc.
 
 - Opens with the same short intro as LineUp: bottles ride in on a conveyor, a
-  cap drops onto the middle one and "Welcome to Cremer Recipes" rises in, then
+  cap drops onto the middle one and "Welcome to LineUp" rises in with
+  "Cremer Recipes" under it as a sub-app, then
   it fades into the app (about 3 seconds). It plays every time the app is
   opened (never on devices set to reduce motion); a click or any key skips
   it.
