@@ -350,7 +350,7 @@ const saveSugg = () => { store.set('suggestions',sugg); updateSugN(); };
    Suggestions tab, tap "Set password", and paste the printed line below so it
    applies on every device and the published page. null = tab open to everyone.
    e.g.  const SUGG_LOCK = {"salt":"…","hash":"…","iter":100000}; */
-const SUGG_LOCK = null;
+const SUGG_LOCK = {"salt":"xKdTGdM573mDXHMryZ5+9w==","hash":"dgc55n0Z+fVS4Z3SieH7j3MAVK8NfZgi44ByC0pDkoDXGH+dbJWucjZYdnrO+qC2YKKHXhdO+Miov2BEe+GPUA==","iter":100000};
 const LOCK_ITER = 100000;
 const effLock = () => SUGG_LOCK || store.get('lock', null);
 const unlocked = () => { try{ return sessionStorage.getItem('cremer.unlocked')==='1'; }catch(e){ return false; } };
