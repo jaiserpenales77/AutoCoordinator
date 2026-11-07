@@ -377,6 +377,19 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   they can be filtered Open / Done / All, marked done, deleted, copied as text
   or downloaded as a CSV for Excel. They are saved in that browser only
   (localStorage), not in the database, so each device has its own list.
+- The **Suggestions** tab can be password-locked with the same password used on
+  the Cremer Excel sheets. (Excel keeps only a salted hash of its sheet
+  password, so the real password can't be read out of the workbook — you set it
+  in the app instead.) Open the Suggestions tab → **Set password**, type the
+  password, and it prints a `const SUGG_LOCK = {…};` line. Paste that line into
+  `cremer-recipes.html` (replacing the existing `const SUGG_LOCK` line near the
+  top of the page script) and commit, so the lock applies on every device and
+  the published page. The password is stored only as a salted SHA-512 hash
+  (PBKDF2, 100k rounds) — never as plain text. Anyone can still **send** a
+  suggestion from a recipe; only **viewing** the tab is locked, and unlocking
+  lasts for the browser session. This is a convenience gate, not strong
+  security: the suggestions live in the browser, so someone technical could
+  still read them with developer tools.
 - Light / dark theme (remembered in the browser).
 
 Values are copied exactly as typed on the sheets (blank cells show "—"). To

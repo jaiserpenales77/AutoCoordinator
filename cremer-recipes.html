@@ -112,7 +112,7 @@ footer{text-align:center;color:var(--ink3);font-size:12.5px;padding:34px 16px 10
 .panel.show{opacity:1;visibility:visible;transform:translate(-50%,-50%)}
 .panel .p-head,.panel .p-foot{flex:none}.panel .p-body{min-height:0}
 .p-head{position:relative;overflow:hidden;padding:24px 20px 18px;text-align:center;background:var(--card);border-bottom:1px solid var(--line);border-top:5px solid var(--c)}
-.p-head .iconbtn{position:absolute;right:14px;top:14px}
+.p-head .iconbtn{position:absolute;right:14px;top:14px;z-index:2}
 .p-fg{position:relative;font-size:40px;font-weight:900;letter-spacing:-.03em;line-height:1}
 .p-bulk{position:relative;font-weight:600;font-size:16px;color:var(--ink2);margin-top:4px}
 .p-tag{position:relative;display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:5px 12px;border-radius:999px;background:var(--bg);color:var(--ink2);font-size:13px;font-weight:700}
@@ -191,6 +191,27 @@ select.vin{text-align:left;padding-right:4px}
 .s-note{margin-top:10px;padding:9px 12px;background:var(--bg);border-radius:10px;font-size:14px;color:var(--ink2)}
 .s-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .s-acts .btn{flex:0 1 auto;padding:7px 12px;font-size:13px}
+.lock-wrap{display:grid;place-items:center;padding:16px 0}
+.lock-card{max-width:430px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px 22px;text-align:center;animation:pop .35s both}
+.lock-ico{font-size:40px;line-height:1}
+.lock-card h2{margin:8px 0 4px;font-size:20px}
+.lock-card p{color:var(--ink2);font-size:14px;margin:0 0 16px}
+.lock-form{display:flex;gap:8px}
+.lock-form .inp{flex:1;text-align:left}
+.lock-form .btn.grow{flex:0 0 auto}
+.lock-err{color:#dc2626;font-weight:700;font-size:13px;margin-top:10px}
+.lock-note{color:var(--ink3);font-size:12px;margin-top:14px;line-height:1.45}
+.pw-modal{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,10,40,.45);opacity:0;transition:opacity .2s}
+.pw-modal.show{opacity:1}
+.pw-box{width:100%;max-width:400px;background:var(--bg);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);padding:22px;transform:scale(.96);transition:transform .2s}
+.pw-modal.show .pw-box{transform:none}
+.pw-box h2{margin:0 0 4px;font-size:19px}
+.pw-box p{color:var(--ink2);font-size:14px;margin:0 0 14px}
+.pw-box code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+.pw-box .inp{margin-bottom:10px}
+.pw-box .inp.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
+.pw-acts{display:flex;gap:8px;margin-top:4px}
+
 
 .toast{position:fixed;left:50%;bottom:84px;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:50;transition:all .25s cubic-bezier(.2,.9,.3,1.3);pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -322,6 +343,97 @@ $('#theme').onclick = () => {
 const state = { q:'', line:'all', size:'all', limit:48, tab:'recipes', sStatus:'open', sFor:null };
 let sugg = store.get('suggestions',[]);
 const saveSugg = () => { store.set('suggestions',sugg); updateSugN(); };
+
+/* ---- Suggestions tab lock (same password you use on the Cremer Excel sheets) ----
+   Excel stores only a salted hash of its sheet password, so the real password
+   can't be read out of the workbook. Set the password here instead: open the
+   Suggestions tab, tap "Set password", and paste the printed line below so it
+   applies on every device and the published page. null = tab open to everyone.
+   e.g.  const SUGG_LOCK = {"salt":"…","hash":"…","iter":100000}; */
+const SUGG_LOCK = null;
+const LOCK_ITER = 100000;
+const effLock = () => SUGG_LOCK || store.get('lock', null);
+const unlocked = () => { try{ return sessionStorage.getItem('cremer.unlocked')==='1'; }catch(e){ return false; } };
+const setUnlocked = v => { try{ v?sessionStorage.setItem('cremer.unlocked','1'):sessionStorage.removeItem('cremer.unlocked'); }catch(e){} };
+const canSeeSugg = () => !effLock() || unlocked();
+const cryptoOk = () => !!(window.crypto && crypto.subtle && window.TextEncoder);
+const b64 = { enc: a => btoa(String.fromCharCode.apply(null, new Uint8Array(a))), dec: s => Uint8Array.from(atob(s), c=>c.charCodeAt(0)) };
+async function pwHash(pw, saltB64, iter){
+  const salt = saltB64 ? b64.dec(saltB64) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations:iter, hash:'SHA-512'}, key, 512);
+  return { salt: saltB64 || b64.enc(salt), hash: b64.enc(new Uint8Array(bits)), iter };
+}
+async function pwMatches(pw, lock){ try{ const h=await pwHash(pw, lock.salt, lock.iter||LOCK_ITER); return h.hash===lock.hash; }catch(e){ return false; } }
+
+function renderLock(){
+  $('#viewSugg').innerHTML = `<div class="lock-wrap"><div class="lock-card">
+    <div class="lock-ico">🔒</div>
+    <h2>Suggestions are locked</h2>
+    <p>Enter the password to view and manage suggestions — the same one used on the Cremer Excel sheets.</p>
+    <form id="unlockForm" class="lock-form" autocomplete="off">
+      <input class="inp" id="pwInput" type="password" placeholder="Password" aria-label="Password" autocomplete="current-password">
+      <button class="btn primary grow" id="unlockBtn" type="submit">Unlock</button>
+    </form>
+    <div class="lock-err" id="pwErr" hidden></div>
+    <div class="lock-note">Anyone can still send a suggestion from a recipe — only viewing them is locked. This is a simple gate, not strong security: suggestions are stored in this browser.</div>
+  </div></div>`;
+  const inp=$('#pwInput');
+  $('#unlockForm').onsubmit = async e => {
+    e.preventDefault(); const btn=$('#unlockBtn'); btn.disabled=true; btn.textContent='Checking…';
+    const ok = await pwMatches(inp.value, effLock());
+    if (ok){ setUnlocked(true); updateSugN(); render(); renderSugg(); toast('✓ Unlocked'); }
+    else { const er=$('#pwErr'); er.hidden=false; er.textContent='Wrong password. Try again.'; btn.disabled=false; btn.textContent='Unlock'; inp.select(); }
+  };
+  setTimeout(()=>inp.focus({preventScroll:true}),60);
+}
+function passwordDialog(isChange){
+  if (!cryptoOk()){ toast('Needs a modern browser'); return; }
+  const wrap=document.createElement('div'); wrap.className='pw-modal';
+  wrap.innerHTML = `<div class="pw-box">
+    <h2>${isChange?'Change password':'Set a password'}</h2>
+    <p>${isChange?'Enter the current password, then the new one.':'Lock the Suggestions tab. Use the same password as the Cremer Excel sheets.'}</p>
+    <form id="pwForm" autocomplete="off">
+      ${isChange?`<input class="inp" id="pwCur" type="password" placeholder="Current password" autocomplete="off">`:''}
+      <input class="inp" id="pwNew" type="password" placeholder="${isChange?'New password':'Password'}" autocomplete="new-password">
+      <input class="inp" id="pwNew2" type="password" placeholder="Repeat password" autocomplete="new-password">
+      <div class="lock-err" id="pwDErr" hidden></div>
+      <div class="pw-acts"><button type="button" class="btn" id="pwCancel">Cancel</button><button type="submit" class="btn primary grow" id="pwSave">Save</button></div>
+    </form>
+    <div class="lock-note">Stored only as a salted hash (SHA-512) — never as plain text, the same way Excel locks the sheets.</div>
+  </div>`;
+  document.body.appendChild(wrap); requestAnimationFrame(()=>wrap.classList.add('show'));
+  const done=()=>{ wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); };
+  wrap.addEventListener('click',e=>{ if(e.target===wrap) done(); });
+  $('#pwCancel').onclick=done;
+  $('#pwForm').onsubmit = async e => {
+    e.preventDefault(); const er=$('#pwDErr'); er.hidden=true;
+    const npw=$('#pwNew').value, npw2=$('#pwNew2').value;
+    if (npw.length<4){ er.hidden=false; er.textContent='Use at least 4 characters.'; return; }
+    if (npw!==npw2){ er.hidden=false; er.textContent='The two passwords don’t match.'; return; }
+    if (isChange){ const ok=await pwMatches($('#pwCur').value, effLock()); if(!ok){ er.hidden=false; er.textContent='Current password is wrong.'; $('#pwCur').select(); return; } }
+    const lock = await pwHash(npw, null, LOCK_ITER);
+    store.set('lock', lock); setUnlocked(true); updateSugN(); render(); done(); showLockLine(lock);
+  };
+  setTimeout(()=>{ ($('#pwCur')||$('#pwNew')).focus({preventScroll:true}); },60);
+}
+function showLockLine(lock){
+  const line = `const SUGG_LOCK = ${JSON.stringify(lock)};`;
+  const baked = SUGG_LOCK!=null;
+  const wrap=document.createElement('div'); wrap.className='pw-modal show';
+  wrap.innerHTML = `<div class="pw-box">
+    <h2>Password saved ✓</h2>
+    <p>To use it on <b>every device and the published page</b>, paste this line into <b>cremer-recipes.html</b> — replace the line that starts <code>const SUGG_LOCK</code> — then save and commit:</p>
+    <textarea class="inp code" id="lockLine" rows="3" readonly>${esc(line)}</textarea>
+    <div class="pw-acts"><button class="btn" id="lockCopy">Copy line</button><button class="btn primary grow" id="lockDone">Done</button></div>
+    <div class="lock-note">${baked?'A password is already built into this file, so changing it only takes effect once you paste the new line in and republish.':'Until you do that, the password works on this device only.'}</div>
+  </div>`;
+  document.body.appendChild(wrap);
+  const done=()=>{ wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); renderSugg(); };
+  $('#lockDone').onclick=done; $('#lockCopy').onclick=()=>{ copyText(line,'✓ Line copied'); $('#lockLine').select(); };
+  wrap.addEventListener('click',e=>{ if(e.target===wrap) done(); });
+}
+
 function renderFilters(){
   const lines = [['all','All lines'],['9','Line 9'],['10','Line 10']];
   const groups = [...new Set(R.filter(r=>state.line==='all'||r.line==state.line).map(r=>r.line+'-'+r.size))]
@@ -352,7 +464,7 @@ function render(){
   const shown = list.slice(0,state.limit);
   $('#results').innerHTML = `<div class="grid">${shown.map((r,i)=>`
     <button class="card" data-u="${r.uid}" style="--c:${col(r)};animation-delay:${Math.min(i,20)*22}ms">
-      ${openFor(r)?`<span class="sbadge" title="Open suggestions">💡 ${openFor(r)}</span>`:''}
+      ${canSeeSugg()&&openFor(r)?`<span class="sbadge" title="Open suggestions">💡 ${openFor(r)}</span>`:''}
       <div class="fg">${hl(r.fg,toks)}</div>
       <div class="bulk">${hl(r.bulk||'—',toks)}</div>
       <span class="tag">Line ${r.line} · ${r.size} cc</span>
@@ -381,7 +493,7 @@ function showPanel(r,h){
 function open(uid){
   const r = byUid[uid];
   const others = R.filter(x=>x.uid!==uid&&x.fg===r.fg);
-  const n = openFor(r);
+  const n = canSeeSugg()?openFor(r):0;
   let h = headHtml(r) + `<div class="p-body">` +
     (n?`<button class="sbanner" id="pSugg">💡 ${n} suggestion${n>1?'s':''} for this recipe — view</button>`:'') +
     `<div class="keys">${KEYS.map(([k,l])=>`<div class="key"><b class="num">${esc(text(k,r[k]))}</b><span>${l}</span></div>`).join('')}</div>`;
@@ -455,7 +567,7 @@ function copy(r){
 }
 
 /* Suggestions tab (saved in this browser) */
-function updateSugN(){ const n=sugg.filter(s=>s.status==='open').length; $('#sugN').textContent=n||''; }
+function updateSugN(){ const n=canSeeSugg()?sugg.filter(s=>s.status==='open').length:0; $('#sugN').textContent=n||''; }
 const fmtDate = iso => { const d=new Date(iso); return d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); };
 function setTab(t){
   state.tab=t;
@@ -466,6 +578,7 @@ function setTab(t){
 }
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ if(b.dataset.tab==='sugg') state.sFor=null; setTab(b.dataset.tab); });
 function renderSugg(){
+  if (effLock() && !unlocked()){ renderLock(); return; }
   const st=state.sStatus;
   const base = sugg.filter(s=>!state.sFor||s.key===state.sFor);
   const cnt = k => base.filter(s=>k==='all'||s.status===k).length;
@@ -475,7 +588,7 @@ function renderSugg(){
       ${[['open','Open'],['done','Done'],['all','All']].map(([k,l])=>`<button class="chip line ${st===k?'on':''}" data-st="${k}">${l} <small>${cnt(k)}</small></button>`).join('')}
       ${forR?`<button class="chip" id="sForX">For ${esc(forR.fg)} ${esc(forR.bulk)} ✕</button>`:''}
     </div>
-    <div class="s-tools"><button class="chip" id="sCopyAll">Copy all</button><button class="chip" id="sCsv">Download (Excel)</button></div>
+    <div class="s-tools"><button class="chip" id="sCopyAll">Copy all</button><button class="chip" id="sCsv">Download (Excel)</button>${effLock()?`<button class="chip" id="sChgPw">Change password</button><button class="chip" id="sLockNow">Lock now 🔒</button>`:`<button class="chip" id="sSetPw">Set password 🔒</button>`}</div>
     <div class="s-info">Suggestions are saved on this device. Use <b>Copy all</b> or <b>Download</b> to send them on.</div>`;
   if (!list.length) h += `<div class="empty"><span class="e">💡</span><b>${sugg.length?'Nothing here.':'No suggestions yet.'}</b><br>Open a recipe and tap “Have better settings?” to suggest a change.</div>`;
   else h += `<div class="s-list">${list.map((s,i)=>{
@@ -499,6 +612,8 @@ $('#viewSugg').addEventListener('click', e => {
   else if (b.dataset.open) open(+b.dataset.open);
   else if (b.dataset.done){ const s=sugg.find(x=>x.id===b.dataset.done); s.status=s.status==='open'?'done':'open'; saveSugg(); renderSugg(); render(); toast(s.status==='done'?'Marked done':'Reopened'); }
   else if (b.dataset.del){ if(confirm('Delete this suggestion?')){ sugg=sugg.filter(x=>x.id!==b.dataset.del); saveSugg(); renderSugg(); render(); toast('Deleted'); } }
+  else if (b.id==='sSetPw'||b.id==='sChgPw'){ passwordDialog(b.id==='sChgPw'); }
+  else if (b.id==='sLockNow'){ setUnlocked(false); updateSugN(); render(); renderSugg(); toast('Locked'); }
   else if (b.id==='sCopyAll'){ copyText(suggText(), '✓ Suggestions copied'); }
   else if (b.id==='sCsv'){ downloadCsv(); }
 });
