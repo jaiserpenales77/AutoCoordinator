@@ -371,18 +371,16 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   **Have better settings?**; the window also links the same FG on the other
   line.
 - **Have better settings?** turns every setting into a box: the person types
-  the values they'd change (changed ones show old → new), adds their name and
-  why, and sends it. Suggestions land in the **Suggestions** tab (count badge
-  on the tab, a 💡 badge on the recipe card and a banner in the recipe), where
-  they can be filtered Open / Done / All, marked done, deleted, copied as text
-  or downloaded as a CSV for Excel. They are saved in that browser only
-  (localStorage), not in the database, so each device has its own list.
-- **Manage** tab (password-locked; Recipes and Suggestions are open to
+  the values they'd change (changed ones show old → new), optionally adds their
+  name and why, and taps **Print**. The printed suggestion sheet (one page for
+  up to about 15 changes, Letter or A4) shows the recipe, "Suggested by / Date /
+  Approved by" lines to sign, the changes as now → suggested, the reason, and
+  the full recipe with the changed rows highlighted. Nothing is stored; the
+  lead applies approved changes in **Manage**.
+- **Manage** tab (password-locked; looking up and printing recipes is open to
   everyone): search the recipes, **Edit** any setting (changed values show
   old → new), **+ New recipe** (FG, bulk, line, bottle size and every
-  setting), and **Remove** (removed recipes can be restored). A suggestion's
-  **Apply** button opens it in the editor with the suggested values filled in
-  and marks it done when saved. Changes are saved in that browser
+  setting), and **Remove** (removed recipes can be restored). Changes are saved in that browser
   (localStorage, per version of the file). **Download updated file** builds a
   new `cremer-recipes.html` with the changes built into its data — replace the
   shared copy with it to give everyone the update; the downloaded file starts

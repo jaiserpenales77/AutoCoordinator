@@ -149,11 +149,7 @@ footer{text-align:center;color:var(--ink3);font-size:12.5px;padding:34px 16px 10
 .tabs{display:flex;gap:4px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;width:max-content;box-shadow:var(--shadow)}
 .tabs button{border:0;background:none;padding:8px 18px;border-radius:999px;font-weight:700;color:var(--ink2);display:inline-flex;gap:8px;align-items:center;transition:background .2s,color .2s}
 .tabs button.on{background:var(--g1);color:#fff}
-.tabs .n{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:11.5px;display:inline-grid;place-items:center}
-.tabs .n:empty{display:none}
 [hidden]{display:none!important}
-.card .sbadge{position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:2px 7px}
-.sbanner{display:block;width:100%;border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 12px;font-weight:700;margin-bottom:14px;text-align:center}
 .hint{background:color-mix(in srgb,var(--g1) 9%,var(--card));border:1px solid color-mix(in srgb,var(--g1) 25%,transparent);border-radius:12px;padding:11px 14px;font-size:14px;color:var(--ink2);margin-bottom:14px;text-align:center}
 .hint b{color:var(--ink);display:block;font-size:15px;margin-bottom:2px}
 .field{display:block;margin-bottom:14px}
@@ -171,26 +167,6 @@ select.vin{text-align:left;padding-right:4px}
 .btn.grow{flex:1.6}
 .btn[disabled]{opacity:.55;cursor:not-allowed}
 .btn.danger{color:#dc2626}
-.s-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
-.s-tools small{opacity:.75;font-weight:600}
-.s-info{text-align:center;color:var(--ink3);font-size:12.5px;margin:2px 0 16px}
-.s-list{display:grid;gap:12px;max-width:720px;margin:0 auto}
-.s-card{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);animation:pop .35s both;text-align:left}
-.s-card.done{opacity:.7}
-.s-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.s-fg{font-size:20px;font-weight:900;letter-spacing:-.02em}.s-fg small{font-size:14px;color:var(--ink2);font-weight:600;margin-left:8px}
-.s-meta{font-size:12.5px;color:var(--ink3);margin-top:2px}.s-meta b{color:var(--ink2)}
-.s-status{flex:none;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--warn-bg);color:var(--warn)}
-.s-status.done{background:color-mix(in srgb,var(--ok) 14%,var(--card));color:var(--ok)}
-.s-chg{margin-top:10px;border-top:1px solid var(--line)}
-.s-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
-.s-row .k{color:var(--ink2)}
-.s-row .vals{white-space:nowrap;font-variant-numeric:tabular-nums}
-.s-row s{color:var(--ink3);margin-right:6px}
-.s-row b{color:var(--g1);font-size:15px}
-.s-note{margin-top:10px;padding:9px 12px;background:var(--bg);border-radius:10px;font-size:14px;color:var(--ink2)}
-.s-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.s-acts .btn{flex:0 1 auto;padding:7px 12px;font-size:13px}
 .lock-wrap{display:grid;place-items:center;padding:16px 0}
 .lock-card{max-width:430px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px 22px;text-align:center;animation:pop .35s both}
 .lock-ico{font-size:40px;line-height:1}
@@ -211,6 +187,7 @@ select.vin{text-align:left;padding-right:4px}
 .pw-box .inp{margin-bottom:10px}
 .pw-box .inp.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
 .pw-acts{display:flex;gap:8px;margin-top:4px}
+.ps{display:none}
 .chip[disabled]{opacity:.5;cursor:not-allowed;transform:none}
 .m-search{margin:6px auto 4px;max-width:560px;animation:none}
 .m-search input{padding:12px 0;font-size:16px}
@@ -249,10 +226,50 @@ select.vin{text-align:left;padding-right:4px}
 .print-only{display:none}
 @page{size:auto;margin:12mm 12mm 10mm}
 @media print{
+  .ps{color:#14161d;font-size:12px}
+  .ps-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-bottom:10px;border-bottom:1px solid #d9dce3}
+  .ps-kicker{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#8a90a0;margin-bottom:4px}
+  .ps-fg{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:.95}
+  .ps-bulk{font-size:17px;font-weight:600;color:#5b6172;margin-left:12px}
+  .ps-size{text-align:right}
+  .ps-pill{display:inline-block;background:var(--c);color:#fff;font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px}
+  .ps-paper{display:block;margin-top:4px;font-size:10px;color:#8a90a0;font-weight:600}
+  .ps-meta{display:grid;grid-template-columns:1.3fr 1fr 1.3fr;gap:16px;margin:10px 0 2px}
+  .ps-meta div{border-bottom:1.5px solid #14161d;padding-bottom:3px}
+  .ps-meta span{display:block;font-size:8.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a90a0}
+  .ps-meta b{display:block;font-size:14px;min-height:22px;padding-top:4px}
+  .ps-h{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:11px 0 4px;padding-bottom:3px;border-bottom:2px solid #14161d}
+  .ps-h::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c)}
+  .ps-tab{width:100%;border-collapse:collapse}
+  .ps-tab th{text-align:left;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a90a0;padding:3px 8px;border-bottom:1px solid #d9dce3}
+  .ps-tab td{padding:4px 8px;border-bottom:1px solid #eceef2;font-size:13px}
+  .ps-tab .r{text-align:right}
+  .ps-tab td.g{color:#8a90a0;font-size:11px}
+  .ps-tab td.cur{color:#8a90a0;text-decoration:line-through}
+  .ps-tab td.new span{display:inline-block;font-weight:900;font-size:15px;padding:1px 10px;border-radius:7px;background:color-mix(in srgb,var(--c) 16%,#fff)}
+  .ps-note{min-height:36px;border:1px solid #d9dce3;border-radius:8px;padding:8px 10px;font-size:13px;white-space:pre-wrap}
+  .ps-cols{columns:2;column-gap:24px}
+  .ps-sec{break-inside:avoid;margin-bottom:5px}
+  .ps-sec h4{margin:0 0 1px;font-size:8.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#5b6172}
+  .ps-kv{display:flex;justify-content:space-between;gap:8px;font-size:10px;padding:1px 5px;border-bottom:1px solid #f0f1f4}
+  .ps-kv span{color:#4b5161}.ps-kv b{font-weight:800}
+  .ps-kv.chg{background:color-mix(in srgb,var(--c) 16%,#fff);border-radius:4px}
+  .ps-kv.chg span{color:#14161d;font-weight:700}
+  .ps-kv s{color:#8a90a0;font-weight:400;margin-right:6px}
+  .ps-foot{display:flex;justify-content:space-between;gap:16px;margin-top:10px;padding-top:6px;border-top:1px solid #d9dce3;font-size:8.5px;color:#8a90a0}
+  .ps.many .ps-tab td{padding:2.5px 8px;font-size:12px}
+  .ps.many .ps-tab td.new span{font-size:13.5px;padding:0 8px}
+  .ps.many .ps-kv{font-size:9.5px;padding:.5px 5px}
+  .ps.many .ps-h{margin:8px 0 3px}
+  .ps.many .ps-sec{margin-bottom:3px}
+  .ps.lots .ps-cols{columns:3;column-gap:16px}
+  .ps.lots .ps-kv{font-size:9px}
   html,body{background:#fff!important;color:#14161d}
   *{animation:none!important;transition:none!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .bgfx,.wrap,footer,.scrim,.p-foot,.iconbtn,.toast,.sec.also-sec,.note,.p-tag,.sbanner{display:none!important}
   .print-only{display:block}
+  body.print-sugg .panel,body.print-sugg .scrim{display:none!important}
+  body.print-sugg .ps{display:block}
   .panel{position:static;transform:none!important;opacity:1;visibility:visible;width:100%;max-height:none;border-radius:0;overflow:visible;background:#fff;display:block}
   /* header */
   .p-head{display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 16px;text-align:left;padding:0 0 12px;border:0;border-bottom:1px solid #d9dce3;background:#fff}
@@ -300,7 +317,7 @@ select.vin{text-align:left;padding-right:4px}
     </button>
   </header>
 
-  <nav class="tabs"><button data-tab="recipes" class="on">Recipes</button><button data-tab="sugg">Suggestions <span class="n" id="sugN"></span></button><button data-tab="manage">Manage 🔒</button></nav>
+  <nav class="tabs"><button data-tab="recipes" class="on">Recipes</button><button data-tab="manage">Manage 🔒</button></nav>
   <section id="viewRecipes">
   <div class="sticky">
     <label class="search" id="sw">
@@ -314,7 +331,6 @@ select.vin{text-align:left;padding-right:4px}
   <div class="count" id="count"></div>
   <div id="results"></div>
   </section>
-  <section id="viewSugg" hidden></section>
   <section id="viewManage" hidden></section>
 </div>
 <footer>From the Cremer Recipe Guides, Line 9 &amp; Line 10 (10.06.26). Always confirm settings on the machine.</footer>
@@ -382,7 +398,7 @@ function buildRecipes(){
   $('#badgeT').textContent = `Line 9 · Line 10 · ${R.length} recipes`;
 }
 const rKey = r => r.k;
-function refreshAll(){ buildRecipes(); renderFilters(); render(); updateSugN(); if(state.tab==='sugg') renderSugg(); if(state.tab==='manage') renderManage(); }
+function refreshAll(){ buildRecipes(); renderFilters(); render(); if(state.tab==='manage') renderManage(); }
 
 /* ---- Manage tab lock (same password as the Cremer Excel sheets) ----
    Excel keeps only a salted hash of its sheet password, so the password is set
@@ -413,7 +429,7 @@ function renderLock(el, after){
       <button class="btn primary grow" id="unlockBtn" type="submit">Unlock</button>
     </form>
     <div class="lock-err" id="pwErr" hidden></div>
-    <div class="lock-note">Recipes and Suggestions stay open to everyone; only changing recipes is locked.</div>
+    <div class="lock-note">Looking up and printing recipes stays open to everyone; only changing recipes is locked.</div>
   </div></div>`;
   const inp=$('#pwInput');
   $('#unlockForm').onsubmit = async e => {
@@ -470,9 +486,7 @@ function showLockLine(lock){
 }
 
 /* filters */
-const state = { q:'', line:'all', size:'all', limit:48, tab:'recipes', sStatus:'open', sFor:null, mq:'' };
-let sugg = store.get('suggestions',[]);
-const saveSugg = () => { store.set('suggestions',sugg); updateSugN(); };
+const state = { q:'', line:'all', size:'all', limit:48, tab:'recipes', mq:'' };
 function renderFilters(){
   const lines = [['all','All lines'],['9','Line 9'],['10','Line 10']];
   const groups = [...new Set(R.filter(r=>state.line==='all'||r.line==state.line).map(r=>r.line+'-'+r.size))]
@@ -494,7 +508,6 @@ $('#clear').onclick = e => { e.preventDefault(); $('#q').value=''; $('#sw').clas
 
 /* results */
 function hl(s,toks){ s=esc(s); if(!toks.length) return s; return s.replace(new RegExp('('+toks.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi'),'<mark>$1</mark>'); }
-const openFor = r => sugg.filter(s=>s.key===rKey(r)&&s.status==='open').length;
 function render(){
   const toks = state.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const list = R.filter(r=>(state.line==='all'||r.line==state.line)&&(state.size==='all'||state.size===r.line+'-'+r.size)&&toks.every(t=>r.hay.includes(t)));
@@ -505,7 +518,6 @@ function render(){
   const shown = list.slice(0,state.limit);
   $('#results').innerHTML = `<div class="grid">${shown.map((r,i)=>`
     <button class="card" data-u="${r.uid}" style="--c:${col(r)};animation-delay:${Math.min(i,20)*22}ms">
-      ${openFor(r)?`<span class="sbadge" title="Open suggestions">💡 ${openFor(r)}</span>`:''}
       <div class="fg">${hl(r.fg,toks)}</div>
       <div class="bulk">${hl(r.bulk||'—',toks)}</div>
       <span class="tag">Line ${r.line} · ${r.size} cc</span>
@@ -532,9 +544,7 @@ function showPanel(r,h){
 function open(uid){
   const r = byUid[uid]; if(!r) return;
   const others = R.filter(x=>x.uid!==uid&&x.fg===r.fg);
-  const n = openFor(r);
   let h = headHtml(r) + `<div class="p-body">` +
-    (n?`<button class="sbanner" id="pSugg">💡 ${n} suggestion${n>1?'s':''} for this recipe — view</button>`:'') +
     `<div class="keys">${KEYS.map(([k,l])=>`<div class="key"><b class="num">${esc(text(k,r[k]))}</b><span>${l}</span></div>`).join('')}</div>`;
   GROUPS.forEach((g,gi)=>{
     h += `<div class="sec" style="animation-delay:${gi*35}ms"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>`<div class="kv"><span class="k">${esc(f.label)}</span>${html(f.key,r[f.key])}</div>`).join('')}</div></div>`;
@@ -544,9 +554,8 @@ function open(uid){
     <div class="p-print-foot print-only"><span>Source: <b>Cremer Recipe Guide Line ${r.line} (10.06.26)</b> · sheet “${esc(r.sheet)}”</span><span>Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
     <div class="p-foot"><button class="btn" id="pCopy">Copy</button><button class="btn primary grow" id="pBetter">💡 Have better settings?</button><button class="btn" id="pPrint">Print</button></div>`;
   const p = showPanel(r,h);
-  $('#pPrint').onclick=()=>print(); $('#pCopy').onclick=()=>copy(r);
+  $('#pPrint').onclick=()=>{ document.body.classList.remove('print-sugg'); print(); }; $('#pCopy').onclick=()=>copy(r);
   $('#pBetter').onclick=()=>suggest(uid);
-  if (n) $('#pSugg').onclick=()=>{ close(true); state.sStatus='open'; state.sFor=rKey(r); setTab('sugg'); };
   p.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>open(+b.dataset.go));
 }
 function settingControl(f, v, orig){
@@ -558,37 +567,67 @@ function settingControl(f, v, orig){
 }
 const markChanged = p => p.querySelectorAll('.vin').forEach(i=>i.closest('.kv').classList.toggle('chg', i.value.trim()!==i.dataset.o));
 
-/* "Have better settings?" — edit the values you'd change */
+/* "Have better settings?" — change the values you'd use, then print the sheet */
 function suggest(uid){
   const r = byUid[uid];
   let h = headHtml(r) + `<div class="p-body">
-    <div class="hint"><b>Have better settings?</b> Change the values you think should be different. Only the ones you change are sent.</div>
-    <label class="field"><span>Your name</span><input class="inp" id="sName" maxlength="60" autocomplete="name" placeholder="e.g. Maria, 2nd shift" value="${esc(store.get('name',''))}"></label>`;
+    <div class="hint"><b>Have better settings?</b> Change the values you think should be different, then print the sheet and give it to your lead.</div>
+    <label class="field"><span>Your name (optional)</span><input class="inp" id="sName" maxlength="60" autocomplete="name" placeholder="e.g. Maria, 2nd shift" value="${esc(store.get('name',''))}"></label>`;
   GROUPS.forEach(g=>{ h += `<div class="sec"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>settingControl(f,r[f.key],r[f.key])).join('')}</div></div>`; });
   h += `<label class="field"><span>Why is it better? (optional)</span><textarea class="inp" id="sNote" rows="3" maxlength="500" placeholder="e.g. fewer rejects, bottles stopped jamming at the gate"></textarea></label></div>
-    <div class="p-foot"><button class="btn" id="sCancel">Cancel</button><button class="btn primary grow" id="sSend" disabled>Send suggestion</button></div>`;
+    <div class="p-foot"><button class="btn" id="sCancel">Cancel</button><button class="btn primary grow" id="sPrint" disabled>Change a value first</button></div>`;
   const p = showPanel(r,h);
   const changes = () => [...p.querySelectorAll('.vin')].filter(i=>i.value.trim()!==i.dataset.o).map(i=>{
     const f=FIELDS.find(x=>x.key===i.dataset.k);
-    return {key:f.key,label:f.label,from:text(f.key,r[f.key]),to:text(f.key,toVal(i.value))};
+    return {key:f.key,label:f.label,group:f.group,from:text(f.key,r[f.key]),to:text(f.key,toVal(i.value))};
   });
   const refresh = () => {
     markChanged(p);
-    const n=changes().length, name=$('#sName').value.trim();
+    const n=changes().length;
     p.dataset.dirty = n?'1':'';
-    $('#sSend').disabled = !n || !name;
-    $('#sSend').textContent = !n ? 'Change a value first' : !name ? 'Add your name' : `Send ${n} change${n>1?'s':''}`;
+    $('#sPrint').disabled = !n;
+    $('#sPrint').textContent = n ? `🖨 Print ${n} change${n>1?'s':''}` : 'Change a value first';
   };
   const pb=p.querySelector('.p-body'); pb.addEventListener('input', refresh); pb.addEventListener('change', refresh); refresh();
-  $('#sCancel').onclick=()=>open(uid);
-  $('#sSend').onclick=()=>{
-    const ch=changes(), name=$('#sName').value.trim(); if(!ch.length||!name) return;
-    store.set('name',name);
-    sugg.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), key:rKey(r), fg:r.fg, bulk:r.bulk, line:r.line, size:r.size, sheet:r.sheet,
-      name, note:$('#sNote').value.trim(), changes:ch, at:new Date().toISOString(), status:'open'});
-    saveSugg(); render(); open(uid); toast('✓ Thanks! Suggestion saved');
+  $('#sCancel').onclick=()=>{ if(!p.dataset.dirty || confirm('Discard your changes?')) open(uid); };
+  $('#sPrint').onclick=()=>{
+    const ch=changes(); if(!ch.length) return;
+    const name=$('#sName').value.trim(); if (name) store.set('name',name);
+    printSuggestion(r, ch, name, $('#sNote').value.trim());
   };
   setTimeout(()=>{ const n=$('#sName'); (n.value?p.querySelector('.vin'):n).focus({preventScroll:true}); },60);
+}
+function printSuggestion(r, ch, name, note){
+  const old=$('#printSheet'); if (old) old.remove();
+  const nv = Object.fromEntries(ch.map(c=>[c.key,c.to]));
+  const sz = r.line+'-'+r.size;
+  const el=document.createElement('div'); el.id='printSheet'; el.className='ps'+(ch.length>4?' many':'')+(ch.length>9?' lots':''); el.style.setProperty('--c', col(r));
+  el.innerHTML = `
+    <div class="ps-head">
+      <div><div class="ps-kicker">Suggested settings change · Cremer counter</div>
+        <div class="ps-name"><span class="ps-fg">${esc(r.fg)}</span><span class="ps-bulk">${esc(r.bulk)}</span></div></div>
+      <div class="ps-size"><span class="ps-pill"${sz==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="ps-paper">${PAPER[sz]||''} sheet</span></div>
+    </div>
+    <div class="ps-meta">
+      <div><span>Suggested by</span><b>${name?esc(name):'&nbsp;'}</b></div>
+      <div><span>Date</span><b>${esc(new Date().toLocaleDateString())}</b></div>
+      <div><span>Approved by / date</span><b>&nbsp;</b></div>
+    </div>
+    <div class="ps-h">Suggested changes · ${ch.length}</div>
+    <table class="ps-tab"><thead><tr><th>Setting</th><th>Section</th><th class="r">Now</th><th class="r">Suggested</th></tr></thead>
+      <tbody>${ch.map(c=>`<tr><td>${esc(c.label)}</td><td class="g">${esc(c.group)}</td><td class="r cur">${esc(c.from)}</td><td class="r new"><span>${esc(c.to)}</span></td></tr>`).join('')}</tbody></table>
+    <div class="ps-h">Why it’s better</div>
+    <div class="ps-note">${note?esc(note):''}</div>
+    <div class="ps-h">Full recipe with the change</div>
+    <div class="ps-cols">${GROUPS.map(g=>`<div class="ps-sec"><h4>${esc(g)}</h4>${FIELDS.filter(f=>f.group===g).map(f=>{
+        const c = f.key in nv;
+        return `<div class="ps-kv${c?' chg':''}"><span>${esc(f.label)}</span><b>${c?`<s>${esc(text(f.key,r[f.key]))}</s>${esc(nv[f.key])}`:esc(text(f.key,r[f.key]))}</b></div>`;
+      }).join('')}</div>`).join('')}</div>
+    <div class="ps-foot"><span>Source: Cremer Recipe Guide Line ${r.line} · sheet “${esc(r.sheet)}”</span><span>A suggestion only — don’t run these settings until a lead approves them.</span></div>`;
+  document.body.appendChild(el); document.body.classList.add('print-sugg');
+  const done=()=>{ document.body.classList.remove('print-sugg'); removeEventListener('afterprint',done); };
+  addEventListener('afterprint',done);
+  print();
 }
 function close(force){
   const p=$('#panel');
@@ -615,81 +654,21 @@ const fmtDate = iso => { const d=new Date(iso); return d.toLocaleDateString()+' 
 function setTab(t){
   state.tab=t;
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  $('#viewRecipes').hidden = t!=='recipes'; $('#viewSugg').hidden = t!=='sugg'; $('#viewManage').hidden = t!=='manage';
-  if (t==='sugg') renderSugg(); else state.sFor=null;
+  $('#viewRecipes').hidden = t!=='recipes'; $('#viewManage').hidden = t!=='manage';
   if (t==='manage') renderManage();
   scrollTo({top:0,behavior:'smooth'});
 }
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ if(b.dataset.tab==='sugg') state.sFor=null; setTab(b.dataset.tab); });
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 
-/* Suggestions tab (saved in this browser, open to everyone) */
-function updateSugN(){ const n=sugg.filter(s=>s.status==='open').length; $('#sugN').textContent=n||''; }
-function renderSugg(){
-  const st=state.sStatus;
-  const base = sugg.filter(s=>!state.sFor||s.key===state.sFor);
-  const cnt = k => base.filter(s=>k==='all'||s.status===k).length;
-  const list = base.filter(s=>st==='all'||s.status===st);
-  const forR = state.sFor && byKey[state.sFor];
-  let h = `<div class="s-tools">
-      ${[['open','Open'],['done','Done'],['all','All']].map(([k,l])=>`<button class="chip line ${st===k?'on':''}" data-st="${k}">${l} <small>${cnt(k)}</small></button>`).join('')}
-      ${forR?`<button class="chip" id="sForX">For ${esc(forR.fg)} ${esc(forR.bulk)} ✕</button>`:''}
-    </div>
-    <div class="s-tools"><button class="chip" id="sCopyAll">Copy all</button><button class="chip" id="sCsv">Download (Excel)</button></div>
-    <div class="s-info">Suggestions are saved on this device. Use <b>Copy all</b> or <b>Download</b> to send them on. <b>Apply</b> opens the change in the Manage tab.</div>`;
-  if (!list.length) h += `<div class="empty"><span class="e">💡</span><b>${sugg.length?'Nothing here.':'No suggestions yet.'}</b><br>Open a recipe and tap “Have better settings?” to suggest a change.</div>`;
-  else h += `<div class="s-list">${list.map((s,i)=>{
-      const r=byKey[s.key];
-      return `<div class="s-card ${s.status}" style="--c:var(${COLORS[s.line+'-'+s.size]||'--g1'});animation-delay:${Math.min(i,10)*30}ms">
-        <div class="s-top"><div><div class="s-fg">${esc(s.fg)}<small>${esc(s.bulk)}</small></div>
-          <div class="s-meta">Line ${s.line} · ${s.size} cc · by <b>${esc(s.name)}</b> · ${esc(fmtDate(s.at))}</div></div>
-          <span class="s-status ${s.status}">${s.status==='open'?'Open':'Done'}</span></div>
-        <div class="s-chg">${s.changes.map(c=>`<div class="s-row"><span class="k">${esc(c.label)}</span><span class="vals"><s>${esc(c.from)}</s>→ <b>${esc(c.to)}</b></span></div>`).join('')}</div>
-        ${s.note?`<div class="s-note">“${esc(s.note)}”</div>`:''}
-        <div class="s-acts">${r?`<button class="btn" data-open="${r.uid}">Open recipe</button><button class="btn" data-apply="${s.id}">✎ Apply</button>`:'<span class="s-meta">Recipe was removed</span>'}
-          <button class="btn" data-done="${s.id}">${s.status==='open'?'✓ Mark done':'Reopen'}</button>
-          <button class="btn danger" data-del="${s.id}">Delete</button></div>
-      </div>`; }).join('')}</div>`;
-  $('#viewSugg').innerHTML = h;
-}
-$('#viewSugg').addEventListener('click', e => {
-  const b=e.target.closest('button'); if(!b) return;
-  if (b.dataset.st){ state.sStatus=b.dataset.st; renderSugg(); }
-  else if (b.id==='sForX'){ state.sFor=null; renderSugg(); }
-  else if (b.dataset.open) open(+b.dataset.open);
-  else if (b.dataset.apply){
-    const s=sugg.find(x=>x.id===b.dataset.apply), pre={};
-    s.changes.forEach(c=>{ pre[c.key] = c.to==='—'?'':c.to==='ON'?1:c.to==='OFF'?0:toVal(c.to); });
-    if (canManage()) editRecipe(s.key, pre, s.id);
-    else { state.pendingApply={key:s.key, pre, id:s.id}; setTab('manage'); toast('Unlock Manage to apply this change'); }
-  }
-  else if (b.dataset.done){ const s=sugg.find(x=>x.id===b.dataset.done); s.status=s.status==='open'?'done':'open'; saveSugg(); renderSugg(); render(); toast(s.status==='done'?'Marked done':'Reopened'); }
-  else if (b.dataset.del){ if(confirm('Delete this suggestion?')){ sugg=sugg.filter(x=>x.id!==b.dataset.del); saveSugg(); renderSugg(); render(); toast('Deleted'); } }
-  else if (b.id==='sCopyAll'){ copyText(suggText(), '✓ Suggestions copied'); }
-  else if (b.id==='sCsv'){ downloadCsv(); }
-});
-function shown(){ return sugg.filter(s=>(!state.sFor||s.key===state.sFor)&&(state.sStatus==='all'||s.status===state.sStatus)); }
-function suggText(){
-  const l=shown(); if(!l.length) return 'No suggestions.';
-  return l.map(s=>`${s.fg} ${s.bulk} — Line ${s.line}, ${s.size}cc (${s.status})\nBy ${s.name}, ${fmtDate(s.at)}\n`+
-    s.changes.map(c=>`  ${c.label}: ${c.from} → ${c.to}`).join('\n')+(s.note?`\n  Note: ${s.note}`:'')).join('\n\n');
-}
 function download(name, content, type){
   const blob=new Blob([content],{type});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
   document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
-function downloadCsv(){
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=[['Date','Name','FG item','Bulk item','Line','Bottle (cc)','Sheet','Setting','Current','Suggested','Note','Status']];
-  shown().forEach(s=>s.changes.forEach(c=>rows.push([fmtDate(s.at),s.name,s.fg,s.bulk,s.line,s.size,s.sheet,c.label,c.from,c.to,s.note,s.status])));
-  if (rows.length<2){ toast('Nothing to download'); return; }
-  download(`cremer-suggestions-${new Date().toISOString().slice(0,10)}.csv`, '\ufeff'+rows.map(r=>r.map(q).join(',')).join('\r\n'), 'text/csv');
-}
-
 /* Manage tab (locked): edit, add and remove recipes */
 function renderManage(){
   const v=$('#viewManage');
-  if (!canManage()){ renderLock(v, ()=>{ renderManage(); const pa=state.pendingApply; if(pa){ state.pendingApply=null; editRecipe(pa.key,pa.pre,pa.id); } }); return; }
+  if (!canManage()){ renderLock(v, ()=>renderManage()); return; }
   const e=edits(), n=nChanges(e);
   const toks = state.mq.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const list = R.filter(r=>toks.every(t=>r.hay.includes(t))).sort((a,b)=>a.order-b.order);
@@ -737,7 +716,7 @@ function uniqueSheet(name, line, k){
   while(taken.has(s)) s=`${name} (${i++})`;
   return s;
 }
-function editRecipe(k, prefill, fromSugg){
+function editRecipe(k, prefill){
   if (!canManage()){ setTab('manage'); return; }
   const cur = k ? byKey[k] : null;
   if (k && !cur){ toast('That recipe was removed'); return; }
@@ -750,7 +729,6 @@ function editRecipe(k, prefill, fromSugg){
       <div class="p-fg">${isNew?'New recipe':'Edit recipe'}</div>
       <div class="p-bulk">${isNew?'Fill in the item and its settings':esc(r.fg+' '+r.bulk)+' · Line '+r.line+' · '+r.size+' cc'}</div></div>
     <div class="p-body">
-    ${fromSugg?'<div class="hint"><b>Suggestion filled in</b> The suggested values are already entered and highlighted. Check them, then save.</div>':''}
     <div class="m-grid">
       <label class="field"><span>FG item</span><input class="inp" id="eFg" value="${esc(r.fg)}" placeholder="e.g. 2684" autocomplete="off"></label>
       <label class="field"><span>Bulk item</span><input class="inp" id="eBulk" value="${esc(r.bulk)}" placeholder="e.g. A664" autocomplete="off"></label>
@@ -791,8 +769,7 @@ function editRecipe(k, prefill, fromSugg){
       if (same) delete e.edited[k]; else e.edited[k]=clean(rec);
     }
     saveEdits(e);
-    if (fromSugg){ const s=sugg.find(x=>x.id===fromSugg); if(s){ s.status='done'; saveSugg(); } }
-    close(true); refreshAll(); toast(isNew?'✓ Recipe added':'✓ Changes saved'+(fromSugg?' · suggestion marked done':''));
+    close(true); refreshAll(); toast(isNew?'✓ Recipe added':'✓ Changes saved');
   };
   setTimeout(()=>{ (isNew?$('#eFg'):p.querySelector('.kv.chg .vin')||$('#eFg')).focus({preventScroll:true}); },60);
 }
@@ -825,11 +802,10 @@ function exportFile(){
 }
 
 addEventListener('storage', e => {
-  if (e.key==='cremer.suggestions'){ sugg=store.get('suggestions',[]); updateSugN(); render(); if(state.tab==='sugg') renderSugg(); }
   if (e.key==='cremer.'+EKEY) refreshAll();
 });
 
-buildRecipes(); updateSugN(); renderFilters(); render();
+buildRecipes(); renderFilters(); render();
 const stk=$('.sticky'); addEventListener('scroll',()=>stk.classList.toggle('stuck',stk.getBoundingClientRect().top<=0&&scrollY>40),{passive:true});
 </script>
 </body>
