@@ -238,9 +238,11 @@ button.h-item:hover{background:var(--bg)}
 @media (min-width:1180px){
   .wrap{max-width:1400px;display:grid;grid-template-columns:minmax(0,1fr) 290px;column-gap:28px;align-items:start}
   .wrap>section{grid-column:1;min-width:0}
-  .hist{display:flex;grid-column:2;grid-row:1 / span 3;position:sticky;top:78px;max-height:calc(100vh - 96px);margin-top:30px}
+  /* the panel pins level with the search box, on the same strip */
+  .hist{display:flex;grid-column:2;grid-row:1 / span 3;position:sticky;top:66px;z-index:7;max-height:calc(100vh - 82px);margin-top:30px}
   .h-close,.hist-fab{display:none}
-  .sticky::before{inset:0 -14px;border-radius:0 0 18px 18px}
+  /* pinned search strip runs the full width, behind the history panel too, with one line under it */
+  .sticky::before{inset:0;border:0;border-radius:0;box-shadow:0 0 0 100vmax var(--glass),0 1px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px -100vmax)}
 }
 @media (max-width:1179.98px){
   .hist.open{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:25;box-shadow:0 24px 60px rgba(15,23,42,.30);animation:pop .25s both}
