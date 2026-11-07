@@ -361,15 +361,15 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 300, 400 and 500 cc; Line 10 150 and 225 cc.
 
 - Branded as part of LineUp: a slim dark top bar (it stays while scrolling)
-  with LineUp's logo (three amber bottles on a conveyor) and the LineUp
+  with a flat LineUp icon (three rising amber bottles with gold caps on a
+  gold belt, on a dark tile — also the browser-tab icon) and the LineUp
   wordmark — "LINE" in heavy caps with "UP" in gold, the U and P each
   stepping higher (Archivo Black). The wordmark is drawn as
   shapes inside the page (Archivo is SIL Open Font License), so it looks the same
   everywhere without the font installed; the intro uses it too. **Cremer
   Recipes** sits beside it (under it on phones) as the sub-app, with the Recipes /
   Manage tabs and light/dark switch on the right. Below: a short headline, the search bar (it sticks under the top bar)
-  and the filters (one sideways-scrolling row on phones). LineUp's blue accent
-  and its favicon. Printouts are headed
+  and the filters (one sideways-scrolling row on phones). LineUp's blue accent. Printouts are headed
   "LineUp · Cremer Recipes".
 - Opens with the same short intro as LineUp: bottles ride in on a conveyor, a
   cap drops onto the middle one and "Welcome to LineUp" rises in with
