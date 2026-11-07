@@ -11,6 +11,7 @@
   --g1:#4f46e5; --g2:#4f46e5; --g3:#4f46e5; --grad:var(--g1);
   --blob1:#c4b5fd; --blob2:#fbcfe8; --blob3:#a5f3fc; --blob4:#fde68a;
   --c-g:#10b981; --c-y:#eab308; --c-b:#3b82f6; --c-p:#ec4899; --c-v:#8b5cf6;
+  --c-75:#0d9488; --c-150:#ea580c; --c-625:#dc2626; --c-750:#475569; --c-950:#a16207;
   --warn:#b45309; --warn-bg:#fef3c7; --k1:var(--ink); --k2:var(--ink); --k3:var(--ink); --k4:var(--ink); --ok:#059669; --diff:#fff4d4;
   --shadow:0 1px 2px rgba(20,20,40,.04),0 6px 18px rgba(20,20,40,.06);
 }
@@ -349,9 +350,12 @@ const FIELDS = DATA.fields.filter(f=>f.key!=='id');
 const GROUPS = [...new Set(FIELDS.map(f=>f.group))];
 const TOGGLES = new Set(['transparent','ejector','ionizer','upsideSensor']);
 const KEYS = [['count','Count'],['precount','Precount'],['bpm','Bottles/min'],['dosingSpeed','Dosing speed']];
-const COLORS = {'9-225':'--c-g','9-300':'--c-y','9-400':'--c-b','9-500':'--c-p','10-150':'--c-g','10-225':'--c-v'};
+const COLORS = {'9-225':'--c-g','9-300':'--c-y','9-400':'--c-b','9-500':'--c-p','10-150':'--c-g','10-225':'--c-v',
+  '9-75':'--c-75','9-150':'--c-150','9-625':'--c-625','9-750':'--c-750','9-950':'--c-950',
+  '10-75':'--c-75','10-625':'--c-625','10-750':'--c-750','10-950':'--c-950'};
 const PAPER = {'9-225':'Green','9-300':'Yellow','9-400':'Blue','9-500':'Pink','10-150':'Green','10-225':'Purple'};
-const SIZES = {9:[225,300,400,500], 10:[150,225]};
+const SIZES = {9:[75,150,225,300,400,500,625,750,950], 10:[75,150,225,625,750,950]};
+const paperOf = r => PAPER[r.line+'-'+r.size] ? PAPER[r.line+'-'+r.size]+' sheet' : '';
 const col = r => `var(${COLORS[r.line+'-'+r.size]||'--g1'})`;
 const nat = (a,b) => String(a).localeCompare(String(b),undefined,{numeric:true});
 const $ = s => document.querySelector(s);
@@ -534,8 +538,8 @@ function headHtml(r){
       <button class="iconbtn" id="pClose" aria-label="Close">${CLOSE_SVG}</button>
       <div class="p-kicker print-only">Cremer recipe · Counter settings</div>
       <div class="p-name"><div class="p-fg">${esc(r.fg)}</div><div class="p-bulk">${esc(r.bulk)}</div></div>
-      <div class="p-size print-only"><span class="pill"${r.line+'-'+r.size==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="paper">${PAPER[r.line+'-'+r.size]||''} sheet</span></div>
-      <span class="p-tag">Line ${r.line} · ${r.size} cc · ${PAPER[r.line+'-'+r.size]||''} sheet</span></div>`;
+      <div class="p-size print-only"><span class="pill"${r.line+'-'+r.size==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="paper">${paperOf(r)}</span></div>
+      <span class="p-tag">Line ${r.line} · ${r.size} cc${paperOf(r)?' · '+paperOf(r):''}</span></div>`;
 }
 function showPanel(r,h){
   const p=$('#panel'); p.style.setProperty('--c',col(r)); p.innerHTML=h; p.dataset.dirty=''; p.classList.add('show'); p.setAttribute('aria-hidden','false'); $('#scrim').classList.add('show');
@@ -606,7 +610,7 @@ function printSuggestion(r, ch, name, note){
     <div class="ps-head">
       <div><div class="ps-kicker">Suggested settings change · Cremer counter</div>
         <div class="ps-name"><span class="ps-fg">${esc(r.fg)}</span><span class="ps-bulk">${esc(r.bulk)}</span></div></div>
-      <div class="ps-size"><span class="ps-pill"${sz==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="ps-paper">${PAPER[sz]||''} sheet</span></div>
+      <div class="ps-size"><span class="ps-pill"${sz==='9-300'?' style="color:#14161d"':''}>Line ${r.line} · ${r.size} cc</span><span class="ps-paper">${paperOf(r)}</span></div>
     </div>
     <div class="ps-meta">
       <div><span>Suggested by</span><b>${name?esc(name):'&nbsp;'}</b></div>
