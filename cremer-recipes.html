@@ -876,7 +876,7 @@ function refreshAll(){ buildRecipes(); renderFilters(); render(); renderHistory(
    Excel keeps only a salted hash of its sheet password, so the password is set
    in the app: Manage tab → Change password prints a new line to paste here.
    null = Manage open to everyone. */
-const MANAGE_LOCK = {"salt":"xKdTGdM573mDXHMryZ5+9w==","hash":"dgc55n0Z+fVS4Z3SieH7j3MAVK8NfZgi44ByC0pDkoDXGH+dbJWucjZYdnrO+qC2YKKHXhdO+Miov2BEe+GPUA==","iter":100000};
+const MANAGE_LOCK = {"salt":"VR2sD1XsDj2FNVE3Gmzk4A==","hash":"zPOAwqJau9saGrZ1weXsmY9fBOnl7UQ/XSLtJ3XfvT+pv9cnRwJOeadtDev5o/BN4Sjq5gCj3hMa7suNcKlj+g==","iter":100000};
 const LOCK_ITER = 100000;
 const effLock = () => MANAGE_LOCK || store.get('lock', null);
 const unlocked = () => { try{ return sessionStorage.getItem('cremer.unlocked')==='1'; }catch(e){ return false; } };
