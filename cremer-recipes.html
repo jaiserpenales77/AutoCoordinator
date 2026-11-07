@@ -10,6 +10,7 @@ try{ if(!matchMedia('(prefers-reduced-motion: reduce)').matches) document.docume
 <meta name="description" content="Look up Cremer counter settings by FG item or bulk item.">
 <style>
 :root{
+  --side:300px;
   --bg:#f6f7fb; --glass:#ffffff; --card:#ffffff; --ink:#171a24; --ink2:#5b6172; --ink3:#9399a8; --line:#e5e7ee;
   --g1:#2563eb; --g2:#2563eb; --g3:#2563eb; --grad:var(--g1);
   --blob1:#c4b5fd; --blob2:#fbcfe8; --blob3:#a5f3fc; --blob4:#fde68a;
@@ -236,23 +237,20 @@ button.h-item:hover{background:var(--bg)}
 .hist-fab{position:fixed;right:16px;bottom:16px;z-index:15;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(15,23,42,.16);transition:transform .12s}
 .hist-fab:active{transform:scale(.95)}
 @media (min-width:1180px){
-  .wrap{max-width:1400px;display:grid;grid-template-columns:minmax(0,1fr) 290px;column-gap:28px;align-items:start}
-  .wrap>section{grid-column:1;min-width:0}
-  /* the panel pins level with the search box, on the same strip */
-  .hist{display:flex;grid-column:2;grid-row:1 / span 3;position:sticky;top:66px;z-index:7;max-height:calc(100vh - 82px);margin-top:30px;transition:top .15s ease}
-  /* fused: once the search strip pins, the panel hangs from it — flush under the top bar, the strip's colour,
-     no top border or floating shadow, and its left edge line only below the strip */
-  .hist.fused{top:58px;max-height:calc(100vh - 70px);background:var(--glass);border-top:0;border-left-color:transparent;border-radius:0 0 16px 16px;
-    box-shadow:0 14px 28px -18px rgba(15,23,42,.35);overflow:visible}
-  .hist.fused::before{content:"";position:absolute;left:-1px;top:calc(var(--strip-h,170px) - 1px);bottom:15px;width:1px;background:var(--line)}
-  .hist.fused::after{content:"";position:absolute;left:-1px;bottom:-1px;width:16px;height:16px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);border-bottom-left-radius:16px}
-  .hist.fused .h-head{border-bottom-color:var(--line)}
-  .hist.fused .h-foot{border-radius:0 0 16px 16px}
+  /* docked sidebar: full height on the right, under the top bar; the page is centred in the space left of it */
+  .wrap,footer{margin-right:var(--side)}
+  .wrap{max-width:none;padding:0 28px}
+  .wrap>section{max-width:1080px;margin:0 auto}
+  .hist{display:flex;position:fixed;top:58px;right:0;bottom:0;width:var(--side);z-index:7;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;background:var(--glass)}
+  .h-head{padding:16px 18px 12px}
+  .h-list{padding:4px 10px 14px}
   .h-close,.hist-fab{display:none}
-  /* pinned search strip runs the full width, behind the history panel too, with one line under it */
-  /* the pinned strip runs from the left edge of the window to the right edge of the history panel */
-  .sticky::before{top:0;bottom:0;left:calc(-1 * ((100vw - min(100vw, 1400px)) / 2 + 16px));right:calc(-1 * (290px + 28px));border-radius:0}
+  /* app-style header: logo at the far left, tabs at the far right */
+  .tb-in{max-width:none;padding:9px 24px}
+  /* the pinned search strip spans the page area and meets the sidebar's edge */
+  .sticky::before{top:0;bottom:0;left:calc((100% - 100vw + var(--side)) / 2);right:calc((100% - 100vw + var(--side)) / 2 - 20px);border-radius:0}
 }
+@media (min-width:1500px){ :root{--side:330px} }
 @media (max-width:1179.98px){
   .hist.open{display:flex;position:fixed;right:12px;top:70px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:25;box-shadow:0 24px 60px rgba(15,23,42,.30);animation:pop .25s both}
 }
@@ -340,6 +338,9 @@ select.vin{text-align:left;padding-right:4px}
 .pw-box .inp.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
 .pw-acts{display:flex;gap:8px;margin-top:4px}
 .ps{display:none}
+.s-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+.s-tools small{opacity:.75;font-weight:600}
+.s-info{text-align:center;color:var(--ink3);font-size:12.5px;margin:2px auto 16px;max-width:640px}
 .chip[disabled]{opacity:.5;cursor:not-allowed;transform:none}
 .m-search{margin:6px auto 4px;max-width:560px;animation:none}
 .m-search input{padding:12px 0;font-size:16px}
@@ -1328,10 +1329,8 @@ renderHistory();
    IntersectionObserver instead of measuring the page on every scroll event */
 const stk=$('.sticky'), sentinel=document.createElement('div'); sentinel.style.cssText='height:1px;margin-bottom:-1px'; stk.before(sentinel);
 let stuckObs; const watchStuck=()=>{ if(stuckObs) stuckObs.disconnect(); const top=parseFloat(getComputedStyle(stk).top)||0;
-  stuckObs=new IntersectionObserver(([en])=>{ const on=!en.isIntersecting && en.boundingClientRect.top < top+2; stk.classList.toggle('stuck', on); $('#hist').classList.toggle('fused', on); }, {rootMargin:`-${top+1}px 0px 0px 0px`});
+  stuckObs=new IntersectionObserver(([en])=>{ const on=!en.isIntersecting && en.boundingClientRect.top < top+2; stk.classList.toggle('stuck', on); }, {rootMargin:`-${top+1}px 0px 0px 0px`});
   stuckObs.observe(sentinel); };
-// the panel needs the strip's height to start its left edge line below it
-new ResizeObserver(()=>$('#hist').style.setProperty('--strip-h', stk.offsetHeight+'px')).observe(stk);
 watchStuck(); let rsz; addEventListener('resize',()=>{ clearTimeout(rsz); rsz=setTimeout(watchStuck,200); });
 </script>
 </body>

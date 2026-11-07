@@ -410,8 +410,10 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   shared copy with it to give everyone the update; the downloaded file starts
   with no local changes. **Undo all changes** puts every recipe back to the
   file's data.
-- **Update history:** a side panel (sticky beside the cards on wide screens; a
-  **History** button opens it on laptops and phones) lists, newest first and
+- **Update history:** a sidebar docked on the right, full height under the top
+  bar, on wide screens (the page is centred beside it and the pinned search
+  strip meets its edge); a **History** button opens it on laptops and phones.
+  It lists, newest first and
   grouped by date, every recipe added, edited (with the settings that changed),
   removed or restored in Manage, ending with the Cremer Recipe Guides import
   (dated 10.06.26, read as Oct 6, 2026). Tapping an entry opens the recipe.
