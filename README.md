@@ -372,11 +372,11 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   line.
 - **Have better settings?** turns every setting into a box: the person types
   the values they'd change (changed ones show old → new), optionally adds their
-  name and why, and taps **Print**. The printed suggestion sheet (one page for
+  name and shift and why, and taps **Print** to give the sheet to their supervisor. The printed suggestion sheet (one page for
   up to about 15 changes, Letter or A4) shows the recipe, "Suggested by / Date /
   Approved by" lines to sign, the changes as now → suggested, the reason, and
-  the full recipe with the changed rows highlighted. Nothing is stored; the
-  lead applies approved changes in **Manage**.
+  the full recipe with the changed rows highlighted. Nothing is stored; approved
+  changes are made in **Manage**.
 - **Manage** tab (password-locked; looking up and printing recipes is open to
   everyone): search the recipes, **Edit** any setting (changed values show
   old → new), **+ New recipe** (FG, bulk, line, bottle size and every

@@ -583,8 +583,8 @@ const markChanged = p => p.querySelectorAll('.vin').forEach(i=>i.closest('.kv').
 function suggest(uid){
   const r = byUid[uid];
   let h = headHtml(r) + `<div class="p-body">
-    <div class="hint"><b>Have better settings?</b> Change the values you think should be different, then print the sheet and give it to your lead.</div>
-    <label class="field"><span>Your name (optional)</span><input class="inp" id="sName" maxlength="60" autocomplete="name" placeholder="e.g. Maria, 2nd shift" value="${esc(store.get('name',''))}"></label>`;
+    <div class="hint"><b>Have better settings?</b> Change the values you think should be different, then print the sheet and give it to your supervisor.</div>
+    <label class="field"><span>Your name and shift (Optional)</span><input class="inp" id="sName" maxlength="60" autocomplete="name" placeholder="e.g. Maria, 2nd shift" value="${esc(store.get('name',''))}"></label>`;
   GROUPS.forEach(g=>{ h += `<div class="sec"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>settingControl(f,r[f.key],r[f.key])).join('')}</div></div>`; });
   h += `<label class="field"><span>Why is it better? (optional)</span><textarea class="inp" id="sNote" rows="3" maxlength="500" placeholder="e.g. fewer rejects, bottles stopped jamming at the gate"></textarea></label></div>
     <div class="p-foot"><button class="btn" id="sCancel">Cancel</button><button class="btn primary grow" id="sPrint" disabled>Change a value first</button></div>`;
@@ -635,7 +635,7 @@ function printSuggestion(r, ch, name, note){
         const c = f.key in nv;
         return `<div class="ps-kv${c?' chg':''}"><span>${esc(f.label)}</span><b>${c?`<s>${esc(text(f.key,r[f.key]))}</s>${esc(nv[f.key])}`:esc(text(f.key,r[f.key]))}</b></div>`;
       }).join('')}</div>`).join('')}</div>
-    <div class="ps-foot"><span>Source: ${sourceOf(r)}</span><span>A suggestion only — don’t run these settings until a lead approves them.</span></div>`;
+    <div class="ps-foot"><span>Source: ${sourceOf(r)}</span><span>A suggestion only — don’t run these settings until a supervisor approves them.</span></div>`;
   document.body.appendChild(el); document.body.classList.add('print-sugg');
   const done=()=>{ document.body.classList.remove('print-sugg'); removeEventListener('afterprint',done); };
   addEventListener('afterprint',done);
