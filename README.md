@@ -415,8 +415,9 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   strip meets its edge); on laptops and phones it is a drawer. A small
   **HISTORY** pull tab (with the number of changes) on the panel's left edge
   collapses it: the panel slides off to the right leaving only the tab at the
-  screen edge, and the page widens; the tab slides it back. On wide screens the
-  collapsed/open choice is remembered in the browser. It lists, newest first and
+  screen edge, and the page widens; the tab slides it back. Each time the app is opened
+  the panel shows for a moment (after the intro) and then collapses to its
+  tab; pointing at, tapping or tabbing into it first keeps it open. It lists, newest first and
   grouped by date, every recipe added, edited (with the settings that changed),
   removed or restored in Manage, ending with the Cremer Recipe Guides import
   (dated 10.06.26, read as Oct 6, 2026). Tapping an entry opens the recipe.

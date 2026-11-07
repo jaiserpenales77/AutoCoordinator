@@ -7,7 +7,6 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23141c2f%22%2F%3E%3Cg%20transform%3D%22translate%284%203%29%20scale%28.875%29%22%3E%3Crect%20x%3D%227.5%22%20y%3D%2233%22%20width%3D%2215%22%20height%3D%2216%22%20rx%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%2211.5%22%20y%3D%2230%22%20width%3D%227%22%20height%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%229.5%22%20y%3D%2225.5%22%20width%3D%2211%22%20height%3D%225%22%20rx%3D%222%22%20fill%3D%22%23facc15%22%2F%3E%3Crect%20x%3D%2224.5%22%20y%3D%2226%22%20width%3D%2215%22%20height%3D%2223%22%20rx%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%2228.5%22%20y%3D%2223%22%20width%3D%227%22%20height%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%2226.5%22%20y%3D%2218.5%22%20width%3D%2211%22%20height%3D%225%22%20rx%3D%222%22%20fill%3D%22%23facc15%22%2F%3E%3Crect%20x%3D%2241.5%22%20y%3D%2219%22%20width%3D%2215%22%20height%3D%2230%22%20rx%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%2245.5%22%20y%3D%2216%22%20width%3D%227%22%20height%3D%223.5%22%20fill%3D%22%23d97706%22%2F%3E%3Crect%20x%3D%2243.5%22%20y%3D%2211.5%22%20width%3D%2211%22%20height%3D%225%22%20rx%3D%222%22%20fill%3D%22%23facc15%22%2F%3E%3Crect%20x%3D%225%22%20y%3D%2251.5%22%20width%3D%2254%22%20height%3D%224.5%22%20rx%3D%222.25%22%20fill%3D%22%23facc15%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <script>/* intro: plays every time the app is opened (never with reduced motion) */
 try{ if(!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('intro-on'); }catch(e){}
-try{ if(localStorage.getItem('cremer.histHidden')==='true') document.documentElement.classList.add('hist-hidden'); }catch(e){}
 document.documentElement.classList.add('no-anim');</script>
 <meta name="description" content="Look up Cremer counter settings by FG item or bulk item.">
 <style>
@@ -810,8 +809,9 @@ const DATA = {"fields":[{"key":"id","group":"Product","label":"ID"},{"key":"leng
 const PAGE_SRC = (()=>{ const c=document.documentElement.cloneNode(true); c.classList.remove('intro-on','hist-hidden','no-anim'); if(!c.classList.length) c.removeAttribute('class'); return '<!doctype html>\n'+c.outerHTML; })();
 /* intro (same as LineUp): 2.6 s, then a 0.45 s fade; a click or any key skips it (0.2 s fade) */
 (()=>{ const root=document.documentElement, el=document.getElementById('intro'); if(!el) return;
-  if(!root.classList.contains('intro-on')){ el.remove(); return; }
-  let t; const end=()=>{ root.classList.remove('intro-on'); el.remove(); removeEventListener('keydown',skip,true); };
+  const done=()=>{ window.__introDone=true; dispatchEvent(new Event('introdone')); };
+  if(!root.classList.contains('intro-on')){ el.remove(); done(); return; }
+  let t; const end=()=>{ root.classList.remove('intro-on'); el.remove(); removeEventListener('keydown',skip,true); done(); };
   const go=(cls,ms)=>{ clearTimeout(t); el.classList.add(cls); t=setTimeout(end,ms); };
   const skip=e=>{ if(e){ e.preventDefault(); e.stopPropagation(); } if(!el.classList.contains('skipping')&&!el.classList.contains('leaving')) go('skipping',200); };
   t=setTimeout(()=>go('leaving',450),2600); el.addEventListener('click',()=>skip()); addEventListener('keydown',skip,true);
@@ -1346,11 +1346,20 @@ $('#hist').addEventListener('click', e => {
 const wideHist = () => matchMedia('(min-width:1180px)').matches;
 const histCollapsed = () => wideHist() ? document.documentElement.classList.contains('hist-hidden') : !$('#hist').classList.contains('open');
 function syncHist(){ const c=histCollapsed(), t=$('#histTab'); $('#histBody').inert=c; t.setAttribute('aria-expanded', String(!c)); t.title = c ? 'Show update history' : 'Hide update history'; }
-function setHistHidden(h){ document.documentElement.classList.toggle('hist-hidden', h); store.set('histHidden', h); syncHist(); }
+function setHistHidden(h){ document.documentElement.classList.toggle('hist-hidden', h); syncHist(); }
 function toggleHist(){ if (wideHist()) setHistHidden(!document.documentElement.classList.contains('hist-hidden')); else { $('#hist').classList.toggle('open'); syncHist(); } }
 matchMedia('(min-width:1180px)').addEventListener('change', syncHist);
 requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('no-anim')));
 renderHistory(); syncHist();
+/* on opening the app: show the history for a moment (after the intro), then tuck it into its pull tab.
+   Pointing at, tapping or tabbing into the panel first keeps it open. */
+(()=>{ const hist=$('#hist'); let t, keep=false;
+  const stay=()=>{ keep=true; clearTimeout(t); };
+  hist.addEventListener('pointerenter', stay, {once:true}); hist.addEventListener('focusin', stay, {once:true});
+  const peek=()=>{ if(keep) return; if(!wideHist()){ hist.classList.add('open'); syncHist(); }
+    t=setTimeout(()=>{ if(keep) return; if(wideHist()) setHistHidden(true); else { hist.classList.remove('open'); syncHist(); } }, 1500); };
+  if (window.__introDone) peek(); else addEventListener('introdone', peek, {once:true});
+})();
 /* the search strip gets its background once it is pinned under the top bar — watched with an
    IntersectionObserver instead of measuring the page on every scroll event */
 const stk=$('.sticky'), sentinel=document.createElement('div'); sentinel.style.cssText='height:1px;margin-bottom:-1px'; stk.before(sentinel);
