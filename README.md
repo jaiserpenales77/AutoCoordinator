@@ -360,9 +360,12 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 *Cremer Recipe Guide Line 9* and *Line 10* workbooks (10.06.26): Line 9 225,
 300, 400 and 500 cc; Line 10 150 and 225 cc.
 
-- Branded as part of LineUp: the homepage has LineUp's navy band, logo (three
-  amber bottles on a conveyor) and name, with **Cremer Recipes** under it as the
-  sub-app, LineUp's blue accent and its favicon. Printouts are headed
+- Branded as part of LineUp: a slim dark top bar (it stays while scrolling)
+  with LineUp's logo (three amber bottles on a conveyor) and name, **Cremer
+  Recipes** under it as the sub-app, and the Recipes / Manage tabs and light/dark
+  switch; then a short headline, the search bar (it sticks under the top bar)
+  and the filters (one sideways-scrolling row on phones). LineUp's blue accent
+  and its favicon. Printouts are headed
   "LineUp · Cremer Recipes".
 - Opens with the same short intro as LineUp: bottles ride in on a conveyor, a
   cap drops onto the middle one and "Welcome to LineUp" rises in with
