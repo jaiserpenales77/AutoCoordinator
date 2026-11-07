@@ -380,10 +380,12 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
 - **Manage** tab (password-locked; looking up and printing recipes is open to
   everyone): search the recipes, **Edit** any setting (changed values show
   old → new), **+ New recipe** (FG, bulk, line, bottle size and every
-  setting), and **Remove** (removed recipes can be restored). Bottle sizes to
-  choose from: Line 9 — 75, 150, 225, 300, 400, 500, 625, 750, 950 cc; Line 10 —
-  75, 150, 225, 625, 750, 950 cc. Sizes without a paper-guide colour get their
-  own colour and no "… sheet" label. Changes are saved in that browser
+  setting), and **Remove** (removed recipes can be restored). Lines to choose
+  from: 1, 5, 9, 10 and 12 (a line's filter chip appears on the Recipes tab once
+  it has a recipe). Bottle sizes: 75, 150, 225, 300, 400, 500, 625, 750 and
+  950 cc on every line except Line 10 (75, 150, 225, 625, 750, 950 cc). Sizes
+  without a paper-guide colour use a colour per size and no "… sheet" label,
+  and the printout's source line says "Added in Manage" for new recipes. Changes are saved in that browser
   (localStorage, per version of the file). **Download updated file** builds a
   new `cremer-recipes.html` with the changes built into its data — replace the
   shared copy with it to give everyone the update; the downloaded file starts
