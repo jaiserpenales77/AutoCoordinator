@@ -849,6 +849,7 @@ document.addEventListener('pointerdown', e => {
   b.appendChild(s); setTimeout(()=>s.remove(),600);
 });
 
+try{ localStorage.removeItem('cremer.name'); }catch(e){}
 /* theme */
 const th = store.get('theme',null); if (th) document.documentElement.dataset.theme = th;
 $('#theme').onclick = () => {
@@ -1063,7 +1064,7 @@ function suggest(uid){
   const r = byUid[uid];
   let h = headHtml(r) + `<div class="p-body">
     <div class="hint"><b>Have better settings?</b> Change the values you think should be different, then print the sheet and give it to your supervisor.</div>
-    <label class="field"><span>Your name and shift (Optional)</span><input class="inp" id="sName" maxlength="60" autocomplete="name" placeholder="e.g. Maria, 2nd shift" value="${esc(store.get('name',''))}"></label>`;
+    <label class="field"><span>Your name and shift (Optional)</span><input class="inp" id="sName" maxlength="60" autocomplete="off" placeholder="e.g. Maria, 2nd shift"></label>`;
   GROUPS.forEach(g=>{ h += `<div class="sec"><h3>${esc(g)}</h3><div class="box">${FIELDS.filter(f=>f.group===g).map(f=>settingControl(f,r[f.key],r[f.key])).join('')}</div></div>`; });
   h += `<label class="field"><span>Why is it better? (optional)</span><textarea class="inp" id="sNote" rows="3" maxlength="500" placeholder="e.g. fewer rejects, bottles stopped jamming at the gate"></textarea></label></div>
     <div class="p-foot"><button class="btn" id="sCancel">Cancel</button><button class="btn primary grow" id="sPrint" disabled>Change a value first</button></div>`;
@@ -1083,10 +1084,10 @@ function suggest(uid){
   $('#sCancel').onclick=()=>{ if(!p.dataset.dirty || confirm('Discard your changes?')) open(uid); };
   $('#sPrint').onclick=()=>{
     const ch=changes(); if(!ch.length) return;
-    const name=$('#sName').value.trim(); if (name) store.set('name',name);
+    const name=$('#sName').value.trim();
     printSuggestion(r, ch, name, $('#sNote').value.trim());
   };
-  setTimeout(()=>{ const n=$('#sName'); (n.value?p.querySelector('.vin'):n).focus({preventScroll:true}); },60);
+  setTimeout(()=>{ $('#sName').focus({preventScroll:true}); },60);
 }
 function printSuggestion(r, ch, name, note){
   const old=$('#printSheet'); if (old) old.remove();
