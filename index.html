@@ -436,6 +436,25 @@
     <p id="noLeadsMsg" class="muted">No leads yet.</p>
   </section>
 
+  <section class="panel lineup-network-panel hidden" id="lineupNetworkPanel">
+    <h2>LineUp: Network Access</h2>
+    <p class="muted">LineUp only opens from the company's network and the networks allowed here (when the check is on). When LineUp says your home network isn't on the list, press <strong>Allow LineUp from this network</strong> from home: it's allowed for 30 days, and pressing it again replaces your last one. Only Owners see this.</p>
+    <p id="lnStatus" class="ln-status" role="status">Checking this network…</p>
+    <div class="actions">
+      <button type="button" class="primary" id="lnAllowBtn">Allow LineUp from this network</button>
+      <button type="button" id="lnRemoveBtn">Remove mine</button>
+      <button type="button" id="lnRefreshBtn">Check again</button>
+    </div>
+    <p id="lnMsg" class="form-msg"></p>
+    <div class="table-scroll stored-table">
+      <table>
+        <thead><tr><th>Network</th><th>For</th><th>Until</th></tr></thead>
+        <tbody id="lnTableBody"></tbody>
+      </table>
+    </div>
+    <p id="lnNone" class="muted">No networks allowed from here right now.</p>
+  </section>
+
   <section class="panel">
     <h2>Account Types</h2>
     <ul class="role-list">

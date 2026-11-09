@@ -411,10 +411,26 @@ const CloudSync = (() => {
     onCleared();
   }
 
+  // Calls one of the project's Cloud Functions (a callable) as the signed-in
+  // account; resolves with its result.
+  async function callFunction(name, data = {}) {
+    if (!auth?.currentUser) throw new Error("Sign in first.");
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch(`https://us-central1-${FIREBASE_CONFIG.projectId}.cloudfunctions.net/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ data })
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.error) throw new Error(body.error?.message || `The server answered ${res.status}.`);
+    return body.result;
+  }
+
   return {
     start,
     signIn,
     signOut,
+    callFunction,
     hasUnsyncedChanges,
     saveSheet: record => write(() => fs.setDoc(sheetRef(record.id), clean(record))),
     deleteSheet: id => write(() => fs.deleteDoc(sheetRef(id))),

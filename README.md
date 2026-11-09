@@ -224,6 +224,15 @@ does).
   A username links to one lead at a time. Leads without an account can be
   added here by hand. Linking a username to a lead before that person signs
   up makes their new account a Lead straight away.
+- **LineUp: Network Access** (Owners only) — LineUp (JDE Sched) can be set
+  to open only from the company's network and the networks allowed here.
+  It shows this computer's network and whether LineUp opens from it.
+  **Allow LineUp from this network** (from home) allows it for 30 days;
+  pressing it again replaces the Owner's last one, and **Remove mine** takes
+  it off. The list is kept by JDE Sched's `lineupNetwork` Cloud Function in
+  `jde-sched-access/network` (the permanent networks are set in the Firebase
+  console; see JDE Sched's `docs/NETWORK_ACCESS_PLAN.md`). Logged in the
+  Activity Log.
 - **Account Types** — what each type can use.
 
 ## Activity Log tab

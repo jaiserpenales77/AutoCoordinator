@@ -937,6 +937,7 @@ function showView(id) {
   VIEWS.forEach(v => el(v).classList.toggle("hidden", v !== id));
   document.querySelectorAll(".form-nav [data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === id));
   if (id === "sheetTab") fillFromStoredData();
+  if (id === "adminTab") lineupNetwork();
   window.dispatchEvent(new CustomEvent("viewshown", { detail: id }));
 }
 
@@ -1485,6 +1486,51 @@ function renderAccounts() {
   el("noAccountsMsg").textContent = accounts.length ? `No accounts match "${el("accountSearch").value.trim()}".` : "No accounts yet.";
   el("noAccountsMsg").classList.toggle("hidden", localOnly || shown.length > 0);
 }
+
+// LineUp: Network Access (Owners only): the network this computer is on, the
+// networks allowed from here (each for 30 days), and the button that allows
+// this one. The list itself is kept by the lineupNetwork function, not here.
+const lnDate = ms => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+let lnBusy = false;
+
+async function lineupNetwork(action = "status") {
+  const panel = el("lineupNetworkPanel");
+  const owner = !localOnly && role === "owner";
+  panel.classList.toggle("hidden", !owner);
+  if (!owner || lnBusy) return;
+  lnBusy = true;
+  ["lnAllowBtn", "lnRemoveBtn", "lnRefreshBtn"].forEach(id => { el(id).disabled = true; });
+  try {
+    const r = await CloudSync.callFunction("lineupNetwork", { action });
+    const mine = r.temporary.find(t => t.mine);
+    el("lnStatus").textContent = `This network: ${r.ip || "unknown"} — ${r.allowedNow ? "LineUp opens from here." : "not on the list."}`
+      + (r.enabled ? "" : " (The network check is off, so LineUp opens from anywhere for now.)");
+    el("lnStatus").classList.toggle("ln-ok", r.allowedNow || !r.enabled);
+    el("lnRemoveBtn").classList.toggle("hidden", !mine);
+    el("lnTableBody").innerHTML = r.temporary.map(t => `
+      <tr><td>${escapeHtml(t.ip)}</td><td>${escapeHtml(t.label)}${t.mine ? ` <span class="account-you">(yours)</span>` : ""}</td>
+        <td>${escapeHtml(lnDate(t.until))}</td></tr>`).join("");
+    el("lnNone").classList.toggle("hidden", r.temporary.length > 0);
+    if (action === "allow") {
+      logActivity("Allowed LineUp from a network", `${r.ip}, until ${lnDate(mine?.until ?? Date.now())}`);
+      showMsg("lnMsg", `LineUp now opens from this network (${r.ip}) until ${lnDate(mine?.until ?? Date.now())}.`);
+    } else if (action === "remove") {
+      logActivity("Removed a LineUp network", r.ip);
+      showMsg("lnMsg", "Your network is off the list.");
+    } else {
+      showMsg("lnMsg", "");
+    }
+  } catch (err) {
+    el("lnStatus").textContent = "Couldn't check this network.";
+    showMsg("lnMsg", `${err.message}`, false);
+  } finally {
+    lnBusy = false;
+    ["lnAllowBtn", "lnRemoveBtn", "lnRefreshBtn"].forEach(id => { el(id).disabled = false; });
+  }
+}
+el("lnAllowBtn").addEventListener("click", () => lineupNetwork("allow"));
+el("lnRemoveBtn").addEventListener("click", () => lineupNetwork("remove"));
+el("lnRefreshBtn").addEventListener("click", () => lineupNetwork("status"));
 
 // Lead and up are in the Created By leads list, linked to their username;
 // PLT and MLT aren't.
