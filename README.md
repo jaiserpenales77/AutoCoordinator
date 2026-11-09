@@ -450,6 +450,32 @@ Values are copied exactly as typed on the sheets (blank cells show "—"). To
 update it, re-export the workbooks' data into the `DATA` object near the top
 of the page's script.
 
+### Excel version (`cremer-recipes.xlsx`)
+
+The same 157 recipes as an Excel workbook, for opening in Teams or SharePoint,
+where the HTML page can't print. Excel for the web prints normally.
+
+- **Find Recipe**: pick a line (①), then a recipe (②; the list shows FG item,
+  bulk and bottle size for that line). The recipe card underneath is laid out
+  like the HTML printout and is the sheet's print area, so File → Print prints
+  that one page. The sheet is protected (no password); only the two yellow
+  boxes can be changed.
+- **How to Use**: steps for line users and supervisors.
+- **Recipes**: one row per recipe (line, bottle size, FG item, bulk, last
+  updated, source, then all 37 settings, grouped like the guide). Filters,
+  frozen headers, and dropdowns for line, size and ON/OFF (1/0) values.
+  Supervisors unprotect it (Review → Unprotect Sheet) to edit. A new recipe
+  typed in the first empty row shows up in the Find Recipe list automatically.
+  The hidden grey columns at the right build that list. Room for 998 recipes.
+- **Update History**: a dated log that supervisors keep by hand.
+- **Lists**: lines, bottle sizes and paper colours (line + size → "Green
+  sheet"), plus the automatic helper cells for the Find Recipe page.
+- In Teams the workbook is edited live by everyone who has it open, so two
+  people using Find Recipe at the same time change each other's page. Filters
+  on the Recipes tab are per person.
+- The sheets are protected without a password to stop accidental edits.
+  Supervisors can add their own password with Review → Protect Sheet.
+
 ## Running it
 
 No build step or server-side code is required — it's a static HTML/CSS/JS app.
@@ -706,6 +732,7 @@ remove someone's access, delete (or disable) their user.
   used by Claude Code sessions (see `CLAUDE.md`).
 - `cremer-recipes.html` — the standalone Cremer Recipe Finder (Line 9 and 10
   counter settings, data embedded).
+- `cremer-recipes.xlsx` — the Excel version of the Cremer Recipe Finder (prints from Teams/SharePoint).
 - `CLAUDE.md` — instructions Claude Code reads at the start of each session.
 - `assets/pharmavite-logo.png` — logo taken from the workbook.
 - `assets/vendor/firebase/` — Firebase JS SDK 12.19.0 app, Firestore and Auth
