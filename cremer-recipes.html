@@ -332,6 +332,14 @@ header.topbar .help-btn{font-size:17px;font-weight:800;line-height:1}
 .hero-help:hover{text-decoration:underline}
 @media (max-width:400px){ header.topbar .help-btn{display:none} }
 
+/* in-page confirm + "printing is blocked" dialogs */
+.cf-box{max-width:380px}.cf-msg{color:var(--ink)!important;font-size:15px!important;line-height:1.5;margin:0 0 16px!important}
+.btn.cf-danger{background:#dc2626;border-color:#dc2626;color:#fff}
+.pb-box{max-width:460px}.pb-box h2{margin:0 0 6px;font-size:19px}
+.pb-steps{margin:0 0 12px;padding-left:22px;color:var(--ink2);font-size:14px;line-height:1.5}.pb-steps b{color:var(--ink)}
+.pb-or{margin:0 0 8px!important;font-size:13px!important}
+.m-warn{max-width:720px;margin:0 auto 14px;padding:11px 14px;border-radius:12px;background:var(--warn-bg);color:var(--ink);font-size:13.5px;line-height:1.45;border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+
 /* tabs + suggestions */
 .tabs{display:flex;gap:4px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;width:max-content;box-shadow:var(--shadow)}
 .tabs button{border:0;background:none;padding:8px 18px;border-radius:999px;font-weight:700;color:var(--ink2);display:inline-flex;gap:8px;align-items:center;transition:background .2s,color .2s}
@@ -823,7 +831,7 @@ select.vin{text-align:left;padding-right:4px}
 
 <div class="pw-modal guide" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle"><div class="pw-box g-box">
   <div class="g-head"><h2 id="guideTitle">How to use</h2><button class="iconbtn g-x" id="guideX" type="button" aria-label="Close">✕</button></div>
-  <ol class="g-list"><li><span class="g-ico" aria-hidden="true">🔎</span><div><b class="g-t">1. Find a recipe</b><p>Type the FG or bulk number in the search box, e.g. <b>2684</b> or <b>A641</b>. Or tap a line or bottle size to narrow the list.</p></div></li><li><span class="g-ico" aria-hidden="true">👆</span><div><b class="g-t">2. Open it</b><p>Tap a recipe card. The four big numbers at the top are the main settings; everything else is below.</p></div></li><li><span class="g-ico" aria-hidden="true">🖨️</span><div><b class="g-t">3. Print it</b><p>Tap <b>Print</b> for a one-page sheet. For colour, turn on <b>Background graphics</b> in the print settings.</p></div></li><li><span class="g-ico" aria-hidden="true">💡</span><div><b class="g-t">4. Have better settings?</b><p>Tap <b>Have better settings?</b>, change the numbers, add your name and shift, tap <b>Print</b> and give the sheet to your supervisor. Don’t change the machine until it’s approved.</p></div></li><li><span class="g-ico" aria-hidden="true">🕘</span><div><b class="g-t">5. What changed?</b><p>The <b>History</b> tab on the right edge shows which recipes changed and when. Tap it to open or close.</p></div></li></ol>
+  <ol class="g-list"><li><span class="g-ico" aria-hidden="true">🔎</span><div><b class="g-t">1. Find a recipe</b><p>Type the FG or bulk number in the search box, e.g. <b>2684</b> or <b>A641</b>. Or tap a line or bottle size to narrow the list.</p></div></li><li><span class="g-ico" aria-hidden="true">👆</span><div><b class="g-t">2. Open it</b><p>Tap a recipe card. The four big numbers at the top are the main settings; everything else is below.</p></div></li><li><span class="g-ico" aria-hidden="true">🖨️</span><div><b class="g-t">3. Print it</b><p>Tap <b>Print</b> for a one-page sheet. For colour, turn on <b>Background graphics</b> in the print settings. <b>In Teams?</b> Open the file in your browser first (<b>⋯</b> next to <b>Close</b> → <b>Open in browser</b>).</p></div></li><li><span class="g-ico" aria-hidden="true">💡</span><div><b class="g-t">4. Have better settings?</b><p>Tap <b>Have better settings?</b>, change the numbers, add your name and shift, tap <b>Print</b> and give the sheet to your supervisor. Don’t change the machine until it’s approved.</p></div></li><li><span class="g-ico" aria-hidden="true">🕘</span><div><b class="g-t">5. What changed?</b><p>The <b>History</b> tab on the right edge shows which recipes changed and when. Tap it to open or close.</p></div></li></ol>
   <div class="g-sup">Supervisors only</div>
   <ol class="g-list" start="6"><li><span class="g-ico" aria-hidden="true">🔒</span><div><b class="g-t">6. Manage</b><p>Tap <b>Manage</b> and enter the password to <b>Edit</b>, add (<b>+ New recipe</b>) or <b>Remove</b> recipes. Changes stay on this computer until you tap <b>Download updated file</b> and replace the file in Teams.</p></div></li></ol>
   <div class="g-tip">✅ Always check the settings on the machine before running.</div>
@@ -869,7 +877,11 @@ const text = (k,v) => blank(v)?'—':(TOGGLES.has(k)&&(v===0||v===1)?(v?'ON':'OF
 const html = (k,v) => blank(v)?'<span class="v blank">—</span>':(TOGGLES.has(k)&&(v===0||v===1)?`<span class="on-off ${v?'on':'off'}">${v?'ON':'OFF'}</span>`:`<span class="v">${esc(v)}</span>`);
 const toVal = s => { s=String(s).trim(); if(s==='') return ''; return isNaN(s)?s:Number(s); };
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),1800); }
-const store = { get(k,d){try{const v=localStorage.getItem('cremer.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}}, set(k,v){try{localStorage.setItem('cremer.'+k,JSON.stringify(v))}catch(e){}} };
+/* Saving on this computer. Where the browser blocks it (e.g. the Teams file preview), keep it in memory for this visit. */
+const CAN_STORE = (()=>{ try{ localStorage.setItem('cremer.t','1'); localStorage.removeItem('cremer.t'); return true; }catch(e){ return false; } })();
+const MEM = {};
+const store = { get(k,d){ try{ const v=localStorage.getItem('cremer.'+k); return v==null?d:JSON.parse(v); }catch(e){ return k in MEM ? JSON.parse(MEM[k]) : d; } },
+                set(k,v){ try{ localStorage.setItem('cremer.'+k,JSON.stringify(v)); }catch(e){ MEM[k]=JSON.stringify(v); } } };
 document.addEventListener('pointerdown', e => {
   const b = e.target.closest('.btn,.more'); if(!b) return;
   const r=b.getBoundingClientRect(), d=Math.max(r.width,r.height), s=document.createElement('span');
@@ -885,6 +897,62 @@ function closeGuide(){ guide.classList.remove('show'); setTimeout(()=>{ guide.hi
 $('#helpBtn').onclick=openGuide; $('#heroHelp').onclick=openGuide; $('#guideX').onclick=closeGuide; $('#guideOk').onclick=closeGuide;
 guide.addEventListener('click',e=>{ if(e.target===guide) closeGuide(); });
 addEventListener('keydown',e=>{ if(e.key==='Escape' && !guide.hidden) closeGuide(); });
+
+/* In-page dialogs: the Teams file preview blocks the browser's own confirm() and print() */
+function askConfirm(msg, ok='OK', danger=false){
+  return new Promise(res=>{
+    const wrap=document.createElement('div'); wrap.className='pw-modal'; wrap.setAttribute('role','alertdialog');
+    wrap.innerHTML=`<div class="pw-box cf-box"><p class="cf-msg">${esc(msg).replace(/\n/g,'<br>')}</p>
+      <div class="pw-acts"><button class="btn" id="cfNo" type="button">Cancel</button><button class="btn primary grow${danger?' cf-danger':''}" id="cfOk" type="button">${esc(ok)}</button></div></div>`;
+    document.body.appendChild(wrap); requestAnimationFrame(()=>wrap.classList.add('show'));
+    const done=v=>{ removeEventListener('keydown',key,true); wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); res(v); };
+    const key=e=>{ if(e.key==='Escape'){ e.stopPropagation(); done(false); } if(e.key==='Enter'){ e.preventDefault(); done(true); } };
+    addEventListener('keydown',key,true);
+    wrap.querySelector('#cfNo').onclick=()=>done(false); wrap.querySelector('#cfOk').onclick=()=>done(true);
+    wrap.addEventListener('click',e=>{ if(e.target===wrap) done(false); });
+    setTimeout(()=>wrap.querySelector('#cfOk').focus(),50);
+  });
+}
+/* Forms: the Teams preview blocks form submission, so run the action from the button and the Enter key instead */
+function onSubmitLike(form, btn, fn){
+  form.addEventListener('submit', e=>e.preventDefault());
+  btn.addEventListener('click', e=>{ e.preventDefault(); fn(); });
+  form.addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target.tagName==='INPUT'){ e.preventDefault(); fn(); } });
+}
+/* Print, and if the page isn't allowed to print (Teams preview), say so and offer other ways */
+function doPrint(){
+  let fired=false; const on=()=>{ fired=true; };
+  addEventListener('beforeprint', on, {once:true});
+  try{ window.print(); }catch(e){}
+  setTimeout(()=>{ removeEventListener('beforeprint', on); if(!fired) printBlocked(); }, 250);
+}
+function printablePage(){
+  const css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('\n');
+  const sugg=document.body.classList.contains('print-sugg') && $('#printSheet');
+  const body= sugg ? $('#printSheet').outerHTML : $('#panel').outerHTML;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Cremer recipe – print</title><style>${css}</style>
+<style>@media screen{ html,body{background:#fff!important;color:#14161d} .panel,.ps{position:static!important;transform:none!important;opacity:1!important;visibility:visible!important;display:block!important;
+ width:auto!important;max-width:960px;max-height:none!important;margin:24px auto!important;box-shadow:none!important;overflow:visible!important} .p-foot,.iconbtn,.p-body{overflow:visible!important} .p-foot,.iconbtn{display:none!important} }</style></head>
+<body class="${sugg?'print-sugg':''}">${body}<script>addEventListener('load',()=>setTimeout(()=>print(),400))<\/script></body></html>`;
+}
+function printBlocked(){
+  const wrap=document.createElement('div'); wrap.className='pw-modal'; wrap.setAttribute('role','dialog');
+  wrap.innerHTML=`<div class="pw-box pb-box">
+    <h2>Printing is blocked here</h2>
+    <p>This looks like the <b>Teams preview</b>, which doesn’t let pages print. Open the file in your browser and print from there:</p>
+    <ol class="pb-steps"><li>In Teams, click <b>⋯</b> (next to <b>Close</b>, top right).</li><li>Choose <b>Open in browser</b> — or <b>Download</b>, then open the downloaded file.</li><li>Open the recipe again and tap <b>Print</b>.</li></ol>
+    <p class="pb-or">Or try one of these:</p>
+    <div class="pw-acts"><button class="btn" id="pbWin" type="button">Open print window</button><button class="btn" id="pbDl" type="button">Download printable page</button></div>
+    <div class="pw-acts" style="margin-top:8px"><button class="btn primary grow" id="pbOk" type="button">OK</button></div></div>`;
+  document.body.appendChild(wrap); requestAnimationFrame(()=>wrap.classList.add('show'));
+  const done=()=>{ wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); };
+  wrap.querySelector('#pbOk').onclick=done; wrap.addEventListener('click',e=>{ if(e.target===wrap) done(); });
+  wrap.querySelector('#pbWin').onclick=()=>{
+    let w=null; try{ w=window.open(URL.createObjectURL(new Blob([printablePage()],{type:'text/html'})),'_blank'); }catch(e){}
+    if (w) { toast('Print window opened'); done(); } else toast('Teams blocked new windows too — use the steps above');
+  };
+  wrap.querySelector('#pbDl').onclick=()=>{ try{ download('cremer-recipe-print.html', printablePage(), 'text/html'); toast('Open the downloaded file to print'); }catch(e){ toast('Download blocked — use the steps above'); } };
+}
 
 /* theme */
 const th = store.get('theme',null); if (th) document.documentElement.dataset.theme = th;
@@ -934,8 +1002,9 @@ function refreshAll(){ buildRecipes(); renderFilters(); render(); renderHistory(
 const MANAGE_LOCK = {"salt":"VR2sD1XsDj2FNVE3Gmzk4A==","hash":"zPOAwqJau9saGrZ1weXsmY9fBOnl7UQ/XSLtJ3XfvT+pv9cnRwJOeadtDev5o/BN4Sjq5gCj3hMa7suNcKlj+g==","iter":100000};
 const LOCK_ITER = 100000;
 const effLock = () => MANAGE_LOCK || store.get('lock', null);
-const unlocked = () => { try{ return sessionStorage.getItem('cremer.unlocked')==='1'; }catch(e){ return false; } };
-const setUnlocked = v => { try{ v?sessionStorage.setItem('cremer.unlocked','1'):sessionStorage.removeItem('cremer.unlocked'); }catch(e){} };
+let memUnlocked = false;
+const unlocked = () => { try{ return sessionStorage.getItem('cremer.unlocked')==='1'; }catch(e){ return memUnlocked; } };
+const setUnlocked = v => { memUnlocked = !!v; try{ v?sessionStorage.setItem('cremer.unlocked','1'):sessionStorage.removeItem('cremer.unlocked'); }catch(e){} };
 const canManage = () => !effLock() || unlocked();
 const cryptoOk = () => !!(window.crypto && crypto.subtle && window.TextEncoder);
 const b64 = { enc: a => btoa(String.fromCharCode.apply(null, new Uint8Array(a))), dec: s => Uint8Array.from(atob(s), c=>c.charCodeAt(0)) };
@@ -959,11 +1028,11 @@ function renderLock(el, after){
     <div class="lock-note">Looking up and printing recipes stays open to everyone; only changing recipes is locked.</div>
   </div></div>`;
   const inp=$('#pwInput');
-  $('#unlockForm').onsubmit = async e => {
-    e.preventDefault(); const btn=$('#unlockBtn'); btn.disabled=true; btn.textContent='Checking…';
+  onSubmitLike($('#unlockForm'), $('#unlockBtn'), async () => {
+    const btn=$('#unlockBtn'); if(btn.disabled) return; btn.disabled=true; btn.textContent='Checking…';
     if (await pwMatches(inp.value, effLock())){ setUnlocked(true); toast('✓ Unlocked'); after(); }
     else { const er=$('#pwErr'); er.hidden=false; er.textContent='Wrong password. Try again.'; btn.disabled=false; btn.textContent='Unlock'; inp.select(); }
-  };
+  });
   setTimeout(()=>inp.focus({preventScroll:true}),60);
 }
 function passwordDialog(isChange){
@@ -985,15 +1054,15 @@ function passwordDialog(isChange){
   const done=()=>{ wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); };
   wrap.addEventListener('click',e=>{ if(e.target===wrap) done(); });
   $('#pwCancel').onclick=done;
-  $('#pwForm').onsubmit = async e => {
-    e.preventDefault(); const er=$('#pwDErr'); er.hidden=true;
+  onSubmitLike($('#pwForm'), $('#pwSave'), async () => {
+    const er=$('#pwDErr'); er.hidden=true;
     const npw=$('#pwNew').value, npw2=$('#pwNew2').value;
     if (npw.length<4){ er.hidden=false; er.textContent='Use at least 4 characters.'; return; }
     if (npw!==npw2){ er.hidden=false; er.textContent='The two passwords don’t match.'; return; }
     if (isChange){ if(!(await pwMatches($('#pwCur').value, effLock()))){ er.hidden=false; er.textContent='Current password is wrong.'; $('#pwCur').select(); return; } }
     const lock = await pwHash(npw, null, LOCK_ITER);
     store.set('lock', lock); setUnlocked(true); done(); showLockLine(lock);
-  };
+  });
   setTimeout(()=>{ ($('#pwCur')||$('#pwNew')).focus({preventScroll:true}); },60);
 }
 function showLockLine(lock){
@@ -1082,7 +1151,7 @@ function open(uid){
     <div class="p-print-foot print-only"><span>Source: <b>${sourceOf(r)}</b></span><span>Updated ${esc(fmtDay(r.updated))} · Printed ${new Date().toLocaleDateString()} · Confirm settings on the machine</span></div></div>
     <div class="p-foot"><button class="btn" id="pCopy">Copy</button><button class="btn primary grow" id="pBetter">💡 Have better settings?</button><button class="btn" id="pPrint">Print</button></div>`;
   const p = showPanel(r,h); p.classList.add('view');
-  $('#pPrint').onclick=()=>{ document.body.classList.remove('print-sugg'); print(); }; $('#pCopy').onclick=()=>copy(r);
+  $('#pPrint').onclick=()=>{ document.body.classList.remove('print-sugg'); doPrint(); }; $('#pCopy').onclick=()=>copy(r);
   $('#pBetter').onclick=()=>suggest(uid);
   p.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>open(+b.dataset.go));
 }
@@ -1117,7 +1186,7 @@ function suggest(uid){
     $('#sPrint').textContent = n ? `🖨 Print ${n} change${n>1?'s':''}` : 'Change a value first';
   };
   const pb=p.querySelector('.p-body'); pb.addEventListener('input', refresh); pb.addEventListener('change', refresh); refresh();
-  $('#sCancel').onclick=()=>{ if(!p.dataset.dirty || confirm('Discard your changes?')) open(uid); };
+  $('#sCancel').onclick=()=>{ if(!p.dataset.dirty) open(uid); else askConfirm('Discard your changes?','Discard',true).then(ok=>{ if(ok) open(uid); }); };
   $('#sPrint').onclick=()=>{
     const ch=changes(); if(!ch.length) return;
     const name=$('#sName').value.trim();
@@ -1155,11 +1224,11 @@ function printSuggestion(r, ch, name, note){
   document.body.appendChild(el); document.body.classList.add('print-sugg');
   const done=()=>{ document.body.classList.remove('print-sugg'); removeEventListener('afterprint',done); };
   addEventListener('afterprint',done);
-  print();
+  doPrint();
 }
 function close(force){
   const p=$('#panel');
-  if (!force && p.dataset.dirty && !confirm('Discard your changes?')) return false;
+  if (!force && p.dataset.dirty){ askConfirm('Discard your changes?','Discard',true).then(ok=>{ if(ok) close(true); }); return false; }
   p.dataset.dirty=''; p.classList.remove('show'); p.setAttribute('aria-hidden','true'); $('#scrim').classList.remove('show'); return true;
 }
 $('#scrim').onclick=()=>close();
@@ -1201,7 +1270,7 @@ function renderManage(){
   const toks = state.mq.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const list = R.filter(r=>toks.every(t=>r.hay.includes(t))).sort((a,b)=>a.order-b.order);
   const removed = DATA.recipes.filter(r0=>e.removed.includes(r0.line+'|'+r0.sheet));
-  let h = `<div class="s-tools">
+  let h = (CAN_STORE?'':`<div class="m-warn">⚠️ <b>This preview can’t keep recipe changes</b> after it closes, and may block downloads. To edit recipes, open the file in your browser: in Teams click <b>⋯</b> next to <b>Close</b> → <b>Open in browser</b>.</div>`) + `<div class="s-tools">
       <button class="chip line on" id="mNew">+ New recipe</button>
       <button class="chip" id="mExport"${n?'':' disabled'}>⬇ Download updated file${n?` <small>${n} change${n>1?'s':''}</small>`:''}</button>
       ${n?`<button class="chip" id="mUndo">Undo all changes</button>`:''}
@@ -1236,7 +1305,7 @@ $('#viewManage').addEventListener('click', e => {
     saveEdits(e); refreshAll(); toast('Restored'); }
   else if (b.id==='mMore'){ state.mLimit=1e9; renderManage(); }
   else if (b.id==='mExport') exportFile();
-  else if (b.id==='mUndo'){ if(confirm('Undo all recipe changes made on this device? This puts every recipe back to how it is in the file.')){ saveEdits({added:[],edited:{},removed:[],log:[]}); refreshAll(); toast('All changes undone'); } }
+  else if (b.id==='mUndo'){ askConfirm('Undo all recipe changes made on this device? This puts every recipe back to how it is in the file.','Undo all',true).then(ok=>{ if(ok){ saveEdits({added:[],edited:{},removed:[],log:[]}); refreshAll(); toast('All changes undone'); } }); }
   else if (b.id==='mSetPw'||b.id==='mChgPw') passwordDialog(b.id==='mChgPw');
   else if (b.id==='mLock'){ setUnlocked(false); renderManage(); toast('Locked'); }
 });
@@ -1276,13 +1345,13 @@ function editRecipe(k, prefill){
   pb.addEventListener('input', ()=>{ p.dataset.dirty='1'; if(!isNew) markChanged(p); });
   pb.addEventListener('change', ()=>{ p.dataset.dirty='1'; if(!isNew) markChanged(p); });
   $('#eCancel').onclick=()=>close();
-  if (!isNew) $('#eDel').onclick=()=>{ if(removeRecipe(k)) close(true); };
-  $('#eSave').onclick=()=>{
+  if (!isNew) $('#eDel').onclick=async()=>{ if(await removeRecipe(k)) close(true); };
+  $('#eSave').onclick=async()=>{
     const er=$('#eErr'); er.hidden=true;
     const fg=$('#eFg').value.trim().toUpperCase(), bulk=$('#eBulk').value.trim().toUpperCase(), line=+$('#eLine').value, size=+$('#eSize').value;
     if (!fg){ er.hidden=false; er.textContent='Enter the FG item.'; $('#eFg').focus(); return; }
     const dup = R.find(x=>x.k!==k && String(x.fg).toUpperCase()===fg && String(x.bulk).toUpperCase()===bulk && x.line===line && x.size===size);
-    if (dup && !confirm(`There is already a recipe for ${fg} ${bulk} on Line ${line}, ${size} cc. Save this one too?`)) return;
+    if (dup && !(await askConfirm(`There is already a recipe for ${fg} ${bulk} on Line ${line}, ${size} cc. Save this one too?`,'Save anyway'))) return;
     const rec = {fg, bulk, line, size, id:(fg+' '+bulk).trim()};
     p.querySelectorAll('.vin').forEach(i=>{ const v=toVal(i.value); if(!blank(v)) rec[i.dataset.k]=v; });
     const e=edits();
@@ -1310,9 +1379,9 @@ function editRecipe(k, prefill){
   };
   setTimeout(()=>{ (isNew?$('#eFg'):p.querySelector('.kv.chg .vin')||$('#eFg')).focus({preventScroll:true}); },60);
 }
-function removeRecipe(k){
+async function removeRecipe(k){
   const r=byKey[k]; if(!r) return false;
-  if (!confirm(`Remove ${r.fg} ${r.bulk} (Line ${r.line}, ${r.size} cc)?`+(r.status==='new'?'':'\n\nYou can restore it later under "Removed recipes".'))) return false;
+  if (!(await askConfirm(`Remove ${r.fg} ${r.bulk} (Line ${r.line}, ${r.size} cc)?`+(r.status==='new'?'':'\nYou can restore it later under "Removed recipes".'),'Remove',true))) return false;
   const e=edits();
   if (r.status==='new') e.added=e.added.filter(a=>a.k!==k);
   else { delete e.edited[k]; if(!e.removed.includes(k)) e.removed.push(k); }

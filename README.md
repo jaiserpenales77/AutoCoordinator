@@ -371,6 +371,13 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   Manage tabs and light/dark switch on the right. Below: a short headline, the search bar (it sticks under the top bar)
   and the filters (one sideways-scrolling row on phones). LineUp's blue accent. Printouts are headed
   "LineUp · Cremer Recipes".
+- **In the Teams file preview:** Teams opens the file in a locked-down viewer that
+  blocks printing, the browser's own "Are you sure?" pop-ups, form submission and
+  saving on the computer. The app works around it: **Print** explains how to open
+  the file in the browser (⋯ next to Close → Open in browser) and offers a print
+  window or a printable download; "Are you sure?" questions are in-page dialogs;
+  the Manage password box works by button and Enter key; and Manage keeps changes
+  in memory with a warning that they are lost when the preview closes.
 - **How to use:** the **?** in the top bar (or "New here? How to use →" under the
   headline on small phones) opens a short step-by-step guide: find, open, print,
   suggest better settings, history, and Manage for supervisors.
