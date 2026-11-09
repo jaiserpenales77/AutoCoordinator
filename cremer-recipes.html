@@ -831,7 +831,7 @@ select.vin{text-align:left;padding-right:4px}
 
 <div class="pw-modal guide" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle"><div class="pw-box g-box">
   <div class="g-head"><h2 id="guideTitle">How to use</h2><button class="iconbtn g-x" id="guideX" type="button" aria-label="Close">✕</button></div>
-  <ol class="g-list"><li><span class="g-ico" aria-hidden="true">🔎</span><div><b class="g-t">1. Find a recipe</b><p>Type the FG or bulk number in the search box, e.g. <b>2684</b> or <b>A641</b>. Or tap a line or bottle size to narrow the list.</p></div></li><li><span class="g-ico" aria-hidden="true">👆</span><div><b class="g-t">2. Open it</b><p>Tap a recipe card. The four big numbers at the top are the main settings; everything else is below.</p></div></li><li><span class="g-ico" aria-hidden="true">🖨️</span><div><b class="g-t">3. Print it</b><p>Tap <b>Print</b> for a one-page sheet. For colour, turn on <b>Background graphics</b> in the print settings. <b>In Teams?</b> Open the file in your browser first (<b>⋯</b> next to <b>Close</b> → <b>Open in browser</b>).</p></div></li><li><span class="g-ico" aria-hidden="true">💡</span><div><b class="g-t">4. Have better settings?</b><p>Tap <b>Have better settings?</b>, change the numbers, add your name and shift, tap <b>Print</b> and give the sheet to your supervisor. Don’t change the machine until it’s approved.</p></div></li><li><span class="g-ico" aria-hidden="true">🕘</span><div><b class="g-t">5. What changed?</b><p>The <b>History</b> tab on the right edge shows which recipes changed and when. Tap it to open or close.</p></div></li></ol>
+  <ol class="g-list"><li><span class="g-ico" aria-hidden="true">🔎</span><div><b class="g-t">1. Find a recipe</b><p>Type the FG or bulk number in the search box, e.g. <b>2684</b> or <b>A641</b>. Or tap a line or bottle size to narrow the list.</p></div></li><li><span class="g-ico" aria-hidden="true">👆</span><div><b class="g-t">2. Open it</b><p>Tap a recipe card. The four big numbers at the top are the main settings; everything else is below.</p></div></li><li><span class="g-ico" aria-hidden="true">🖨️</span><div><b class="g-t">3. Print it</b><p>Tap <b>Print</b> for a one-page sheet. For colour, turn on <b>Background graphics</b> in the print settings. <b>In Teams or SharePoint?</b> Printing is blocked there — <b>download the file and open it</b>, then print.</p></div></li><li><span class="g-ico" aria-hidden="true">💡</span><div><b class="g-t">4. Have better settings?</b><p>Tap <b>Have better settings?</b>, change the numbers, add your name and shift, tap <b>Print</b> and give the sheet to your supervisor. Don’t change the machine until it’s approved.</p></div></li><li><span class="g-ico" aria-hidden="true">🕘</span><div><b class="g-t">5. What changed?</b><p>The <b>History</b> tab on the right edge shows which recipes changed and when. Tap it to open or close.</p></div></li></ol>
   <div class="g-sup">Supervisors only</div>
   <ol class="g-list" start="6"><li><span class="g-ico" aria-hidden="true">🔒</span><div><b class="g-t">6. Manage</b><p>Tap <b>Manage</b> and enter the password to <b>Edit</b>, add (<b>+ New recipe</b>) or <b>Remove</b> recipes. Changes stay on this computer until you tap <b>Download updated file</b> and replace the file in Teams.</p></div></li></ol>
   <div class="g-tip">✅ Always check the settings on the machine before running.</div>
@@ -939,19 +939,21 @@ function printBlocked(){
   const wrap=document.createElement('div'); wrap.className='pw-modal'; wrap.setAttribute('role','dialog');
   wrap.innerHTML=`<div class="pw-box pb-box">
     <h2>Printing is blocked here</h2>
-    <p>This looks like the <b>Teams preview</b>, which doesn’t let pages print. Open the file in your browser and print from there:</p>
-    <ol class="pb-steps"><li>In Teams, click <b>⋯</b> (next to <b>Close</b>, top right).</li><li>Choose <b>Open in browser</b> — or <b>Download</b>, then open the downloaded file.</li><li>Open the recipe again and tap <b>Print</b>.</li></ol>
-    <p class="pb-or">Or try one of these:</p>
-    <div class="pw-acts"><button class="btn" id="pbWin" type="button">Open print window</button><button class="btn" id="pbDl" type="button">Download printable page</button></div>
+    <p><b>Teams and SharePoint</b> show this file inside their own page, and that page doesn’t allow printing. Download the file and open it — then printing works:</p>
+    <ol class="pb-steps"><li><b>Download the file.</b> In Teams: <b>⋯</b> next to <b>Close</b> → <b>Download</b>. In SharePoint: go to <b>Documents</b>, click <b>⋯</b> next to <b>cremer-recipes.html</b> → <b>Download</b>.</li>
+      <li><b>Open the downloaded file</b> (from your browser’s downloads, or the Downloads folder). It opens in your browser.</li>
+      <li>Find the recipe and tap <b>Print</b>.</li></ol>
+    <p class="pb-or">Or try these quick ways (some sites block them too):</p>
+    <div class="pw-acts"><button class="btn" id="pbDl" type="button">⬇ Download this sheet</button><button class="btn" id="pbWin" type="button">Open print window</button></div>
     <div class="pw-acts" style="margin-top:8px"><button class="btn primary grow" id="pbOk" type="button">OK</button></div></div>`;
   document.body.appendChild(wrap); requestAnimationFrame(()=>wrap.classList.add('show'));
   const done=()=>{ wrap.classList.remove('show'); setTimeout(()=>wrap.remove(),200); };
   wrap.querySelector('#pbOk').onclick=done; wrap.addEventListener('click',e=>{ if(e.target===wrap) done(); });
   wrap.querySelector('#pbWin').onclick=()=>{
     let w=null; try{ w=window.open(URL.createObjectURL(new Blob([printablePage()],{type:'text/html'})),'_blank'); }catch(e){}
-    if (w) { toast('Print window opened'); done(); } else toast('Teams blocked new windows too — use the steps above');
+    if (w) { toast('Print window opened'); done(); } else toast('New windows are blocked here too — use the steps above');
   };
-  wrap.querySelector('#pbDl').onclick=()=>{ try{ download('cremer-recipe-print.html', printablePage(), 'text/html'); toast('Open the downloaded file to print'); }catch(e){ toast('Download blocked — use the steps above'); } };
+  wrap.querySelector('#pbDl').onclick=()=>{ try{ download('cremer-recipe-print.html', printablePage(), 'text/html'); toast('Open the downloaded file — it prints by itself'); }catch(e){ toast('Download blocked — use the steps above'); } };
 }
 
 /* theme */
@@ -1270,7 +1272,7 @@ function renderManage(){
   const toks = state.mq.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const list = R.filter(r=>toks.every(t=>r.hay.includes(t))).sort((a,b)=>a.order-b.order);
   const removed = DATA.recipes.filter(r0=>e.removed.includes(r0.line+'|'+r0.sheet));
-  let h = (CAN_STORE?'':`<div class="m-warn">⚠️ <b>This preview can’t keep recipe changes</b> after it closes, and may block downloads. To edit recipes, open the file in your browser: in Teams click <b>⋯</b> next to <b>Close</b> → <b>Open in browser</b>.</div>`) + `<div class="s-tools">
+  let h = (CAN_STORE?'':`<div class="m-warn">⚠️ <b>Changes made here aren’t kept.</b> Teams and SharePoint show this file inside their own page, which doesn’t let it save and may block downloads. To edit recipes, <b>download the file and open the downloaded copy</b> (Teams: <b>⋯</b> next to <b>Close</b> → <b>Download</b>; SharePoint: <b>⋯</b> next to the file → <b>Download</b>).</div>`) + `<div class="s-tools">
       <button class="chip line on" id="mNew">+ New recipe</button>
       <button class="chip" id="mExport"${n?'':' disabled'}>⬇ Download updated file${n?` <small>${n} change${n>1?'s':''}</small>`:''}</button>
       ${n?`<button class="chip" id="mUndo">Undo all changes</button>`:''}
