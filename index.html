@@ -532,6 +532,11 @@
         <span class="form-card-code">Equipment failure</span>
         <span class="form-card-desc">Trouble Shooting Template: the problem, line, equipment and downtime, what the SME or mechanic checked and whether it fixed it, and the corrective action</span>
       </button>
+      <button type="button" class="form-card" data-form="pcTab">
+        <span class="form-card-name">Pulse Check Conversation</span>
+        <span class="form-card-code">Conversation prep</span>
+        <span class="form-card-desc">Prepare for Your Pulse Check Conversation: an accomplishment, goal progress, a skill you're building, and the support and communication that would help</span>
+      </button>
       <button type="button" class="form-card" data-form="bulkCalcTab">
         <span class="form-card-name">Bulk Calculator</span>
         <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
@@ -639,6 +644,22 @@
     <p class="muted">Start this form when there's an equipment failure. Print it blank to fill in by hand, or type in any boxes first; an empty Date and Time start with today's date and the time now. Click the circle beside a row to circle that check as the cause (click again to clear).</p>
     <div id="tsSheetWrap" class="br-sheet-wrap">
       <div id="tsSheet" class="br-sheet tr-sheet"></div>
+    </div>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="pcTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Prepare for Your Pulse Check Conversation</h2>
+      <div class="actions br-actions">
+        <button type="button" id="pcClearBtn">Clear</button>
+        <button type="button" id="pcPrintBtn" class="primary">Print Pulse Check</button>
+      </div>
+    </div>
+    <p class="muted">Print it blank to jot on by hand, or type your answers on the lines first; longer answers carry on down the box. Nothing typed here is saved or sent anywhere: it's gone when you leave the page or click Clear.</p>
+    <div id="pcSheetWrap" class="br-sheet-wrap">
+      <div id="pcSheet" class="br-sheet tr-sheet"></div>
     </div>
   </section>
 </div>
@@ -752,6 +773,9 @@
 <div id="ctPrint" class="ct-print">
   <div id="ctPrintPage" class="br-print-page"></div>
 </div>
+<div id="pcPrint" class="pc-print">
+  <div id="pcPrintPage" class="tr-print-page"></div>
+</div>
 <div id="tsPrint" class="ts-print">
   <div id="tsPrintPage" class="tr-print-page"></div>
 </div>
@@ -772,5 +796,6 @@
 <script src="component-transfer.js"></script>
 <script src="training-signin.js"></script>
 <script src="troubleshooting.js"></script>
+<script src="pulse-check.js"></script>
 </body>
 </html>
