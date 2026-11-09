@@ -371,6 +371,9 @@ settings on Line 9 and Line 10. It holds the 157 recipes from the
   Manage tabs and light/dark switch on the right. Below: a short headline, the search bar (it sticks under the top bar)
   and the filters (one sideways-scrolling row on phones). LineUp's blue accent. Printouts are headed
   "LineUp · Cremer Recipes".
+- **How to use:** the **?** in the top bar (or "New here? How to use →" under the
+  headline on small phones) opens a short step-by-step guide: find, open, print,
+  suggest better settings, history, and Manage for supervisors.
 - Opens with the same short intro as LineUp: bottles ride in on a conveyor, a
   cap drops onto the middle one and "Welcome to LineUp" rises in with
   "Cremer Recipes" under it as a sub-app, then
