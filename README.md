@@ -455,18 +455,22 @@ of the page's script.
 The same 157 recipes as an Excel workbook, for opening in Teams or SharePoint,
 where the HTML page can't print. Excel for the web prints normally.
 
-- **Find Recipe**: pick a line (①), then a recipe (②; the list shows FG item,
-  bulk and bottle size for that line). The recipe card underneath is laid out
-  like the HTML printout and is the sheet's print area, so File → Print prints
-  that one page. The sheet is protected (no password); only the two yellow
-  boxes can be changed.
+- **Find Recipe**: a 🔍 search bar. Type an FG or bulk number, or part of
+  one, and press Enter; matching is case-insensitive. **Line** narrows the
+  search (default *All lines*). The first match fills the recipe card, and
+  box ② lists every match ("FG · bulk · Line · size") so you can pick
+  another. A line under the boxes says how many matched, or that nothing did.
+  A pick from an older search is greyed out and struck through. The recipe
+  card underneath is laid out like the HTML printout and is the sheet's print
+  area, so File → Print prints that one page. The sheet is protected (no
+  password); only the three yellow boxes can be changed.
 - **How to Use**: steps for line users and supervisors.
 - **Recipes**: one row per recipe (line, bottle size, FG item, bulk, last
   updated, source, then all 37 settings, grouped like the guide). Filters,
   frozen headers, and dropdowns for line, size and ON/OFF (1/0) values.
   Supervisors unprotect it (Review → Unprotect Sheet) to edit. A new recipe
   typed in the first empty row shows up in the Find Recipe list automatically.
-  The hidden grey columns at the right build that list. Room for 998 recipes.
+  The hidden grey columns at the right do the search. Room for 998 recipes.
 - **Update History**: a dated log that supervisors keep by hand.
 - **Lists**: lines, bottle sizes and paper colours (line + size → "Green
   sheet"), plus the automatic helper cells for the Find Recipe page.
