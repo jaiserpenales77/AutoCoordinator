@@ -1208,15 +1208,18 @@ el("lineRateTableBody").addEventListener("click", e => {
   }
 });
 
-// Cotton and Desiccant: the FG items that take cotton or desiccant ("Yes", or
-// which), for LineUp's changeover notes and QA sheets. Only admins add,
-// change or remove them; Leads see the lists (the database rules let Leads
-// add only bulk and FG items). Each panel's elements are named after its
-// `id`: cottonForm, cottonFg, cottonType, cottonSearch and so on.
+// Cotton, Desiccant and Allergen: the FG items that take cotton or desiccant
+// ("Yes", or which) or have an allergen (its code), for LineUp's printouts,
+// changeover notes and QA sheets. Only admins add, change or remove them;
+// Leads see the lists (the database rules let Leads add only bulk and FG
+// items). Each panel's elements are named after its `id`: cottonForm,
+// cottonFg, cottonType, cottonSearch and so on. `blank` is what an empty
+// value saves (none: the value must be typed); `upper` saves it in capitals.
 const NO_FLAG = ["N", "NO", "0", "-", "FALSE", "NONE"];
 const FLAG_PANELS = [
-  { id: "cotton", word: "cotton", Word: "Cotton", store: () => StoredData.cotton },
-  { id: "desiccant", word: "desiccant", Word: "Desiccant", store: () => StoredData.desiccant }
+  { id: "cotton", word: "cotton", Word: "Cotton", store: () => StoredData.cotton, blank: "Yes" },
+  { id: "desiccant", word: "desiccant", Word: "Desiccant", store: () => StoredData.desiccant, blank: "Yes" },
+  { id: "allergen", word: "allergen", Word: "Allergen", store: () => StoredData.allergen, blank: "", upper: true }
 ];
 const flagEl = (p, part) => el(`${p.id}${part}`);
 
@@ -1236,7 +1239,7 @@ function renderFlagPanel(p) {
       </td></tr>`).join("");
   flagEl(p, "None").textContent = all.length
     ? `No ${p.word} matches "${flagEl(p, "Search").value.trim()}".`
-    : `No ${p.word} yet.`;
+    : `No ${p.id === "allergen" ? "allergens" : p.word} yet.`;
   flagEl(p, "None").classList.toggle("hidden", list.length > 0);
   flagEl(p, "Search").classList.toggle("hidden", all.length === 0);
   flagEl(p, "Count").textContent = all.length ? `${all.length} FG item${all.length === 1 ? "" : "s"}` : "";
@@ -1251,9 +1254,14 @@ FLAG_PANELS.forEach(p => {
     e.preventDefault();
     if (!canChangeStoredItems()) return;
     const items = [...new Set(flagEl(p, "Fg").value.split(/[\s,;]+/).map(s => s.trim().toUpperCase()).filter(Boolean))];
-    const value = flagEl(p, "Type").value.trim().replace(/\s+/g, " ") || "Yes";
+    const typed = flagEl(p, "Type").value.trim().replace(/\s+/g, " ");
+    const value = (p.upper ? typed.toUpperCase() : typed) || p.blank;
     if (!items.length) {
       showMsg(`${p.id}Msg`, "Type an FG item.", false);
+      return;
+    }
+    if (!value) {
+      showMsg(`${p.id}Msg`, `Type the ${p.word}.`, false);
       return;
     }
     if (NO_FLAG.includes(value.toUpperCase())) {
@@ -1280,7 +1288,7 @@ FLAG_PANELS.forEach(p => {
     if (!hit) return;
     if (btn.dataset.action === "edit") {
       flagEl(p, "Fg").value = hit.item;
-      flagEl(p, "Type").value = hit[p.id] === "Yes" ? "" : hit[p.id];
+      flagEl(p, "Type").value = p.blank && hit[p.id] === p.blank ? "" : hit[p.id];
       flagEl(p, "Type").focus();
       showMsg(`${p.id}Msg`, `Editing ${hit.item} — change the ${p.word} and click Save ${p.Word}.`);
     } else if (confirm(`Take ${hit.item} off the ${p.word} list?`)) {
@@ -1312,7 +1320,7 @@ el("importStoredInput").addEventListener("change", async e => {
     // leads are left out and items already stored keep their values.
     const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
     const counts = `${n.items} bulk item(s), ${n.fgItems} FG item(s), ${n.lineRates} line rate(s)`
-      + (n.cotton !== null ? `, ${n.cotton} cotton item(s) and ${n.desiccant} desiccant item(s)` : "");
+      + (n.cotton !== null ? `, ${n.cotton} cotton, ${n.desiccant} desiccant and ${n.allergen} allergen item(s)` : "");
     logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${counts}`);
     const kept = n.kept ? ` ${n.kept} already stored ${n.kept === 1 ? "entry" : "entries"} kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
@@ -1784,7 +1792,8 @@ CloudSync.start({
     fgItems: StoredData.fgItems.all(),
     lineRates: StoredData.lineRates.all(),
     cotton: StoredData.cotton.all(),
-    desiccant: StoredData.desiccant.all()
+    desiccant: StoredData.desiccant.all(),
+    allergen: StoredData.allergen.all()
   }),
   onSheets(records) {
     saveRecords(records);

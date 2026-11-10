@@ -260,7 +260,7 @@ first), with a search box, a time range (today, last 7 or 30 days, all) and
 Logged: signing in, signing out and creating an account; saving, updating,
 deleting, printing and exporting yield sheets; importing JDE report PDFs;
 adding, changing and removing bulk items (also from the Bulk Calculator), FG
-items, line rates, cotton and desiccant; importing and exporting Stored Data; adding and removing leads
+items, line rates, cotton, desiccant and allergen; importing and exporting Stored Data; adding and removing leads
 and linking usernames; changing account types; and printing each form and
 the Bulk Calculator report.
 
@@ -294,6 +294,11 @@ people do through the app; it isn't a tamper-proof audit trail.
   it when a work order's DES box is empty, for its changeover notes (Add,
   Change, Remove Desiccant) and its QA sheets. Admins and Owners change it;
   Leads see it.
+- **Allergen** — the FG items with an allergen, and its code as the
+  schedule's Allergen column has it (M, S, C, ...; the code must be typed,
+  and is saved in capitals). LineUp reads it when a work order's Allergen box
+  is empty, for the allergen highlight, the Washroom Prep List and the QA
+  allergen test. Admins and Owners change it; Leads see it.
 
 A value typed by hand is never overwritten, and a loaded saved sheet keeps its
 own values.
@@ -304,7 +309,7 @@ buttons (the database refuses it too). **Admins and Owners** can add, edit and r
 
 Stored Data is shared through the database (see below). **Export Stored Data**
 saves a JSON backup; **Import Stored Data** adds a backup's entries back
-(its leads, usernames, cotton and desiccant only for admins; for Leads, items already
+(its leads, usernames, cotton, desiccant and allergen only for admins; for Leads, items already
 stored keep their values).
 
 ## Importing the JDE report PDFs
@@ -388,10 +393,11 @@ same Firebase Firestore database as the JDE Sched app (project
 - each yield sheet is a document in the `pk030-yield-sheets` collection;
 - leads, username links (`leadUsers`, username → lead name), bulk piece
   weights, FG counts, line rates (`lineRates`, "LINE|FG ITEM" → Full Hour,
-  Lunch, Break), cotton (`cottonItems`, FG item → "Yes" or the cotton) and
-  desiccant (`desiccantItems`, FG item → "Yes" or the desiccant) are maps in
-  `pk030/storedData`. JDE Sched's shift accounts read it too, for its
-  estimated times and its cotton and desiccant notes.
+  Lunch, Break), cotton (`cottonItems`, FG item → "Yes" or the cotton),
+  desiccant (`desiccantItems`, FG item → "Yes" or the desiccant) and allergen
+  (`allergenItems`, FG item → its code) are maps in `pk030/storedData`. JDE
+  Sched's shift accounts read it too, for its estimated times and its
+  cotton, desiccant and allergen information.
 
 The status under the title shows **Synced**, **Saving…**, **Offline** (changes
 are kept and sent when the connection returns, even across reloads) or a
@@ -615,9 +621,9 @@ remove someone's access, delete (or disable) their user.
 - `assets/standard-work-front.png`, `assets/standard-work-back.png` — the
   Standard Work sheet's two sides, from the 600 dpi scans (straightened,
   cleaned, 300 dpi).
-- `stored-data.js` — leads (Admin tab), bulk piece weights, FG counts, line rates, cotton and desiccant (Stored Data tab).
+- `stored-data.js` — leads (Admin tab), bulk piece weights, FG counts, line rates, cotton, desiccant and allergen (Stored Data tab).
 - `cloud-sync.js` — sign-in and sign-up, account types, and syncing sheets and Stored Data with Firestore.
-- `tools/pk030_db.py` — adds FG items, bulk items, line rates, cotton and desiccant to Stored Data
+- `tools/pk030_db.py` — adds FG items, bulk items, line rates, cotton, desiccant and allergen to Stored Data
   from a file in the export format, signed in as the account in
   `PK030_USERNAME` / `PK030_PASSWORD` (add-only, with Activity Log entries);
   used by Claude Code sessions (see `CLAUDE.md`).
