@@ -728,7 +728,10 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   .line-rate-form button { grid-column: 1 / -1; }
 }
 
-/* Cotton: FG Item and Cotton side by side. */
+/* A Stored Data list's count, next to its heading. */
+.panel-count { font-size: 0.8rem; font-weight: 400; opacity: 0.7; }
+
+/* Cotton and Desiccant: FG Item and Cotton (or Desiccant) side by side. */
 .cotton-form {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;

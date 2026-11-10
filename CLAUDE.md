@@ -7,7 +7,7 @@ Data lives in Firebase Firestore (project `jde-schedule-database`), shared with
 the JDE Sched app. See README.md for features, account types and the Firestore
 rules.
 
-## Adding data to Stored Data (FG items, bulk items, line rates, cotton)
+## Adding data to Stored Data (FG items, bulk items, line rates, cotton, desiccant)
 
 Requests like "add the missing FG items from this schedule" go straight into
 the live database with `tools/pk030_db.py`. It signs in as the account in
@@ -24,11 +24,13 @@ for each, and reads the data back to confirm.
    `{"fgItems": [{"item": "2676", "count": 180}],
      "items": [{"item": "BU001565", "pieceWt": 1781}],
      "lineRates": [{"line": "10", "fgItem": "2676", "fullHour": 3000, "lunch": 1500, "break": null}],
-     "cotton": [{"item": "2741", "cotton": "Yes"}]}`
-   (`lunch`/`break` may be null for lines that run through them; cotton is
-   "Yes" or the cotton it takes, and needs an Admin or Owner account.)
+     "cotton": [{"item": "2741", "cotton": "Yes"}],
+     "desiccant": [{"item": "1717", "desiccant": "Yes"}]}`
+   (`lunch`/`break` may be null for lines that run through them; cotton and
+   desiccant are "Yes" or the one it takes, and need an Admin or Owner
+   account.)
 3. `python3 tools/pk030_db.py add FILE --dry-run`, then without `--dry-run`.
-   `python3 tools/pk030_db.py show fgItems` (or `bulkItems`, `lineRates`, `cottonItems`)
+   `python3 tools/pk030_db.py show fgItems` (or `bulkItems`, `lineRates`, `cottonItems`, `desiccantItems`)
    prints what's stored.
 4. Report a table of what was added, what was already stored, and anything
    stored with a different value. The script never changes those; tell the

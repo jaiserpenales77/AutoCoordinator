@@ -993,7 +993,7 @@ function renderStoredData() {
 
   ITEM_PANELS.forEach(renderItemPanel);
   renderLineRates();
-  renderCotton();
+  FLAG_PANELS.forEach(renderFlagPanel);
 
   populateLeads();
   // The Bulk Calculator's item suggestions (bulk-calc.js loads after this file).
@@ -1208,79 +1208,88 @@ el("lineRateTableBody").addEventListener("click", e => {
   }
 });
 
-// Cotton: the FG items that take cotton ("Yes", or the cotton it takes), for
-// LineUp's changeover notes. Only admins add, change or remove it; Leads see
-// the list (the database rules let Leads add only bulk and FG items).
-const NO_COTTON = ["N", "NO", "0", "-", "FALSE", "NONE"];
+// Cotton and Desiccant: the FG items that take cotton or desiccant ("Yes", or
+// which), for LineUp's changeover notes and QA sheets. Only admins add,
+// change or remove them; Leads see the lists (the database rules let Leads
+// add only bulk and FG items). Each panel's elements are named after its
+// `id`: cottonForm, cottonFg, cottonType, cottonSearch and so on.
+const NO_FLAG = ["N", "NO", "0", "-", "FALSE", "NONE"];
+const FLAG_PANELS = [
+  { id: "cotton", word: "cotton", Word: "Cotton", store: () => StoredData.cotton },
+  { id: "desiccant", word: "desiccant", Word: "Desiccant", store: () => StoredData.desiccant }
+];
+const flagEl = (p, part) => el(`${p.id}${part}`);
 
-function renderCotton() {
-  const all = StoredData.cotton.all();
-  const query = el("cottonSearch").value.trim().toUpperCase();
-  const list = query ? all.filter(i => `${i.item} ${i.cotton.toUpperCase()}`.includes(query)) : all;
+function renderFlagPanel(p) {
+  const all = p.store().all();
+  const query = flagEl(p, "Search").value.trim().toUpperCase();
+  const list = query ? all.filter(i => `${i.item} ${i[p.id].toUpperCase()}`.includes(query)) : all;
   const change = canChangeStoredItems();
-  el("cottonForm").classList.toggle("hidden", !change);
-  el("cottonMsg").classList.toggle("hidden", !change);
-  el("cottonViewOnlyNote").classList.toggle("hidden", change);
-  el("cottonTableBody").innerHTML = list.map(i => `
-    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(i.cotton)}</td>
+  flagEl(p, "Form").classList.toggle("hidden", !change);
+  flagEl(p, "Msg").classList.toggle("hidden", !change);
+  flagEl(p, "ViewOnlyNote").classList.toggle("hidden", change);
+  flagEl(p, "TableBody").innerHTML = list.map(i => `
+    <tr><td>${escapeHtml(i.item)}</td><td>${escapeHtml(i[p.id])}</td>
       <td class="row-actions">${change ? `
         <button type="button" data-action="edit" data-item="${escapeHtml(i.item)}">Edit</button>
         <button type="button" data-action="remove" data-item="${escapeHtml(i.item)}">Remove</button>` : ""}
       </td></tr>`).join("");
-  el("noCottonMsg").textContent = all.length
-    ? `No cotton matches "${el("cottonSearch").value.trim()}".`
-    : "No cotton yet.";
-  el("noCottonMsg").classList.toggle("hidden", list.length > 0);
-  el("cottonSearch").classList.toggle("hidden", all.length === 0);
+  flagEl(p, "None").textContent = all.length
+    ? `No ${p.word} matches "${flagEl(p, "Search").value.trim()}".`
+    : `No ${p.word} yet.`;
+  flagEl(p, "None").classList.toggle("hidden", list.length > 0);
+  flagEl(p, "Search").classList.toggle("hidden", all.length === 0);
+  flagEl(p, "Count").textContent = all.length ? `${all.length} FG item${all.length === 1 ? "" : "s"}` : "";
   // Suggestions: the stored FG items.
-  el("cottonFgList").innerHTML = StoredData.fgItems.all()
+  flagEl(p, "FgList").innerHTML = StoredData.fgItems.all()
     .map(i => `<option value="${escapeHtml(i.item)}">`).join("");
 }
 
-el("cottonSearch").addEventListener("input", renderCotton);
-el("cottonForm").addEventListener("submit", e => {
-  e.preventDefault();
-  if (!canChangeStoredItems()) return;
-  const items = [...new Set(el("cottonFg").value.split(/[\s,;]+/).map(s => s.trim().toUpperCase()).filter(Boolean))];
-  const cotton = el("cottonType").value.trim().replace(/\s+/g, " ") || "Yes";
-  if (!items.length) {
-    showMsg("cottonMsg", "Type an FG item.", false);
-    return;
-  }
-  if (NO_COTTON.includes(cotton.toUpperCase())) {
-    showMsg("cottonMsg", "To take an FG item off the cotton list, click Remove next to it.", false);
-    return;
-  }
-  const saved = items.map(item => ({ item, was: StoredData.cotton.find(item) }));
-  saved.forEach(({ item, was }) => {
-    StoredData.cotton.save(item, cotton);
-    logActivity(`${was ? "Changed" : "Added"} cotton`, `${item}: ${cotton}${was ? ` (was ${was.cotton})` : ""}`);
-  });
-  showMsg("cottonMsg", saved.length === 1
-    ? `${saved[0].was ? "Updated" : "Added"} ${saved[0].item}: ${cotton}.`
-    : `Saved ${saved.length} FG items: ${cotton}.`);
-  el("cottonFg").value = "";
-  el("cottonType").value = "";
-  renderStoredData();
-  el("cottonFg").focus();
-});
-
-el("cottonTableBody").addEventListener("click", e => {
-  const btn = e.target.closest("button[data-action]");
-  if (!btn || !canChangeStoredItems()) return;
-  const hit = StoredData.cotton.find(btn.dataset.item);
-  if (!hit) return;
-  if (btn.dataset.action === "edit") {
-    el("cottonFg").value = hit.item;
-    el("cottonType").value = hit.cotton === "Yes" ? "" : hit.cotton;
-    el("cottonType").focus();
-    showMsg("cottonMsg", `Editing ${hit.item} — change the cotton and click Save Cotton.`);
-  } else if (confirm(`Take ${hit.item} off the cotton list?`)) {
-    StoredData.cotton.remove(hit.item);
-    logActivity("Removed cotton", `${hit.item}: ${hit.cotton}`);
-    showMsg("cottonMsg", `Removed ${hit.item}.`);
+FLAG_PANELS.forEach(p => {
+  flagEl(p, "Search").addEventListener("input", () => renderFlagPanel(p));
+  flagEl(p, "Form").addEventListener("submit", e => {
+    e.preventDefault();
+    if (!canChangeStoredItems()) return;
+    const items = [...new Set(flagEl(p, "Fg").value.split(/[\s,;]+/).map(s => s.trim().toUpperCase()).filter(Boolean))];
+    const value = flagEl(p, "Type").value.trim().replace(/\s+/g, " ") || "Yes";
+    if (!items.length) {
+      showMsg(`${p.id}Msg`, "Type an FG item.", false);
+      return;
+    }
+    if (NO_FLAG.includes(value.toUpperCase())) {
+      showMsg(`${p.id}Msg`, `To take an FG item off the ${p.word} list, click Remove next to it.`, false);
+      return;
+    }
+    const saved = items.map(item => ({ item, was: p.store().find(item) }));
+    saved.forEach(({ item, was }) => {
+      p.store().save(item, value);
+      logActivity(`${was ? "Changed" : "Added"} ${p.word}`, `${item}: ${value}${was ? ` (was ${was[p.id]})` : ""}`);
+    });
+    showMsg(`${p.id}Msg`, saved.length === 1
+      ? `${saved[0].was ? "Updated" : "Added"} ${saved[0].item}: ${value}.`
+      : `Saved ${saved.length} FG items: ${value}.`);
+    flagEl(p, "Fg").value = "";
+    flagEl(p, "Type").value = "";
     renderStoredData();
-  }
+    flagEl(p, "Fg").focus();
+  });
+  flagEl(p, "TableBody").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn || !canChangeStoredItems()) return;
+    const hit = p.store().find(btn.dataset.item);
+    if (!hit) return;
+    if (btn.dataset.action === "edit") {
+      flagEl(p, "Fg").value = hit.item;
+      flagEl(p, "Type").value = hit[p.id] === "Yes" ? "" : hit[p.id];
+      flagEl(p, "Type").focus();
+      showMsg(`${p.id}Msg`, `Editing ${hit.item} — change the ${p.word} and click Save ${p.Word}.`);
+    } else if (confirm(`Take ${hit.item} off the ${p.word} list?`)) {
+      p.store().remove(hit.item);
+      logActivity(`Removed ${p.word}`, `${hit.item}: ${hit[p.id]}`);
+      showMsg(`${p.id}Msg`, `Removed ${hit.item}.`);
+      renderStoredData();
+    }
+  });
 });
 
 el("exportStoredBtn").addEventListener("click", () => {
@@ -1303,7 +1312,7 @@ el("importStoredInput").addEventListener("change", async e => {
     // leads are left out and items already stored keep their values.
     const n = StoredData.importJson(await file.text(), { withLeads: canManageLeads(), addOnly: !canChangeStoredItems() });
     const counts = `${n.items} bulk item(s), ${n.fgItems} FG item(s), ${n.lineRates} line rate(s)`
-      + (n.cotton !== null ? ` and ${n.cotton} cotton item(s)` : "");
+      + (n.cotton !== null ? `, ${n.cotton} cotton item(s) and ${n.desiccant} desiccant item(s)` : "");
     logActivity("Imported Stored Data", `${file.name}: ${n.leads !== null ? `${n.leads} lead(s), ` : ""}${counts}`);
     const kept = n.kept ? ` ${n.kept} already stored ${n.kept === 1 ? "entry" : "entries"} kept their values (only an admin can change them).` : "";
     showMsg("storedImportMsg", n.leads === null
@@ -1774,7 +1783,8 @@ CloudSync.start({
     bulkItems: StoredData.bulkItems.all(),
     fgItems: StoredData.fgItems.all(),
     lineRates: StoredData.lineRates.all(),
-    cotton: StoredData.cotton.all()
+    cotton: StoredData.cotton.all(),
+    desiccant: StoredData.desiccant.all()
   }),
   onSheets(records) {
     saveRecords(records);

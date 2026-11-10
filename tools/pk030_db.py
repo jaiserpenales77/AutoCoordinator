@@ -7,7 +7,7 @@ aren't stored yet (never changes or removes one), writes one Activity Log
 entry per entry added, then reads the data back to confirm. Standard library
 only.
 
-  python3 tools/pk030_db.py show fgItems            # or bulkItems / lineRates / cottonItems
+  python3 tools/pk030_db.py show fgItems            # or bulkItems / lineRates / cottonItems / desiccantItems
   python3 tools/pk030_db.py add entries.json --dry-run
   python3 tools/pk030_db.py add entries.json
 
@@ -17,8 +17,10 @@ out):
    "items":     [{"item": "BU001565", "pieceWt": 1781}],
    "lineRates": [{"line": "10", "fgItem": "2676", "fullHour": 3000,
                   "lunch": 1500, "break": null}],
-   "cotton":    [{"item": "2741", "cotton": "Yes"}]}
-(Cotton needs an Admin or Owner account: the database refuses it from a Lead.)
+   "cotton":    [{"item": "2741", "cotton": "Yes"}],
+   "desiccant": [{"item": "1717", "desiccant": "Yes"}]}
+(Cotton and desiccant need an Admin or Owner account: the database refuses
+them from a Lead.)
 
 The password and the sign-in token are never printed. For testing against the
 Firestore emulator, set PK030_EMULATOR=host:port (and PK030_PROJECT); sign-in
@@ -47,7 +49,8 @@ BASE = (f"http://{EMULATOR}" if EMULATOR else "https://firestore.googleapis.com"
 FIELDS = {"fgItems": ("FG items", "Added an FG item", ""),
           "bulkItems": ("bulk items", "Added a bulk item", " mg"),
           "lineRates": ("line rates", "Added a line rate", ""),
-          "cottonItems": ("cotton", "Added cotton", "")}
+          "cottonItems": ("cotton", "Added cotton", ""),
+          "desiccantItems": ("desiccant", "Added desiccant", "")}
 
 
 class Fail(Exception):
@@ -209,6 +212,14 @@ def wanted_entries(data):
         if cotton.upper() in ("N", "NO", "0", "-", "FALSE", "NONE"):
             raise Fail(f"Cotton for {key} says none ({cotton!r}): leave the item out instead.")
         out["cottonItems"][key] = cotton[:40]
+    for i in data.get("desiccant", []):
+        key = norm_item(i.get("item"))
+        desiccant = " ".join(str(i.get("desiccant") or "").split()) or "Yes"
+        if not key:
+            raise Fail(f"Desiccant without an FG item: {i}")
+        if desiccant.upper() in ("N", "NO", "0", "-", "FALSE", "NONE"):
+            raise Fail(f"Desiccant for {key} says none ({desiccant!r}): leave the item out instead.")
+        out["desiccantItems"][key] = desiccant[:40]
     return out
 
 
@@ -273,7 +284,7 @@ def add(path, dry_run):
         except Fail as err:
             if " 403 " in str(err):
                 raise Fail(f"The database refused the change for {username}: the account must be a Lead "
-                           "(or Admin/Owner) in the app's Admin tab (cotton: an Admin or Owner), and someone may "
+                           "(or Admin/Owner) in the app's Admin tab (cotton and desiccant: an Admin or Owner), and someone may "
                            "have stored one of these in the meantime. Nothing was changed.") from None
             raise
         # One Activity Log entry per entry added, timed by the server.

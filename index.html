@@ -371,7 +371,7 @@
   </section>
 
   <section class="panel cotton-panel">
-    <h2>Cotton</h2>
+    <h2>Cotton <span id="cottonCount" class="panel-count"></span></h2>
     <p class="muted">The FG items that take cotton, and which. LineUp (JDE Sched) uses this list for its changeover notes: Add Cotton, Change Cotton and Remove Cotton. Leave Cotton empty for "Yes", or type the cotton it takes. Several FG items can go in at once, with commas between them.</p>
     <p id="cottonViewOnlyNote" class="muted hidden">Only an admin can add, change or remove cotton.</p>
     <form id="cottonForm" class="cotton-form" autocomplete="off">
@@ -392,7 +392,32 @@
         <tbody id="cottonTableBody"></tbody>
       </table>
     </div>
-    <p id="noCottonMsg" class="muted">No cotton yet.</p>
+    <p id="cottonNone" class="muted">No cotton yet.</p>
+  </section>
+
+  <section class="panel desiccant-panel">
+    <h2>Desiccant <span id="desiccantCount" class="panel-count"></span></h2>
+    <p class="muted">The FG items that take desiccant, and which. LineUp (JDE Sched) uses this list when a work order's DES box is empty: for its changeover notes (Add Desiccant, Change Desiccant, Remove Desiccant) and its QA sheets. Leave Desiccant empty for "Yes", or type the desiccant it takes. Several FG items can go in at once, with commas between them.</p>
+    <p id="desiccantViewOnlyNote" class="muted hidden">Only an admin can add, change or remove desiccant.</p>
+    <form id="desiccantForm" class="cotton-form" autocomplete="off">
+      <label>FG Item
+        <input type="text" id="desiccantFg" list="desiccantFgList" placeholder="e.g. 1717, or 1717, 4066" required>
+        <datalist id="desiccantFgList"></datalist>
+      </label>
+      <label>Desiccant
+        <input type="text" id="desiccantType" maxlength="40" placeholder="Yes">
+      </label>
+      <button type="submit" class="primary">Save Desiccant</button>
+    </form>
+    <p id="desiccantMsg" class="form-msg"></p>
+    <input type="search" id="desiccantSearch" class="stored-search" placeholder="Search desiccant…" aria-label="Search the desiccant list">
+    <div class="table-scroll stored-table">
+      <table>
+        <thead><tr><th>FG Item</th><th>Desiccant</th><th></th></tr></thead>
+        <tbody id="desiccantTableBody"></tbody>
+      </table>
+    </div>
+    <p id="desiccantNone" class="muted">No desiccant yet.</p>
   </section>
 
   <section class="panel">
