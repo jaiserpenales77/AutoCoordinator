@@ -1622,7 +1622,13 @@ let activityDrawnSearching = false;
 const ACTIVITY_DAY_MS = 24 * 60 * 60 * 1000;
 
 const activityAccount = e => accounts.find(a => a.uid === e.uid);
+// The other apps sign in with shared accounts: LineUp's shifts, Cremer
+// Recipes' Mech and Super. They're named by app and account.
+const OTHER_APP_ACCOUNTS = { "1st": "1st shift", "2nd": "2nd shift", "3rd": "3rd shift",
+  "cremer-mech": "Mech", "cremer-super": "Super" };
+const isHubEntry = e => e.app === CloudSync.HUB_APP;
 const activityName = e => {
+  if (!isHubEntry(e)) return `${e.app} · ${OTHER_APP_ACCOUNTS[e.username] ?? e.username}`;
   const account = activityAccount(e);
   return account ? accountDisplayName(account) : StoredData.leadForUser(e.username) ?? e.username;
 };
@@ -1633,8 +1639,9 @@ function filteredActivity() {
   const from = days === "1" ? new Date(new Date().setHours(0, 0, 0, 0))
     : days ? new Date(Date.now() - Number(days) * ACTIVITY_DAY_MS) : null;
   const query = el("activitySearch").value.trim().toLowerCase();
-  return activityEntries.filter(e => (!from || e.at >= from)
-    && (!query || `${activityName(e)} ${e.username} ${e.action} ${e.detail}`.toLowerCase().includes(query)));
+  const app = el("activityApp").value;
+  return activityEntries.filter(e => (!from || e.at >= from) && (!app || e.app === app)
+    && (!query || `${activityName(e)} ${e.username} ${e.app} ${e.action} ${e.detail} ${e.ip}`.toLowerCase().includes(query)));
 }
 
 // [[name, entries], ...] sorted by name; entries stay newest first.
@@ -1667,18 +1674,19 @@ function renderActivity({ keepOpen = true } = {}) {
   el("activityMsg").textContent = !activityLoaded ? "Loading…"
     : !activityEntries.length ? "No activity yet."
     : !count ? "No activity matches."
-    : `${count} ${count === 1 ? "activity" : "activities"} by ${groups.length} ${groups.length === 1 ? "person" : "people"}`
+    : `${count} ${count === 1 ? "activity" : "activities"} by ${groups.length} ${groups.length === 1 ? "account" : "accounts"}`
       + (activityTruncated ? " (the newest 1,000 entries)." : ".");
   el("activityGroups").innerHTML = groups.map(g => {
-    const account = activityAccount(g.entry);
-    const who = [g.entry.username, account && ROLE_LABELS[account.role]].filter(Boolean).join(" · ");
+    const account = isHubEntry(g.entry) ? activityAccount(g.entry) : null;
+    const who = isHubEntry(g.entry) ? [g.entry.username, account && ROLE_LABELS[account.role]].filter(Boolean).join(" · ")
+      : "shared account";
     const open = searching || activityOpen.has(g.key);
     return `<details class="activity-person" data-key="${escapeHtml(g.key)}"${open ? " open" : ""}>
       <summary><strong>${escapeHtml(g.name)}</strong><span class="activity-who">${escapeHtml(who)}</span>
         <span class="activity-count">${g.entries.length} ${g.entries.length === 1 ? "activity" : "activities"} · last ${escapeHtml(activityTime(g.entries[0].at))}</span></summary>
       <div class="table-scroll"><table class="activity-table">
-        <colgroup><col class="col-time"><col class="col-action"><col></colgroup><tbody>${g.entries.map(e => `
-        <tr><td>${escapeHtml(activityTime(e.at))}</td><td>${escapeHtml(e.action)}</td><td>${escapeHtml(e.detail)}</td></tr>`).join("")}
+        <colgroup><col class="col-time"><col class="col-action"><col><col class="col-ip"></colgroup><tbody>${g.entries.map(e => `
+        <tr><td>${escapeHtml(activityTime(e.at))}</td><td>${escapeHtml(e.action)}</td><td>${escapeHtml(e.detail)}</td><td class="activity-ip">${escapeHtml(e.ip)}</td></tr>`).join("")}
       </tbody></table></div></details>`;
   }).join("");
   el("activityExpandBtn").textContent = activityAllOpen() ? "Collapse All" : "Expand All";
@@ -1695,6 +1703,7 @@ onViewShown("activityTab", () => {
 });
 el("activitySearch").addEventListener("input", renderActivity);
 el("activityRange").addEventListener("change", renderActivity);
+el("activityApp").addEventListener("change", renderActivity);
 // "toggle" doesn't bubble, so it's caught on the way down.
 const activityAllOpen = () => {
   const shown = [...el("activityGroups").querySelectorAll("details[data-key]")];
@@ -1715,14 +1724,14 @@ el("activityExpandBtn").addEventListener("click", () => {
 });
 el("activityExportBtn").addEventListener("click", () => {
   const rows = activityGroups().flatMap(g => g.entries.map(e => {
-    const account = activityAccount(e);
-    return [g.name, e.username, account ? ROLE_LABELS[account.role] : "", activityTime(e.at), e.action, e.detail];
+    const account = isHubEntry(e) ? activityAccount(e) : null;
+    return [g.name, e.username, account ? ROLE_LABELS[account.role] : "", e.app, activityTime(e.at), e.action, e.detail, e.ip];
   }));
   if (!rows.length) {
     alert("No activity to export.");
     return;
   }
-  downloadCsv([["Name", "Username", "Account type", "Date/time", "Activity", "Details"], ...rows],
+  downloadCsv([["Name", "Username", "Account type", "App", "Date/time", "Activity", "Details", "IP address"], ...rows],
     `pk030-activity-${todayISO()}.csv`);
 });
 

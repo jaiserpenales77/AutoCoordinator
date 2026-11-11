@@ -799,12 +799,15 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .activity-table { table-layout: fixed; width: 100%; margin-bottom: 0; }
 .activity-table .col-time { width: 150px; }
 .activity-table .col-action { width: 280px; }
+.activity-table .col-ip { width: 300px; }
+.activity-table td.activity-ip { color: var(--muted); font-variant-numeric: tabular-nums; }
 .activity-table td { vertical-align: top; overflow-wrap: anywhere; }
 .activity-table td:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
 .activity-table td:nth-child(2) { font-weight: 600; }
 @media (max-width: 700px) {
   .activity-table .col-time { width: 78px; }
-  .activity-table .col-action { width: 42%; }
+  .activity-table .col-action { width: 34%; }
+  .activity-table .col-ip { width: 92px; }
   .activity-person .table-scroll { padding: 0 8px 6px; }
   .activity-person summary { padding: 10px; }
 }

@@ -226,6 +226,9 @@ const CloudSync = (() => {
 
   // The newest activity entries, live, for the Activity Log (Admin and
   // Owner). Starts when the log is first opened.
+  // The app name the database's sign-in check gives this app's entries.
+  const HUB_APP = "Packaging Lead Hub";
+
   function watchActivity(onEntries) {
     activityHandler = onEntries;
     if (activityUnsubscribe || !account || !atLeast(account.role ?? "plt", "admin")) return;
@@ -233,8 +236,11 @@ const CloudSync = (() => {
     activityUnsubscribe = fs.onSnapshot(q, snap => {
       activityHandler(snap.docs.map(d => {
         const data = d.data();
+        // Entries from before sign-ins were logged by the server (and the
+        // app's own entries) have no app: they're this app's.
         return { id: d.id, uid: String(data.uid ?? ""), username: String(data.username ?? ""),
           action: String(data.action ?? ""), detail: String(data.detail ?? ""),
+          app: String(data.app || HUB_APP), ip: String(data.ip ?? ""),
           at: data.at?.toDate?.() ?? new Date() };
       }), snap.size >= ACTIVITY_LIMIT);
     }, err => {
@@ -374,8 +380,9 @@ const CloudSync = (() => {
 
   async function signIn(username, password) {
     try {
+      // The sign-in itself is logged by the database's sign-in check (with the
+      // IP address), for every app that uses the database.
       await authMod.signInWithEmailAndPassword(auth, toEmail(username), password);
-      log("Signed in");
     } catch (err) {
       const wrong = ["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found", "auth/invalid-email"];
       if (wrong.includes(err.code)) throw new Error("Wrong username or password.");
@@ -450,6 +457,7 @@ const CloudSync = (() => {
     signUp,
     log,
     watchActivity,
+    HUB_APP,
     // An admin changing someone's account type.
     setRole: (uid, role) => write(() => fs.setDoc(userRef(uid), { role }, { merge: true })),
     ROLES

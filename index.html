@@ -527,9 +527,15 @@
         <button type="button" id="activityExportBtn">Export CSV</button>
       </div>
     </div>
-    <p class="muted">What everyone does in the app, grouped by name (A–Z), newest first for each person. Entries can't be changed or deleted from the app.</p>
+    <p class="muted">What everyone does in the app, and every sign-in to LineUp, Cremer Recipes and this app with its IP address, grouped by name (A–Z), newest first for each. LineUp and Cremer Recipes sign in with shared accounts, so they show the shift or login, not a person. Entries can't be changed or deleted from the app.</p>
     <div class="activity-filters">
-      <input type="search" id="activitySearch" placeholder="Search names, activities and details…" aria-label="Search the activity log">
+      <input type="search" id="activitySearch" placeholder="Search names, activities, details and IP addresses…" aria-label="Search the activity log">
+      <select id="activityApp" aria-label="App">
+        <option value="" selected>All apps</option>
+        <option>Packaging Lead Hub</option>
+        <option>LineUp</option>
+        <option>Cremer Recipes</option>
+      </select>
       <select id="activityRange" aria-label="Time range">
         <option value="1">Today</option>
         <option value="7">Last 7 days</option>

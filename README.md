@@ -253,19 +253,36 @@ does).
 ## Activity Log tab
 
 Only Admins and Owners see this tab. It lists what everyone does in the app,
-grouped by person with names A–Z (click a name to open their entries, newest
-first), with a search box, a time range (today, last 7 or 30 days, all) and
-**Export CSV**. It shows the newest 1,000 entries and updates live.
+and every sign-in to the apps that share the database, grouped by account
+with names A–Z (click a name to open their entries, newest first), with a
+search box (names, activities, details and IP addresses), an app filter (the
+Hub, LineUp, Cremer Recipes), a time range (today, last 7 or 30 days, all)
+and **Export CSV** (with the app and IP address). It shows the newest 1,000
+entries and updates live.
 
-Logged: signing in, signing out and creating an account; saving, updating,
+**Sign-ins, with IP addresses:** JDE Sched's sign-in check (the
+`allowedNetworksOnly` Cloud Function, which runs on Firebase's servers for
+every sign-in) logs each one: **Signed in**, or **Sign-in refused
+(network)** when LineUp's network check turned it away, with the app, the
+account and the network's IP address as Firebase saw it. It logs whether the
+network check is on or off; `logSignIns` = false in
+`jde-sched-access/network` stops it (see JDE Sched's
+`docs/NETWORK_ACCESS_PLAN.md`, which also has the deploy step). LineUp and
+Cremer Recipes sign in with shared accounts, so their entries show as e.g.
+**LineUp · 3rd shift** or **Cremer Recipes · Mech**, not a person. A
+sign-in is typing the password: opening an app that's still signed in isn't
+one. Project Hub isn't included (it doesn't sign in through this database).
+
+Logged by the app: signing out and creating an account; saving, updating,
 deleting, printing and exporting yield sheets; importing JDE report PDFs;
 adding, changing and removing bulk items (also from the Bulk Calculator), FG
 items, line rates, cotton, desiccant and allergen; importing and exporting Stored Data; adding and removing leads
 and linking usernames; changing account types; and printing each form and
 the Bulk Calculator report.
 
-Entries are written by each person's own app as they act: the database only
-accepts entries in their own name with the server's time, and nobody can
+The app's entries are written by each person's own app as they act: the
+database only accepts entries in their own name with the server's time
+(the sign-in entries come from the sign-in check itself), and nobody can
 change or delete them from the app (an Owner can delete them in the Firebase
 console, **Firestore Database → Data → pk030-activity**). Something done
 while offline is logged when the connection comes back. The log records what
