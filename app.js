@@ -1667,6 +1667,8 @@ async function checkActivityNetworks() {
   lnChecking = true;
   try {
     const r = await CloudSync.callFunction("lineupNetwork", { action: "status", checkIps: ips });
+    // A function from before Allow existed doesn't answer this: no buttons.
+    if (!Array.isArray(r.allowedIps)) return;
     lnAllowedIps = new Set(r.allowedIps);
     ips.forEach(ip => lnCheckedIps.add(ip));
     renderActivity();
@@ -1774,7 +1776,8 @@ el("activityGroups").addEventListener("click", async e => {
   if (label === null) return;
   button.disabled = true;
   try {
-    await CloudSync.callFunction("lineupNetwork", { action: "allowIp", ip, label: label.trim() });
+    const r = await CloudSync.callFunction("lineupNetwork", { action: "allowIp", ip, label: label.trim() });
+    if (!r.permanentList?.some(p => p.ip === ip)) throw new Error("the server's lineupNetwork function needs updating (deploy the functions again)");
     lnAllowedIps.add(ip);
     logActivity("Allowed LineUp from a network", `${ip} (${label.trim() || "no name"})`);
     showMsg("activityNetMsg", `${ip} is now on LineUp's allowed networks.`);
