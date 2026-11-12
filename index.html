@@ -488,7 +488,7 @@
 
   <section class="panel lineup-network-panel hidden" id="lineupNetworkPanel">
     <h2>LineUp: Network Access</h2>
-    <p class="muted">LineUp only opens from the company's network and the networks allowed here (when the check is on). When LineUp says your home network isn't on the list, press <strong>Allow LineUp from this network</strong> from home: it's allowed for 30 days, and pressing it again replaces your last one. Only Owners see this.</p>
+    <p class="muted">LineUp only opens from the company's network and the networks allowed here (when the check is on). When LineUp says your home network isn't on the list, press <strong>Allow LineUp from this network</strong> from home: it's allowed for 30 days, and pressing it again replaces your last one. Networks allowed from the Activity Log (and those set in the Firebase console) stay until removed here. Only Owners see this.</p>
     <p id="lnStatus" class="ln-status" role="status">Checking this network…</p>
     <div class="actions">
       <button type="button" class="primary" id="lnAllowBtn">Allow LineUp from this network</button>
@@ -498,11 +498,11 @@
     <p id="lnMsg" class="form-msg"></p>
     <div class="table-scroll stored-table">
       <table>
-        <thead><tr><th>Network</th><th>For</th><th>Until</th></tr></thead>
+        <thead><tr><th>Network</th><th>For</th><th>Until</th><th></th></tr></thead>
         <tbody id="lnTableBody"></tbody>
       </table>
     </div>
-    <p id="lnNone" class="muted">No networks allowed from here right now.</p>
+    <p id="lnNone" class="muted">No networks on the list yet.</p>
   </section>
 
   <section class="panel">
@@ -527,7 +527,7 @@
         <button type="button" id="activityExportBtn">Export CSV</button>
       </div>
     </div>
-    <p class="muted">What everyone does in the app, and every sign-in to LineUp, Cremer Recipes and this app with its IP address, grouped by name (A–Z), newest first for each. LineUp and Cremer Recipes sign in with shared accounts, so they show the shift or login, not a person. Entries can't be changed or deleted from the app.</p>
+    <p class="muted">What everyone does in the app, and every sign-in to LineUp, Cremer Recipes and this app with its IP address, grouped by name (A–Z), newest first for each. LineUp and Cremer Recipes sign in with shared accounts, so they show the shift or login, not a person. Each account lists the networks it signed in from; an Owner can press <strong>Allow</strong> to add one to LineUp's allowed networks. Entries can't be changed or deleted from the app.</p>
     <div class="activity-filters">
       <input type="search" id="activitySearch" placeholder="Search names, activities, details and IP addresses…" aria-label="Search the activity log">
       <select id="activityApp" aria-label="App">
@@ -544,6 +544,7 @@
       </select>
     </div>
     <p id="activityMsg" class="muted"></p>
+    <p id="activityNetMsg" class="form-msg"></p>
     <div id="activityGroups"></div>
   </section>
 </div>

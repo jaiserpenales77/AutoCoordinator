@@ -795,9 +795,28 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .activity-person .activity-count { margin-left: auto; color: var(--muted); font-size: 0.82rem; }
 .activity-person[open] summary { border-bottom: 1px solid var(--border); }
 .activity-person .table-scroll { padding: 0 14px 6px; }
+/* An account's networks: one chip per IP address, with Allow for Owners. */
+.activity-nets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 10px 14px 4px; }
+.activity-nets-label { color: var(--muted); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.activity-net {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  max-width: 100%;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--subtle-bg);
+  font-size: 0.82rem;
+}
+.activity-net-ip { font-variant-numeric: tabular-nums; font-weight: 600; overflow-wrap: anywhere; }
+.activity-net-meta { color: var(--muted); }
+.activity-net-ok { color: var(--ok-text); font-weight: 600; padding-right: 4px; }
+.activity-net-allow { padding: 2px 10px; font-size: 0.78rem; border-radius: 999px; }
 /* Same column widths for every person, so the groups line up. */
 .activity-table { table-layout: fixed; width: 100%; margin-bottom: 0; }
-.activity-table .col-time { width: 150px; }
+.activity-table .col-time { width: 165px; }
 .activity-table .col-action { width: 280px; }
 .activity-table .col-ip { width: 300px; }
 .activity-table td.activity-ip { color: var(--muted); font-variant-numeric: tabular-nums; }

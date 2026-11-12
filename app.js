@@ -1510,7 +1510,7 @@ function renderAccounts() {
 const lnDate = ms => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 let lnBusy = false;
 
-async function lineupNetwork(action = "status") {
+async function lineupNetwork(action = "status", extra = {}) {
   const panel = el("lineupNetworkPanel");
   const owner = !localOnly && role === "owner";
   panel.classList.toggle("hidden", !owner);
@@ -1518,22 +1518,36 @@ async function lineupNetwork(action = "status") {
   lnBusy = true;
   ["lnAllowBtn", "lnRemoveBtn", "lnRefreshBtn"].forEach(id => { el(id).disabled = true; });
   try {
-    const r = await CloudSync.callFunction("lineupNetwork", { action });
+    const r = await CloudSync.callFunction("lineupNetwork", { action, ...extra });
     const mine = r.temporary.find(t => t.mine);
+    const permanent = r.permanentList ?? [];
     el("lnStatus").textContent = `This network: ${r.ip || "unknown"} — ${r.allowedNow ? "LineUp opens from here." : "not on the list."}`
       + (r.enabled ? "" : " (The network check is off, so LineUp opens from anywhere for now.)");
     el("lnStatus").classList.toggle("ln-ok", r.allowedNow || !r.enabled);
     el("lnRemoveBtn").classList.toggle("hidden", !mine);
-    el("lnTableBody").innerHTML = r.temporary.map(t => `
+    // The allowed list (from the Activity Log, or typed in the console), then
+    // the networks allowed from here for 30 days.
+    el("lnTableBody").innerHTML = permanent.map(p => `
+      <tr><td>${escapeHtml(p.ip)}</td>
+        <td>${p.label ? escapeHtml(p.label) : `<span class="muted">Set in the Firebase console</span>`}${p.by ? ` <span class="muted">(${escapeHtml(p.by)})</span>` : ""}</td>
+        <td>Until removed</td>
+        <td><button type="button" class="link-btn" data-ln-remove="${escapeHtml(p.ip)}">Remove</button></td></tr>`).join("")
+      + r.temporary.map(t => `
       <tr><td>${escapeHtml(t.ip)}</td><td>${escapeHtml(t.label)}${t.mine ? ` <span class="account-you">(yours)</span>` : ""}</td>
-        <td>${escapeHtml(lnDate(t.until))}</td></tr>`).join("");
-    el("lnNone").classList.toggle("hidden", r.temporary.length > 0);
+        <td>${escapeHtml(lnDate(t.until))}</td><td></td></tr>`).join("");
+    el("lnNone").classList.toggle("hidden", permanent.length + r.temporary.length > 0);
+    // The list may have changed: the Activity Log asks again when it's next shown.
+    lnAllowedIps = new Set();
+    lnCheckedIps.clear();
     if (action === "allow") {
       logActivity("Allowed LineUp from a network", `${r.ip}, until ${lnDate(mine?.until ?? Date.now())}`);
       showMsg("lnMsg", `LineUp now opens from this network (${r.ip}) until ${lnDate(mine?.until ?? Date.now())}.`);
     } else if (action === "remove") {
       logActivity("Removed a LineUp network", r.ip);
       showMsg("lnMsg", "Your network is off the list.");
+    } else if (action === "removeIp") {
+      logActivity("Removed a LineUp network", extra.ip);
+      showMsg("lnMsg", `${extra.ip} is off the list.`);
     } else {
       showMsg("lnMsg", "");
     }
@@ -1548,6 +1562,10 @@ async function lineupNetwork(action = "status") {
 el("lnAllowBtn").addEventListener("click", () => lineupNetwork("allow"));
 el("lnRemoveBtn").addEventListener("click", () => lineupNetwork("remove"));
 el("lnRefreshBtn").addEventListener("click", () => lineupNetwork("status"));
+el("lnTableBody").addEventListener("click", e => {
+  const ip = e.target.closest("[data-ln-remove]")?.dataset.lnRemove;
+  if (ip && confirm(`Take ${ip} off LineUp's allowed networks? LineUp won't open from it once the check is on.`)) lineupNetwork("removeIp", { ip });
+});
 
 // Lead and up are in the Created By leads list, linked to their username;
 // PLT and MLT aren't.
@@ -1634,6 +1652,49 @@ const activityName = e => {
 };
 const activityTime = d => d.toLocaleString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit", hour: "numeric", minute: "2-digit" });
 
+// The networks (IP addresses) each account signed in from. Owners can add
+// one to LineUp's allowed networks from here; which are allowed already is
+// asked of the lineupNetwork function (it knows the list, ranges included).
+let lnAllowedIps = new Set();
+const lnCheckedIps = new Set();
+let lnChecking = false;
+const isOwnerHere = () => !localOnly && role === "owner";
+
+async function checkActivityNetworks() {
+  if (!isOwnerHere() || lnChecking) return;
+  const ips = [...new Set(activityEntries.map(e => e.ip).filter(Boolean))];
+  if (ips.every(ip => lnCheckedIps.has(ip))) return;
+  lnChecking = true;
+  try {
+    const r = await CloudSync.callFunction("lineupNetwork", { action: "status", checkIps: ips });
+    lnAllowedIps = new Set(r.allowedIps);
+    ips.forEach(ip => lnCheckedIps.add(ip));
+    renderActivity();
+  } catch (err) {
+    console.warn("Couldn't check the networks.", err);
+  } finally {
+    lnChecking = false;
+  }
+}
+
+function activityNetworksHtml(g) {
+  const nets = new Map();
+  g.entries.forEach(e => {
+    if (!e.ip) return;
+    if (!nets.has(e.ip)) nets.set(e.ip, { ip: e.ip, count: 0, last: e.at });
+    nets.get(e.ip).count++;
+  });
+  if (!nets.size) return "";
+  const owner = isOwnerHere();
+  return `<div class="activity-nets"><span class="activity-nets-label">${nets.size === 1 ? "Network" : `${nets.size} networks`}</span>
+    ${[...nets.values()].map(n => `<span class="activity-net">
+      <span class="activity-net-ip">${escapeHtml(n.ip)}</span>
+      <span class="activity-net-meta">${n.count} sign-in${n.count === 1 ? "" : "s"} · last ${escapeHtml(activityTime(n.last))}</span>
+      ${!owner ? "" : lnAllowedIps.has(n.ip) ? `<span class="activity-net-ok">✓ Allowed</span>`
+        : lnCheckedIps.has(n.ip) ? `<button type="button" class="activity-net-allow" data-allow-ip="${escapeHtml(n.ip)}" data-allow-for="${escapeHtml(g.name)}">Allow</button>` : ""}
+    </span>`).join("")}</div>`;
+}
+
 function filteredActivity() {
   const days = el("activityRange").value;
   const from = days === "1" ? new Date(new Date().setHours(0, 0, 0, 0))
@@ -1684,6 +1745,7 @@ function renderActivity({ keepOpen = true } = {}) {
     return `<details class="activity-person" data-key="${escapeHtml(g.key)}"${open ? " open" : ""}>
       <summary><strong>${escapeHtml(g.name)}</strong><span class="activity-who">${escapeHtml(who)}</span>
         <span class="activity-count">${g.entries.length} ${g.entries.length === 1 ? "activity" : "activities"} · last ${escapeHtml(activityTime(g.entries[0].at))}</span></summary>
+      ${activityNetworksHtml(g)}
       <div class="table-scroll"><table class="activity-table">
         <colgroup><col class="col-time"><col class="col-action"><col><col class="col-ip"></colgroup><tbody>${g.entries.map(e => `
         <tr><td>${escapeHtml(activityTime(e.at))}</td><td>${escapeHtml(e.action)}</td><td>${escapeHtml(e.detail)}</td><td class="activity-ip">${escapeHtml(e.ip)}</td></tr>`).join("")}
@@ -1694,12 +1756,33 @@ function renderActivity({ keepOpen = true } = {}) {
 
 onViewShown("activityTab", () => {
   renderActivity();
+  checkActivityNetworks();
   CloudSync.watchActivity((entries, truncated) => {
     activityEntries = entries;
     activityTruncated = truncated;
     activityLoaded = true;
     renderActivity();
+    checkActivityNetworks();
   });
+});
+// Allow beside a network: add it to LineUp's allowed networks, with a name.
+el("activityGroups").addEventListener("click", async e => {
+  const button = e.target.closest("[data-allow-ip]");
+  if (!button) return;
+  const ip = button.dataset.allowIp;
+  const label = prompt(`Allow LineUp from ${ip}, until it's removed (Admin → LineUp: Network Access)?\n\nName this network, for example "Plant" or "Home - Jaiser":`, button.dataset.allowFor);
+  if (label === null) return;
+  button.disabled = true;
+  try {
+    await CloudSync.callFunction("lineupNetwork", { action: "allowIp", ip, label: label.trim() });
+    lnAllowedIps.add(ip);
+    logActivity("Allowed LineUp from a network", `${ip} (${label.trim() || "no name"})`);
+    showMsg("activityNetMsg", `${ip} is now on LineUp's allowed networks.`);
+    renderActivity();
+  } catch (err) {
+    button.disabled = false;
+    showMsg("activityNetMsg", `Couldn't allow ${ip}: ${err.message}`, false);
+  }
 });
 el("activitySearch").addEventListener("input", renderActivity);
 el("activityRange").addEventListener("change", renderActivity);
