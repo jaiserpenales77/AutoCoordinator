@@ -244,10 +244,13 @@ does).
   It shows this computer's network and whether LineUp opens from it.
   **Allow LineUp from this network** (from home) allows it for 30 days;
   pressing it again replaces the Owner's last one, and **Remove mine** takes
-  it off. The table also lists the networks that stay until removed: those
-  allowed from the Activity Log (with their name and who added them) and
-  those set in the Firebase console, each with **Remove** (after a
-  confirmation). The list is kept by JDE Sched's `lineupNetwork` Cloud
+  it off. The table also lists the networks allowed from the Activity Log
+  (with their name and who added them) and those set in the Firebase
+  console: each permanent one (until removed) has **Make temporary** (30
+  days from now), each temporary one **Make permanent** (its name kept),
+  and every one **Remove** (after a confirmation). An Owner's home network
+  is kept apart: pressing **Allow LineUp from this network** again only
+  replaces that one. The list is kept by JDE Sched's `lineupNetwork` Cloud
   Function in `jde-sched-access/network` (see JDE Sched's
   `docs/NETWORK_ACCESS_PLAN.md`). Logged in the Activity Log.
 - **Account Types** — what each type can use.
@@ -279,9 +282,11 @@ one. Project Hub isn't included (it doesn't sign in through this database).
 it signed in from, one chip each with how many sign-ins and the last one, as
 an account can use several. For Owners, a network already on LineUp's
 allowed list (or in an allowed range) shows **✓ Allowed**; the others have
-**Allow**, which asks for a name (for example "Plant" or "Home - Jaiser")
-and adds the address to the list until it's removed in **Admin → LineUp:
-Network Access**. Admins see the networks without the buttons.
+**Allow**, which opens a small window: a name (for example "Plant" or
+"Home - Jaiser") and how long, **Until removed (permanent)** or **For 30
+days**. A temporary one then shows **✓ Allowed until** its date. Either can
+be changed or removed in **Admin → LineUp: Network Access**. Admins see the
+networks without the buttons.
 
 Logged by the app: signing out and creating an account; saving, updating,
 deleting, printing and exporting yield sheets; importing JDE report PDFs;

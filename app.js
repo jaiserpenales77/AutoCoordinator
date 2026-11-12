@@ -1509,6 +1509,7 @@ function renderAccounts() {
 // this one. The list itself is kept by the lineupNetwork function, not here.
 const lnDate = ms => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 let lnBusy = false;
+let lnDays = 30; // how long "temporary" is (the function says)
 
 async function lineupNetwork(action = "status", extra = {}) {
   const panel = el("lineupNetworkPanel");
@@ -1527,14 +1528,17 @@ async function lineupNetwork(action = "status", extra = {}) {
     el("lnRemoveBtn").classList.toggle("hidden", !mine);
     // The allowed list (from the Activity Log, or typed in the console), then
     // the networks allowed from here for 30 days.
+    lnDays = r.days ?? 30;
+    const buttons = (ip, label, to) => `<td><div class="ln-actions">
+      <button type="button" class="link-btn" data-ln-make="${to}" data-ip="${escapeHtml(ip)}" data-label="${escapeHtml(label)}"${to === "temporary" ? ` title="Allowed for ${lnDays} days from now"` : ""}>${to === "temporary" ? "Make temporary" : "Make permanent"}</button>
+      <button type="button" class="link-btn" data-ln-remove="${escapeHtml(ip)}">Remove</button></div></td>`;
     el("lnTableBody").innerHTML = permanent.map(p => `
       <tr><td>${escapeHtml(p.ip)}</td>
         <td>${p.label ? escapeHtml(p.label) : `<span class="muted">Set in the Firebase console</span>`}${p.by ? ` <span class="muted">(${escapeHtml(p.by)})</span>` : ""}</td>
-        <td>Until removed</td>
-        <td><button type="button" class="link-btn" data-ln-remove="${escapeHtml(p.ip)}">Remove</button></td></tr>`).join("")
+        <td>Until removed</td>${buttons(p.ip, p.label || "From the Firebase console", "temporary")}</tr>`).join("")
       + r.temporary.map(t => `
-      <tr><td>${escapeHtml(t.ip)}</td><td>${escapeHtml(t.label)}${t.mine ? ` <span class="account-you">(yours)</span>` : ""}</td>
-        <td>${escapeHtml(lnDate(t.until))}</td><td></td></tr>`).join("");
+      <tr><td>${escapeHtml(t.ip)}</td><td>${escapeHtml(t.label)}${t.mine ? ` <span class="account-you">(yours)</span>` : t.by ? ` <span class="muted">(${escapeHtml(t.by)})</span>` : ""}</td>
+        <td>${escapeHtml(lnDate(t.until))}</td>${buttons(t.ip, t.label, "permanent")}</tr>`).join("");
     el("lnNone").classList.toggle("hidden", permanent.length + r.temporary.length > 0);
     // The list may have changed: the Activity Log asks again when it's next shown.
     lnAllowedIps = new Set();
@@ -1548,6 +1552,12 @@ async function lineupNetwork(action = "status", extra = {}) {
     } else if (action === "removeIp") {
       logActivity("Removed a LineUp network", extra.ip);
       showMsg("lnMsg", `${extra.ip} is off the list.`);
+    } else if (action === "allowIp") {
+      const until = r.temporary.find(t => t.ip === extra.ip && t.listed)?.until;
+      const ok = extra.days ? !!until : permanent.some(p => p.ip === extra.ip);
+      if (!ok) throw new Error("The server's lineupNetwork function needs updating (deploy the functions again).");
+      logActivity("Changed a LineUp network", `${extra.ip}: ${extra.days ? `until ${lnDate(until)}` : "until removed"}`);
+      showMsg("lnMsg", `${extra.ip} is allowed ${extra.days ? `until ${lnDate(until)}` : "until removed"}.`);
     } else {
       showMsg("lnMsg", "");
     }
@@ -1563,6 +1573,12 @@ el("lnAllowBtn").addEventListener("click", () => lineupNetwork("allow"));
 el("lnRemoveBtn").addEventListener("click", () => lineupNetwork("remove"));
 el("lnRefreshBtn").addEventListener("click", () => lineupNetwork("status"));
 el("lnTableBody").addEventListener("click", e => {
+  const make = e.target.closest("[data-ln-make]");
+  if (make) {
+    const { ip, label, lnMake } = make.dataset;
+    lineupNetwork("allowIp", lnMake === "temporary" ? { ip, label, days: lnDays } : { ip, label });
+    return;
+  }
   const ip = e.target.closest("[data-ln-remove]")?.dataset.lnRemove;
   if (ip && confirm(`Take ${ip} off LineUp's allowed networks? LineUp won't open from it once the check is on.`)) lineupNetwork("removeIp", { ip });
 });
@@ -1657,6 +1673,8 @@ const activityTime = d => d.toLocaleString("en-US", { month: "2-digit", day: "2-
 // asked of the lineupNetwork function (it knows the list, ranges included).
 let lnAllowedIps = new Set();
 const lnCheckedIps = new Set();
+// Networks allowed for a while: address -> end (ms).
+let lnTempUntil = new Map();
 let lnChecking = false;
 const isOwnerHere = () => !localOnly && role === "owner";
 
@@ -1670,6 +1688,8 @@ async function checkActivityNetworks() {
     // A function from before Allow existed doesn't answer this: no buttons.
     if (!Array.isArray(r.allowedIps)) return;
     lnAllowedIps = new Set(r.allowedIps);
+    lnTempUntil = new Map((r.temporary ?? []).map(t => [t.ip, t.until]));
+    lnDays = r.days ?? lnDays;
     ips.forEach(ip => lnCheckedIps.add(ip));
     renderActivity();
   } catch (err) {
@@ -1692,7 +1712,7 @@ function activityNetworksHtml(g) {
     ${[...nets.values()].map(n => `<span class="activity-net">
       <span class="activity-net-ip">${escapeHtml(n.ip)}</span>
       <span class="activity-net-meta">${n.count} sign-in${n.count === 1 ? "" : "s"} · last ${escapeHtml(activityTime(n.last))}</span>
-      ${!owner ? "" : lnAllowedIps.has(n.ip) ? `<span class="activity-net-ok">✓ Allowed</span>`
+      ${!owner ? "" : lnAllowedIps.has(n.ip) ? `<span class="activity-net-ok">✓ Allowed${lnTempUntil.has(n.ip) ? ` until ${escapeHtml(lnDate(lnTempUntil.get(n.ip)))}` : ""}</span>`
         : lnCheckedIps.has(n.ip) ? `<button type="button" class="activity-net-allow" data-allow-ip="${escapeHtml(n.ip)}" data-allow-for="${escapeHtml(g.name)}">Allow</button>` : ""}
     </span>`).join("")}</div>`;
 }
@@ -1767,20 +1787,46 @@ onViewShown("activityTab", () => {
     checkActivityNetworks();
   });
 });
+// The Allow window: the network's name, and until removed or for lnDays days.
+// Resolves to { label, days } (days 0 = until removed), or null if cancelled.
+function askAllowNetwork(ip, name) {
+  const dialog = el("netAllowDialog");
+  el("netAllowTitle").textContent = `Allow LineUp from ${ip}`;
+  el("netAllowName").value = name || "";
+  el("netAllowDaysText").textContent = `For ${lnDays} days`;
+  dialog.querySelector('input[name="netAllowHow"][value="permanent"]').checked = true;
+  dialog.returnValue = "";
+  dialog.showModal();
+  el("netAllowName").select();
+  return new Promise(resolve => {
+    dialog.addEventListener("close", () => {
+      if (dialog.returnValue !== "allow") return resolve(null);
+      const temporary = dialog.querySelector('input[name="netAllowHow"]:checked')?.value === "temporary";
+      resolve({ label: el("netAllowName").value.trim(), days: temporary ? lnDays : 0 });
+    }, { once: true });
+  });
+}
+
 // Allow beside a network: add it to LineUp's allowed networks, with a name.
 el("activityGroups").addEventListener("click", async e => {
   const button = e.target.closest("[data-allow-ip]");
   if (!button) return;
   const ip = button.dataset.allowIp;
-  const label = prompt(`Allow LineUp from ${ip}, until it's removed (Admin → LineUp: Network Access)?\n\nName this network, for example "Plant" or "Home - Jaiser":`, button.dataset.allowFor);
-  if (label === null) return;
+  const choice = await askAllowNetwork(ip, button.dataset.allowFor);
+  if (!choice) return;
+  const { label, days } = choice;
   button.disabled = true;
   try {
-    const r = await CloudSync.callFunction("lineupNetwork", { action: "allowIp", ip, label: label.trim() });
-    if (!r.permanentList?.some(p => p.ip === ip)) throw new Error("the server's lineupNetwork function needs updating (deploy the functions again)");
+    const r = await CloudSync.callFunction("lineupNetwork", { action: "allowIp", ip, label, ...(days ? { days } : {}) });
+    const until = r.temporary?.find(t => t.ip === ip && t.listed)?.until;
+    if (days ? !until : !r.permanentList?.some(p => p.ip === ip)) {
+      throw new Error("the server's lineupNetwork function needs updating (deploy the functions again)");
+    }
     lnAllowedIps.add(ip);
-    logActivity("Allowed LineUp from a network", `${ip} (${label.trim() || "no name"})`);
-    showMsg("activityNetMsg", `${ip} is now on LineUp's allowed networks.`);
+    if (days) lnTempUntil.set(ip, until); else lnTempUntil.delete(ip);
+    const how = days ? `until ${lnDate(until)}` : "until removed";
+    logActivity("Allowed LineUp from a network", `${ip} (${label || "no name"}), ${how}`);
+    showMsg("activityNetMsg", `${ip} is on LineUp's allowed networks ${how}.`);
     renderActivity();
   } catch (err) {
     button.disabled = false;
