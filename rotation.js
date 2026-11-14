@@ -7,8 +7,11 @@
 //
 // Auto rotation (the panel beside the sheet): from the positions and the 1st
 // rotation's names on the sheet, it fills every rotation's time (a start time
-// and the same interval each time) and names: each rotation, everyone moves
-// down one position and the last one goes to the top. Positions marked
+// and the same interval each time) and names, skill-based: the Skills grid
+// under the sheet says who's trained on which position (remembered on this
+// computer), and each rotation puts only trained people on a position,
+// moves everyone off their last position when someone else trained is free,
+// and shares the positions and the time off out evenly. Positions marked
 // "stays" keep their person; extra people take turns coming in.
 // Uses el, escapeHtml, showMsg, todayISO, formatDateMMDDYY and onViewShown
 // from app.js.
@@ -182,26 +185,132 @@ const Rotation = (() => {
     return `${Math.floor(t / 60) % 12 || 12}:${String(t % 60).padStart(2, "0")} ${t < 720 ? "AM" : "PM"}`;
   }
 
-  // Who's on each position in each rotation, from the positions and the 1st
-  // rotation on the sheet. Rows with neither are left out; a position with
-  // nobody yet rotates as an open spot. Returns names[row][rotation].
-  function plan(count, stays, extras) {
+  // ---- Skills: who's trained on which position. Kept on this computer as
+  // the exceptions (everyone is trained on everything until unticked):
+  // { "<person, lowercase>": ["<position, lowercase>", ...] }.
+  const SKILLS_KEY = "pk030_rotation_skills";
+  let notTrained = {};
+  try { notTrained = JSON.parse(localStorage.getItem(SKILLS_KEY)) || {}; } catch { /* starts empty */ }
+  const saveSkills = () => { try { localStorage.setItem(SKILLS_KEY, JSON.stringify(notTrained)); } catch { /* this visit only */ } };
+  const lower = t => t.trim().toLowerCase();
+  const posName = r => value(`pos${r}`) || `Position ${r}`;
+  const trained = (person, r) => !(notTrained[lower(person)] ?? []).includes(lower(posName(r)));
+  function setTrained(person, r, yes) {
+    const key = lower(person), pos = lower(posName(r));
+    const list = (notTrained[key] ?? []).filter(p => p !== pos);
+    if (!yes) list.push(pos);
+    if (list.length) notTrained[key] = list; else delete notTrained[key];
+    saveSkills();
+  }
+
+  // The rows in use (a position or a 1st-rotation name), those that rotate,
+  // and the people who rotate: the 1st rotation's (not those staying put),
+  // then the extra people, each once.
+  function setup(stays, extras) {
     const used = [];
     for (let r = 1; r <= ROWS; r++) if (value(`pos${r}`) || value(`r${r}c1`)) used.push(r);
     const rotating = used.filter(r => !stays.has(r));
-    // Everyone moves down one position each rotation; the people beyond the
-    // positions (extras) come in at the top, first one first.
-    const people = [...rotating.map(r => value(`r${r}c1`)), ...[...extras].reverse()];
-    const n = people.length;
-    const names = {};
-    for (const r of used) {
-      names[r] = [];
-      for (let k = 0; k < count; k++) {
-        if (stays.has(r)) names[r].push(value(`r${r}c1`));
-        else names[r].push(people[(((rotating.indexOf(r) - k) % n) + n) % n]);
-      }
+    const staying = new Set(used.filter(r => stays.has(r)).map(r => lower(value(`r${r}c1`))).filter(Boolean));
+    const seen = new Set(), people = [];
+    for (const name of [...rotating.map(r => value(`r${r}c1`)), ...extras]) {
+      if (!name || seen.has(lower(name)) || staying.has(lower(name))) continue;
+      seen.add(lower(name));
+      people.push(name);
     }
-    return { used, names };
+    return { used, rotating, people };
+  }
+
+  // The cheapest way to pair rows with columns (Hungarian method, square
+  // matrix): returns the column for each row.
+  function assign(cost) {
+    const n = cost.length;
+    const u = new Array(n + 1).fill(0), v = new Array(n + 1).fill(0);
+    const p = new Array(n + 1).fill(0), way = new Array(n + 1).fill(0);
+    for (let i = 1; i <= n; i++) {
+      p[0] = i;
+      let j0 = 0;
+      const minv = new Array(n + 1).fill(Infinity), done = new Array(n + 1).fill(false);
+      do {
+        done[j0] = true;
+        const i0 = p[j0];
+        let delta = Infinity, j1 = 0;
+        for (let j = 1; j <= n; j++) {
+          if (done[j]) continue;
+          const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+          if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+          if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+        }
+        for (let j = 0; j <= n; j++) {
+          if (done[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta;
+        }
+        j0 = j1;
+      } while (p[j0] !== 0);
+      do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+    }
+    const col = new Array(n);
+    for (let j = 1; j <= n; j++) if (p[j]) col[p[j] - 1] = j - 1;
+    return col;
+  }
+
+  // Who's on each position in each rotation, from the positions and the 1st
+  // rotation on the sheet. Each later rotation is the best fit: only people
+  // trained on a position go there; nobody stays on the same position two
+  // rotations running unless nobody else trained is free; people go to the
+  // positions they've had least and take turns being off (when there are more
+  // people than positions); with everyone trained on everything, everyone
+  // simply moves down one position. Returns names[row][rotation] and warnings.
+  const UNTRAINED = 1e6, EMPTY = 1000, SAME = 100;
+  function plan(count, stays, extras) {
+    const { used, rotating, people } = setup(stays, extras);
+    const R = rotating.length, P = people.length;
+    const names = {}, warnings = [];
+    for (const r of used) names[r] = [value(`r${r}c1`)];
+    for (const r of used) {
+      const who = value(`r${r}c1`);
+      if (who && !stays.has(r) && !trained(who, r)) warnings.push(`1st rotation: ${who} isn't trained on ${posName(r)}.`);
+    }
+    // Where each person was last (index in `rotating`, or -1 off), what
+    // they've had, and how often they've been off.
+    const index = new Map(people.map((name, i) => [lower(name), i]));
+    const prev = people.map(() => -1);
+    const worked = people.map(() => new Array(R).fill(0));
+    const off = people.map(() => 1);
+    rotating.forEach((r, j) => {
+      const i = index.get(lower(value(`r${r}c1`)));
+      if (i !== undefined && prev[i] === -1) { prev[i] = j; worked[i][j] = 1; off[i] = 0; }
+    });
+    for (let k = 1; k < count; k++) {
+      // People and "nobody" (a position left empty) down the side; the
+      // positions and "off" across the top.
+      const N = P + R;
+      const cost = Array.from({ length: N }, (_, i) => Array.from({ length: N }, (_, j) => {
+        if (i >= P) return j < R ? EMPTY : 0;
+        if (j >= R) return 30 + 20 * off[i] + (prev[i] === -1 ? 50 : 0);
+        if (!trained(people[i], rotating[j])) return UNTRAINED;
+        const step = prev[i] >= 0 ? (((j - prev[i] - 1) % R) + R) % R : j;
+        return (prev[i] === j ? SAME : 0) + 10 * worked[i][j] + 0.1 * step;
+      }));
+      const col = assign(cost);
+      const filled = new Array(R).fill(null);
+      people.forEach((name, i) => {
+        const j = col[i];
+        if (j < R && cost[i][j] < UNTRAINED) {
+          filled[j] = name;
+          if (prev[i] === j) warnings.push(`${ORDINALS[k]} rotation: ${name} stays on ${posName(rotating[j])} (nobody else trained is free).`);
+          prev[i] = j;
+          worked[i][j]++;
+        } else {
+          prev[i] = -1;
+          off[i]++;
+        }
+      });
+      rotating.forEach((r, j) => {
+        names[r].push(filled[j] ?? "");
+        if (!filled[j]) warnings.push(`${ORDINALS[k]} rotation: nobody trained on ${posName(r)} is free.`);
+      });
+      for (const r of used) if (stays.has(r)) names[r].push(value(`r${r}c1`));
+    }
+    return { used, names, warnings };
   }
 
   // The "stays put" list follows the position names on the sheet.
@@ -215,12 +324,26 @@ const Rotation = (() => {
     }).join("");
   }
 
+  // The skills grid under the sheet: the people who rotate down the side,
+  // the positions that rotate across the top.
+  function renderSkills() {
+    const extras = el("rotExtras").value.split(/\n|,/).map(t => t.trim()).filter(Boolean);
+    const { rotating, people } = setup(stays, extras);
+    const shown = people.length > 0 && rotating.length > 0;
+    el("rotSkillsNone").classList.toggle("hidden", shown);
+    el("rotSkills").classList.toggle("hidden", !shown);
+    if (!shown) { el("rotSkills").innerHTML = ""; return; }
+    el("rotSkills").innerHTML = `<thead><tr><th>Name</th>${rotating.map(r => `<th>${escapeHtml(posName(r))}</th>`).join("")}</tr></thead>
+      <tbody>${people.map(name => `<tr><th>${escapeHtml(name)}</th>${rotating.map(r => `<td><input type="checkbox"
+        data-skill-person="${escapeHtml(name)}" data-skill-row="${r}" aria-label="${escapeHtml(`${name} trained on ${posName(r)}`)}"${trained(name, r) ? " checked" : ""}></td>`).join("")}</tr>`).join("")}</tbody>`;
+  }
+
   function autoRotate() {
     const count = Number(el("rotCount").value);
     const every = Number(el("rotEvery").value);
     const start = el("rotStart").value;
     const extras = el("rotExtras").value.split(/\n|,/).map(s => s.trim()).filter(Boolean);
-    const { used, names } = plan(count, stays, extras);
+    const { used, names, warnings } = plan(count, stays, extras);
     if (!used.length || !used.some(r => value(`r${r}c1`))) {
       showMsg("rotAutoMsg", "Type the positions and the 1st rotation's names on the sheet first.", false);
       return;
@@ -237,19 +360,23 @@ const Rotation = (() => {
     }
     render();
     showMsg("rotAutoMsg", `Filled ${count} rotation${count === 1 ? "" : "s"}${start ? `, from ${timeLabel(start, 0)} every ${every < 60 ? `${every} minutes` : every === 60 ? "hour" : `${every / 60} hours`}` : ""}.`);
+    el("rotWarnings").innerHTML = warnings.map(w => `<li>${escapeHtml(w)}</li>`).join("");
   }
 
   sheet.innerHTML = pageSvg() + inputsHtml();
   copy.innerHTML = pageSvg();
   new ResizeObserver(fitSheet).observe(el("rotSheetWrap"));
   renderStays();
+  renderSkills();
 
   tab.addEventListener("input", e => {
+    if (e.target.id === "rotExtras") { renderSkills(); return; }
     const id = e.target.dataset.field;
     if (!id) return;
     state.values[id] = e.target.value;
     render();
     if (/^pos\d$/.test(id)) renderStays();
+    if (/^pos\d$|^r\dc1$/.test(id)) renderSkills();
   });
   sheet.addEventListener("click", e => {
     const box = e.target.closest("[data-check]");
@@ -270,6 +397,11 @@ const Rotation = (() => {
     const r = Number(e.target.dataset.stay);
     if (!r) return;
     if (e.target.checked) stays.add(r); else stays.delete(r);
+    renderSkills();
+  });
+  el("rotSkills").addEventListener("change", e => {
+    const box = e.target.closest("[data-skill-person]");
+    if (box) setTrained(box.dataset.skillPerson, Number(box.dataset.skillRow), box.checked);
   });
   el("rotAutoBtn").addEventListener("click", autoRotate);
 
@@ -280,8 +412,10 @@ const Rotation = (() => {
     stays.clear();
     el("rotExtras").value = "";
     renderStays();
+    renderSkills();
     render();
     el("rotAutoMsg").textContent = "";
+    el("rotWarnings").innerHTML = "";
   });
 
   el("rotPrintBtn").addEventListener("click", () => window.print());

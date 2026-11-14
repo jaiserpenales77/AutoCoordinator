@@ -689,7 +689,7 @@
       </div>
       <aside class="br-more rot-auto" aria-label="Auto rotation">
         <h3>Auto rotation</h3>
-        <p class="muted">Each rotation, everyone moves down one position and the bottom one goes to the top.</p>
+        <p class="muted">Skill-based: people only go on positions they're trained on (set in <strong>Skills</strong>, under the sheet), move off their last position each rotation, and share the positions and time off evenly.</p>
         <div class="rot-auto-grid">
           <label>Start <input type="time" id="rotStart"></label>
           <label>Every
@@ -714,8 +714,15 @@
         </label>
         <button type="button" id="rotAutoBtn" class="primary">Fill in the rotations</button>
         <p id="rotAutoMsg" class="form-msg"></p>
+        <ul id="rotWarnings" class="rot-warnings"></ul>
       </aside>
     </div>
+    <section class="rot-skills" aria-labelledby="rotSkillsTitle">
+      <h3 id="rotSkillsTitle">Skills: who's trained on what</h3>
+      <p class="muted">Everyone starts trained on every position. Untick a box when someone isn't trained on that position, and Auto rotation won't put them there. Remembered on this computer, by name and position.</p>
+      <p id="rotSkillsNone" class="muted">Type the positions and the 1st rotation's names on the sheet (and any extra people), and the grid appears here.</p>
+      <div class="table-scroll"><table id="rotSkills" class="rot-skills-table hidden"></table></div>
+    </section>
   </section>
 </div>
 

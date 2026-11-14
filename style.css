@@ -657,6 +657,16 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .rot-auto-extras { display: block; margin: 8px 0 10px; }
 .rot-auto-extras textarea { margin-top: 2px; resize: vertical; }
 .rot-auto #rotAutoBtn { width: 100%; }
+.rot-warnings { margin: 0; padding-left: 16px; color: var(--caution-text); font-size: 0.78rem; }
+.rot-warnings li { margin-bottom: 4px; }
+.rot-skills { margin-top: 16px; }
+.rot-skills h3 { margin: 0 0 4px; font-size: 1rem; }
+.rot-skills > p { margin: 0 0 8px; font-size: 0.85rem; }
+.rot-skills-table { width: auto; border-collapse: collapse; font-size: 0.85rem; }
+.rot-skills-table th, .rot-skills-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); text-align: center; }
+.rot-skills-table tbody th { text-align: left; font-weight: 600; white-space: nowrap; }
+.rot-skills-table thead th { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
+.rot-skills-table input { width: 16px; height: 16px; cursor: pointer; }
 .br-input.ct-input { padding: 0 4pt; }
 .br-input.ct-reason { resize: none; text-align: center; line-height: 1.25; padding: 4pt; }
 /* Training Sign-In: the TR002B sheet, two Letter portrait pages, entries in

@@ -215,17 +215,26 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   above each of the 8 rotations; and 7 positions down the left with who's
   on each in every rotation. An empty Date starts with today. Print it
   blank, or filled in.
-  **Auto rotation** (the panel beside the sheet): type the positions and the
-  1st rotation's names on the sheet, choose the start time, how often (30
-  minutes to 2 hours, 1 hour by default) and how many rotations, then **Fill
-  in the rotations**. Each rotation, everyone moves down one position and
-  the bottom one goes to the top, so nobody is in two places at once and
-  everyone takes every position in turn. Positions ticked **Stays put**
-  keep their person all shift (for example the lead); **Extra people** take
-  turns coming in at the top (and get time off in turn); a position with
-  nobody yet rotates as an open spot. The times fill in at the same
-  interval, past midnight too. It asks before replacing names already in
-  the later rotations, and clears the rotations past the number chosen.
+  **Auto rotation** (the panel beside the sheet), skill-based: type the
+  positions and the 1st rotation's names on the sheet, choose the start
+  time, how often (30 minutes to 2 hours, 1 hour by default) and how many
+  rotations, then **Fill in the rotations**. **Skills** (under the sheet) is
+  a grid of the people who rotate (the 1st rotation's and the extra people)
+  against the positions that rotate: everyone starts trained on every
+  position; untick a box when someone isn't, and it's remembered on that
+  computer (by name and position). Each later rotation is worked out as a
+  best fit: only people trained on a position go there; nobody is on the
+  same position two rotations running unless nobody else trained is free;
+  people go to the positions they've had least and take turns being off
+  when there are more people than positions. With everyone trained on
+  everything it's simply everyone moving down one position. Positions
+  ticked **Stays put** keep their person all shift (for example the lead).
+  The panel lists anything to look at: someone in the 1st rotation not
+  trained on their position, someone kept on a position because nobody else
+  trained was free, or a position left empty because nobody trained was.
+  The times fill in at the same interval, past midnight too. It asks before
+  replacing names already in the later rotations, and clears the rotations
+  past the number chosen.
   Printing is logged with the line, shift and date.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
