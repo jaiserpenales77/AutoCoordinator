@@ -317,7 +317,8 @@ const Rotation = (() => {
   // when the line is typed on the sheet (and the column is empty) or chosen
   // in the panel.
   const LINE_POSITIONS = {
-    5: ["Packing", "Shippers", "Pallet", "Labeler/Cremer", "Inside Utility", "Outside Utility"]
+    5: ["Packing", "Shippers", "Pallet", "Labeler/Cremer", "Inside Utility", "Outside Utility"],
+    7: ["Labeler", "Filler", "Hand Packing 1", "Hand Packing 2", "Shipper/Casepacker", "Inside Utility", "Outside Utility"]
   };
   // "5", "Line 5", "L05", "VPKL05" -> "5".
   const lineKey = t => { const m = String(t).match(/(\d+)/); return m ? String(Number(m[1])) : ""; };
