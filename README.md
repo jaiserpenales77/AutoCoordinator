@@ -215,6 +215,13 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   above each of the 8 rotations; and 7 positions down the left with who's
   on each in every rotation. An empty Date starts with today. Print it
   blank, or filled in.
+  **Line positions:** typing a line in the sheet's Line box ("5", "Line 5",
+  "VPKL05") fills in that line's positions when the position column is
+  empty; the panel's **Line positions** picker and **Fill positions** do it
+  any time (asking before replacing typed ones). Line 5: Packing, Shippers,
+  Pallet, Labeler/Cremer, Inside Utility, Outside Utility. The positions
+  can still be typed over. (The presets are in `LINE_POSITIONS` in
+  `rotation.js`.)
   **Auto rotation** (the panel beside the sheet), skill-based: type the
   positions and the 1st rotation's names on the sheet, choose the start
   time, how often (30 minutes to 2 hours, 1 hour by default) and how many

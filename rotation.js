@@ -313,6 +313,29 @@ const Rotation = (() => {
     return { used, names, warnings };
   }
 
+  // Each line's positions, top to bottom, filled into the position column
+  // when the line is typed on the sheet (and the column is empty) or chosen
+  // in the panel.
+  const LINE_POSITIONS = {
+    5: ["Packing", "Shippers", "Pallet", "Labeler/Cremer", "Inside Utility", "Outside Utility"]
+  };
+  // "5", "Line 5", "L05", "VPKL05" -> "5".
+  const lineKey = t => { const m = String(t).match(/(\d+)/); return m ? String(Number(m[1])) : ""; };
+
+  function fillPositions(line, { ask = true } = {}) {
+    const list = LINE_POSITIONS[line];
+    if (!list) return false;
+    const typed = Array.from({ length: ROWS }, (_, i) => value(`pos${i + 1}`));
+    const same = typed.every((t, i) => t === (list[i] ?? ""));
+    if (ask && !same && typed.some(Boolean) && !confirm(`Replace the positions on the sheet with Line ${line}'s?`)) return false;
+    typed.forEach((_, i) => setValue(`pos${i + 1}`, list[i] ?? ""));
+    el("rotPreset").value = line;
+    render();
+    renderStays();
+    renderSkills();
+    return true;
+  }
+
   // The "stays put" list follows the position names on the sheet.
   const stays = new Set();
   function renderStays() {
@@ -377,6 +400,16 @@ const Rotation = (() => {
     render();
     if (/^pos\d$/.test(id)) renderStays();
     if (/^pos\d$|^r\dc1$/.test(id)) renderSkills();
+    // Typing a line with preset positions fills an empty position column.
+    if (id === "line" && LINE_POSITIONS[lineKey(e.target.value)]
+      && Array.from({ length: ROWS }, (_, i) => value(`pos${i + 1}`)).every(t => !t)) {
+      fillPositions(lineKey(e.target.value), { ask: false });
+      showMsg("rotAutoMsg", `Filled in Line ${lineKey(e.target.value)}'s positions.`);
+    }
+  });
+  el("rotPreset").innerHTML = Object.keys(LINE_POSITIONS).map(l => `<option value="${l}">Line ${l}</option>`).join("");
+  el("rotPresetBtn").addEventListener("click", () => {
+    if (fillPositions(el("rotPreset").value)) showMsg("rotAutoMsg", `Filled in Line ${el("rotPreset").value}'s positions.`);
   });
   sheet.addEventListener("click", e => {
     const box = e.target.closest("[data-check]");

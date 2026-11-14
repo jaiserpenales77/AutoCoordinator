@@ -657,6 +657,10 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .rot-auto-extras { display: block; margin: 8px 0 10px; }
 .rot-auto-extras textarea { margin-top: 2px; resize: vertical; }
 .rot-auto #rotAutoBtn { width: 100%; }
+.rot-preset { display: block; margin-bottom: 10px; }
+.rot-preset-row { display: flex; gap: 6px; margin-top: 2px; }
+.rot-preset-row select { flex: 1 1 auto; min-width: 0; }
+.rot-auto .rot-preset-row button { flex: 0 0 auto; width: auto; padding: 4px 10px; font-size: 0.8rem; }
 .rot-warnings { margin: 0; padding-left: 16px; color: var(--caution-text); font-size: 0.78rem; }
 .rot-warnings li { margin-bottom: 4px; }
 .rot-skills { margin-top: 16px; }
