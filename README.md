@@ -242,7 +242,10 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   when there are more people than positions. With everyone trained on
   everything it's simply everyone moving down one position. Positions
   ticked **Stays put** keep their person all shift (for example the lead).
-  The panel lists anything to look at: someone in the 1st rotation not
+  The panel lists anything to look at: two names that look like one person
+  spelled two ways ("Fransisco" / "Francisco", one or two letters apart),
+  which are treated as two people and could be put in two places at once;
+  someone in the 1st rotation not
   trained on their position, someone kept on a position because nobody else
   trained was free, or a position left empty because nobody trained was.
   The times fill in at the same interval, past midnight too. It asks before

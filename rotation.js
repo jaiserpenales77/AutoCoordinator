@@ -260,10 +260,39 @@ const Rotation = (() => {
   // people than positions); with everyone trained on everything, everyone
   // simply moves down one position. Returns names[row][rotation] and warnings.
   const UNTRAINED = 1e6, EMPTY = 1000, SAME = 100;
+  // How many letters differ between two words (Levenshtein distance).
+  function editDistance(a, b) {
+    let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const next = [i];
+      for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      row = next;
+    }
+    return row[b.length];
+  }
+  // Two different names that look like one person spelled two ways
+  // ("Fransisco" / "Francisco"): one or two letters apart.
+  function lookAlikes(names) {
+    const letters = n => n.toLowerCase().replace(/[^a-z]/g, "");
+    const pairs = [];
+    for (let i = 0; i < names.length; i++) {
+      for (let j = i + 1; j < names.length; j++) {
+        const a = letters(names[i]), b = letters(names[j]);
+        if (a === b ? names[i].toLowerCase() !== names[j].toLowerCase() : Math.min(a.length, b.length) >= 4
+          && editDistance(a, b) <= (Math.min(a.length, b.length) >= 7 ? 2 : 1)) pairs.push([names[i], names[j]]);
+      }
+    }
+    return pairs;
+  }
+
   function plan(count, stays, extras) {
     const { used, rotating, people } = setup(stays, extras);
     const R = rotating.length, P = people.length;
     const names = {}, warnings = [];
+    const everyone = [...new Map([...used.map(r => value(`r${r}c1`)), ...people].filter(Boolean).map(n => [n.toLowerCase(), n])).values()];
+    for (const [a, b] of lookAlikes(everyone)) {
+      warnings.push(`"${a}" and "${b}" look like the same person: check the spelling (they're treated as two people).`);
+    }
     for (const r of used) names[r] = [value(`r${r}c1`)];
     for (const r of used) {
       const who = value(`r${r}c1`);
