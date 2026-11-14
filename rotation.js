@@ -318,7 +318,8 @@ const Rotation = (() => {
   // in the panel.
   const LINE_POSITIONS = {
     5: ["Packing", "Shippers", "Pallet", "Labeler/Cremer", "Inside Utility", "Outside Utility"],
-    7: ["Labeler", "Filler", "Hand Packing 1", "Hand Packing 2", "Shipper/Casepacker", "Inside Utility", "Outside Utility"]
+    7: ["Labeler", "Filler", "Hand Packing 1", "Hand Packing 2", "Shipper/Casepacker", "Inside Utility", "Outside Utility"],
+    8: ["Filler", "Labeler", "Inside Utility", "Outside Utility", "Case Packer"]
   };
   // "5", "Line 5", "L05", "VPKL05" -> "5".
   const lineKey = t => { const m = String(t).match(/(\d+)/); return m ? String(Number(m[1])) : ""; };
