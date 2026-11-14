@@ -213,7 +213,8 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   (Dumping, Lead running 2x lines, Desiccant by hand, Stretch - Line 6,
   Heavy bottles, Short skillset / 1 PLT), clicked to mark them; a time
   above each of the 8 rotations; and 7 positions down the left with who's
-  on each in every rotation. An empty Date starts with today. Print it
+  on each in every rotation. An empty Date starts with today. Entries are in
+  bold Arial (on screen and printed), shrinking to fit their box. Print it
   blank, or filled in.
   **Line positions:** typing a line in the sheet's Line box ("5", "Line 5",
   "VPKL05") fills in that line's positions when the position column is

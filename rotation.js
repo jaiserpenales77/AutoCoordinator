@@ -65,7 +65,7 @@ const Rotation = (() => {
 
   const measureCtx = document.createElement("canvas").getContext("2d");
   const widthPt = (s, size) => {
-    measureCtx.font = `400 ${size}pt ${ARIAL}`;
+    measureCtx.font = `700 ${size}pt ${ARIAL}`;
     return measureCtx.measureText(s).width * 0.75; // px to pt
   };
   const room = id => FIELDS[id].box[2] - FIELDS[id].box[0] - 2 * INSET - 2 * PAD;
@@ -126,7 +126,7 @@ const Rotation = (() => {
       const size = fitSize(id, s);
       const squeeze = widthPt(s, size) > room(id) ? ` textLength="${fmt(room(id))}" lengthAdjust="spacingAndGlyphs"` : "";
       const base = kind === "line" ? y1 : (y0 + y1) / 2 + size * 0.36;
-      out += text(s, (x0 + x1) / 2, base, size, ARIAL, middle + squeeze);
+      out += text(s, (x0 + x1) / 2, base, size, ARIAL, ' font-weight="700"' + middle + squeeze);
     }
     return out;
   }

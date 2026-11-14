@@ -640,10 +640,10 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .up-print { display: none; }
 .ct-print { display: none; }
-/* Rotation Schedule: Letter landscape, entries in plain Arial; the Auto
+/* Rotation Schedule: Letter landscape, entries in bold Arial; the Auto
    rotation panel uses the Bulk Return side panel's styles. */
 .rot-print { display: none; }
-.br-input.rot-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
+.br-input.rot-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 700; }
 .br-choice.rot-check { border-radius: 2pt; }
 .rot-auto { flex-basis: 250px; }
 .rot-auto h3 { margin: 0 0 4px; }
