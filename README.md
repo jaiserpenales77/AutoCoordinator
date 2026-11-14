@@ -223,7 +223,8 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   Filler, Hand Packing 1, Hand Packing 2, Shipper/Casepacker, Inside
   Utility, Outside Utility. Line 8: Filler, Labeler, Inside Utility,
   Outside Utility, Case Packer. Line 9: Labeler/Cremer, Inside Utility,
-  Outside Utility, Case Packer. The positions
+  Outside Utility, Case Packer. Line 10: Labeler, Cremer, Utility, Case
+  Packer. The positions
   can still be typed over. (The presets are in `LINE_POSITIONS` in
   `rotation.js`.)
   **Auto rotation** (the panel beside the sheet), skill-based: type the
