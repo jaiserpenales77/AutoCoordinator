@@ -259,7 +259,11 @@ const Rotation = (() => {
   // positions they've had least and take turns being off (when there are more
   // people than positions); with everyone trained on everything, everyone
   // simply moves down one position. Returns names[row][rotation] and warnings.
-  const UNTRAINED = 1e6, EMPTY = 1000, SAME = 100;
+  // What breaking each rule costs: an untrained position is never used; a
+  // position left empty is worse than any other break; staying on a
+  // position, then coming back to it after only one rotation away, are
+  // worse than anything fairness weighs (worked counts, time off).
+  const UNTRAINED = 1e7, EMPTY = 1e5, SAME = 500, BACK = 300;
   // How many letters differ between two words (Levenshtein distance).
   function editDistance(a, b) {
     let row = Array.from({ length: b.length + 1 }, (_, j) => j);
@@ -285,7 +289,37 @@ const Rotation = (() => {
     return pairs;
   }
 
+  // A fixed run of pseudo-random numbers (the same every time, so the same
+  // sheet always fills in the same way).
+  function seeded(seed) {
+    return () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Each rotation is fitted on its own, so a choice in one can leave no good
+  // choice in a later one. So the plan is made many times, nudging the
+  // fairness weights a little each time, and the one with the fewest broken
+  // rules is kept (empty positions first, then people staying put, then
+  // coming back after one rotation away); a tie keeps the first, un-nudged
+  // plan (with everyone trained, everyone simply moving down one).
+  const TRIES = 300;
   function plan(count, stays, extras) {
+    const best = { result: null, score: Infinity };
+    for (let t = 0; t < TRIES; t++) {
+      const result = planOnce(count, stays, extras, t === 0 ? () => 0 : seeded(t));
+      const score = 1e6 * result.broken.empty + 1e4 * result.broken.same + 100 * result.broken.back;
+      if (score < best.score) { best.result = result; best.score = score; }
+      if (score === 0) break;
+    }
+    return best.result;
+  }
+
+  function planOnce(count, stays, extras, noise) {
+    const broken = { empty: 0, same: 0, back: 0 };
     const { used, rotating, people } = setup(stays, extras);
     const R = rotating.length, P = people.length;
     const names = {}, warnings = [];
@@ -298,10 +332,13 @@ const Rotation = (() => {
       const who = value(`r${r}c1`);
       if (who && !stays.has(r) && !trained(who, r)) warnings.push(`1st rotation: ${who} isn't trained on ${posName(r)}.`);
     }
-    // Where each person was last (index in `rotating`, or -1 off), what
-    // they've had, and how often they've been off.
+    // Where each person was last and the rotation before (index in
+    // `rotating`, or -1 off), what they've had, and how often they've been
+    // off. A person must rotate twice (two rotations away, being off counts)
+    // before coming back to a position.
     const index = new Map(people.map((name, i) => [lower(name), i]));
     const prev = people.map(() => -1);
+    const prev2 = people.map(() => -1);
     const worked = people.map(() => new Array(R).fill(0));
     const off = people.map(() => 1);
     rotating.forEach((r, j) => {
@@ -314,10 +351,10 @@ const Rotation = (() => {
       const N = P + R;
       const cost = Array.from({ length: N }, (_, i) => Array.from({ length: N }, (_, j) => {
         if (i >= P) return j < R ? EMPTY : 0;
-        if (j >= R) return 30 + 20 * off[i] + (prev[i] === -1 ? 50 : 0);
+        if (j >= R) return 30 + 20 * off[i] + (prev[i] === -1 ? 50 : 0) + 40 * noise();
         if (!trained(people[i], rotating[j])) return UNTRAINED;
         const step = prev[i] >= 0 ? (((j - prev[i] - 1) % R) + R) % R : j;
-        return (prev[i] === j ? SAME : 0) + 10 * worked[i][j] + 0.1 * step;
+        return (prev[i] === j ? SAME : prev2[i] === j ? BACK : 0) + 10 * worked[i][j] + 0.1 * step + 40 * noise();
       }));
       const col = assign(cost);
       const filled = new Array(R).fill(null);
@@ -325,21 +362,27 @@ const Rotation = (() => {
         const j = col[i];
         if (j < R && cost[i][j] < UNTRAINED) {
           filled[j] = name;
-          if (prev[i] === j) warnings.push(`${ORDINALS[k]} rotation: ${name} stays on ${posName(rotating[j])} (nobody else trained is free).`);
+          if (prev[i] === j) { broken.same++; warnings.push(`${ORDINALS[k]} rotation: ${name} stays on ${posName(rotating[j])} (nobody else trained is free).`); }
+          else if (prev2[i] === j) {
+            broken.back++;
+            warnings.push(`${ORDINALS[k]} rotation: ${name} is back on ${posName(rotating[j])} after only one rotation away (nobody else trained is free).`);
+          }
+          prev2[i] = prev[i];
           prev[i] = j;
           worked[i][j]++;
         } else {
+          prev2[i] = prev[i];
           prev[i] = -1;
           off[i]++;
         }
       });
       rotating.forEach((r, j) => {
         names[r].push(filled[j] ?? "");
-        if (!filled[j]) warnings.push(`${ORDINALS[k]} rotation: nobody trained on ${posName(r)} is free.`);
+        if (!filled[j]) { broken.empty++; warnings.push(`${ORDINALS[k]} rotation: nobody trained on ${posName(r)} is free.`); }
       });
       for (const r of used) if (stays.has(r)) names[r].push(value(`r${r}c1`));
     }
-    return { used, names, warnings };
+    return { used, names, warnings, broken };
   }
 
   // Each line's positions, top to bottom, filled into the position column

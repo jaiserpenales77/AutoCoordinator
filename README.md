@@ -236,18 +236,25 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   against the positions that rotate: everyone starts trained on every
   position; untick a box when someone isn't, and it's remembered on that
   computer (by name and position). Each later rotation is worked out as a
-  best fit: only people trained on a position go there; nobody is on the
-  same position two rotations running unless nobody else trained is free;
-  people go to the positions they've had least and take turns being off
-  when there are more people than positions. With everyone trained on
+  best fit: only people trained on a position go there; a person must
+  rotate twice before coming back to a position (two rotations elsewhere,
+  being off counts as one: A, B, C, A is fine; A, B, A isn't), unless
+  nobody else trained is free; people go to the positions they've had
+  least and take turns being off when there are more people than
+  positions. As one rotation's choice can box in a later one, the plan is
+  worked out many times with small changes and the one breaking the fewest
+  rules is kept (an empty position worst, then someone staying put, then
+  someone back after one rotation away); the same sheet always fills in
+  the same way. With everyone trained on
   everything it's simply everyone moving down one position. Positions
   ticked **Stays put** keep their person all shift (for example the lead).
   The panel lists anything to look at: two names that look like one person
   spelled two ways ("Fransisco" / "Francisco", one or two letters apart),
   which are treated as two people and could be put in two places at once;
   someone in the 1st rotation not
-  trained on their position, someone kept on a position because nobody else
-  trained was free, or a position left empty because nobody trained was.
+  trained on their position, someone kept on a position or back on it after
+  only one rotation away because nobody else trained was free, or a
+  position left empty because nobody trained was.
   The times fill in at the same interval, past midnight too. It asks before
   replacing names already in the later rotations, and clears the rotations
   past the number chosen.
