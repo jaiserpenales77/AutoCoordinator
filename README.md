@@ -206,6 +206,27 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   longer than the box. **Print Pulse Check** prints it (colours included).
   Answers aren't saved or sent anywhere, and the Activity Log records only
   that the sheet was printed, not what's on it.
+- **Rotation Schedule** — the hourly rotation sheet posted on the MDI
+  board, redrawn from a scan of the paper form on one Letter landscape page
+  (straightened, and a little narrower than the original so its right edge
+  prints): Line, Shift and Date; the six "mark all that apply" boxes
+  (Dumping, Lead running 2x lines, Desiccant by hand, Stretch - Line 6,
+  Heavy bottles, Short skillset / 1 PLT), clicked to mark them; a time
+  above each of the 8 rotations; and 7 positions down the left with who's
+  on each in every rotation. An empty Date starts with today. Print it
+  blank, or filled in.
+  **Auto rotation** (the panel beside the sheet): type the positions and the
+  1st rotation's names on the sheet, choose the start time, how often (30
+  minutes to 2 hours, 1 hour by default) and how many rotations, then **Fill
+  in the rotations**. Each rotation, everyone moves down one position and
+  the bottom one goes to the top, so nobody is in two places at once and
+  everyone takes every position in turn. Positions ticked **Stays put**
+  keep their person all shift (for example the lead); **Extra people** take
+  turns coming in at the top (and get time off in turn); a position with
+  nobody yet rotates as an open spot. The times fill in at the same
+  interval, past midnight too. It asks before replacing names already in
+  the later rotations, and clears the rotations past the number chosen.
+  Printing is logged with the line, shift and date.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk
   weight − tare (Big Blue Pallet 23.9, Small Blue Pallet 18.5, Grey Tote 17.5,
@@ -646,6 +667,7 @@ remove someone's access, delete (or disable) their user.
 - `training-signin.js` — the Forms tab's Training Sign-in Sheet.
 - `troubleshooting.js` — the Forms tab's Trouble Shooting Template.
 - `pulse-check.js` — the Forms tab's Pulse Check Conversation prep sheet.
+- `rotation.js` — the Forms tab's Rotation Schedule, with Auto rotation.
 - `assets/pharmavite-logo-qs106a.png` — logo taken from the Bulk Return form.
 - `assets/pharmavite-logo-pk007b.jpg` — logo taken from the Unplanned Issue form.
 - `assets/pharmavite-logo-qa263c.png` — logo taken from the Hold Tag.

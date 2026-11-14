@@ -640,6 +640,23 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 }
 .up-print { display: none; }
 .ct-print { display: none; }
+/* Rotation Schedule: Letter landscape, entries in plain Arial; the Auto
+   rotation panel uses the Bulk Return side panel's styles. */
+.rot-print { display: none; }
+.br-input.rot-input { padding: 0 3pt; font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-weight: 400; }
+.br-choice.rot-check { border-radius: 2pt; }
+.rot-auto { flex-basis: 250px; }
+.rot-auto h3 { margin: 0 0 4px; }
+.rot-auto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; margin-bottom: 10px; }
+.rot-auto-grid label:first-child { grid-column: 1 / -1; }
+.rot-auto label { font-size: 0.78rem; }
+.rot-auto input, .rot-auto select, .rot-auto textarea { width: 100%; padding: 4px 6px; font-size: 0.85rem; }
+.rot-auto-label { margin: 0 0 4px !important; color: var(--muted); font-weight: 600; }
+.rot-auto .rot-stay { margin: 0 0 3px; font-size: 0.8rem; }
+.rot-auto .rot-stay input { width: auto; }
+.rot-auto-extras { display: block; margin: 8px 0 10px; }
+.rot-auto-extras textarea { margin-top: 2px; resize: vertical; }
+.rot-auto #rotAutoBtn { width: 100%; }
 .br-input.ct-input { padding: 0 4pt; }
 .br-input.ct-reason { resize: none; text-align: center; line-height: 1.25; padding: 4pt; }
 /* Training Sign-In: the TR002B sheet, two Letter portrait pages, entries in
@@ -953,12 +970,14 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   body[data-print="hold"] .print-sheet,
   body[data-print="standardWork"] .print-sheet,
   body[data-print="componentTransfer"] .print-sheet,
+  body[data-print="rotation"] .print-sheet,
   body[data-print="training"] .print-sheet,
   body[data-print="troubleshooting"] .print-sheet,
   body[data-print="pulseCheck"] .print-sheet,
   body[data-print="blocked"] .print-sheet { display: none !important; }
   body[data-print="blocked"] .print-blocked { display: block; }
   body[data-print="componentTransfer"] .ct-print { display: block; }
+  body[data-print="rotation"] .rot-print { display: block; }
   body[data-print="training"] .tr-print { display: block; }
   body[data-print="troubleshooting"] .ts-print { display: block; }
   body[data-print="pulseCheck"] .pc-print { display: block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

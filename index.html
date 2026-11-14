@@ -611,6 +611,11 @@
         <span class="form-card-code">Conversation prep</span>
         <span class="form-card-desc">Prepare for Your Pulse Check Conversation: an accomplishment, goal progress, a skill you're building, and the support and communication that would help</span>
       </button>
+      <button type="button" class="form-card" data-form="rotTab">
+        <span class="form-card-name">Rotation Schedule</span>
+        <span class="form-card-code">For the MDI board</span>
+        <span class="form-card-desc">Who's on each position every rotation, with the times; Auto rotation fills it in from the 1st rotation</span>
+      </button>
       <button type="button" class="form-card" data-form="bulkCalcTab">
         <span class="form-card-name">Bulk Calculator</span>
         <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
@@ -663,6 +668,52 @@
         <label class="check-inline"><input type="checkbox" id="brSameLot"> <span>Same lot # as Bulk 1</span></label>
         <div class="br-more-head" id="brMoreHead"><span>#</span><span class="br-more-lot">Lot #</span><span>Qty (TH)</span><span></span></div>
         <div id="brMoreList"></div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<div class="layout single-layout hidden" id="rotTab">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Rotation Schedule</h2>
+      <div class="actions br-actions">
+        <button type="button" id="rotClearBtn">Clear</button>
+        <button type="button" id="rotPrintBtn" class="primary">Print Rotation Schedule</button>
+      </div>
+    </div>
+    <p class="muted">Type in the blanks and click a box to mark it; print it blank to fill in by hand. For <strong>Auto rotation</strong>, type the positions (left column) and the 1st rotation's names, then fill in the rest from the panel.</p>
+    <div class="br-with-side">
+      <div id="rotSheetWrap" class="br-sheet-wrap">
+        <div id="rotSheet" class="br-sheet"></div>
+      </div>
+      <aside class="br-more rot-auto" aria-label="Auto rotation">
+        <h3>Auto rotation</h3>
+        <p class="muted">Each rotation, everyone moves down one position and the bottom one goes to the top.</p>
+        <div class="rot-auto-grid">
+          <label>Start <input type="time" id="rotStart"></label>
+          <label>Every
+            <select id="rotEvery">
+              <option value="30">30 min</option>
+              <option value="60" selected>1 hour</option>
+              <option value="90">1½ hours</option>
+              <option value="120">2 hours</option>
+            </select>
+          </label>
+          <label>Rotations
+            <select id="rotCount">
+              <option>1</option><option>2</option><option>3</option><option>4</option>
+              <option>5</option><option>6</option><option>7</option><option selected>8</option>
+            </select>
+          </label>
+        </div>
+        <p class="rot-auto-label">Stays put (doesn't rotate)</p>
+        <div id="rotStays"></div>
+        <label class="rot-auto-extras">Extra people (take turns coming in)
+          <textarea id="rotExtras" rows="3" placeholder="One name per line"></textarea>
+        </label>
+        <button type="button" id="rotAutoBtn" class="primary">Fill in the rotations</button>
+        <p id="rotAutoMsg" class="form-msg"></p>
       </aside>
     </div>
   </section>
@@ -844,6 +895,9 @@
 <div id="upPrint" class="up-print">
   <div id="upPrintPage" class="br-print-page"></div>
 </div>
+<div id="rotPrint" class="rot-print">
+  <div id="rotPrintPage" class="br-print-page"></div>
+</div>
 <div id="ctPrint" class="ct-print">
   <div id="ctPrintPage" class="br-print-page"></div>
 </div>
@@ -868,6 +922,7 @@
 <script src="hold-tag.js"></script>
 <script src="standard-work.js"></script>
 <script src="component-transfer.js"></script>
+<script src="rotation.js"></script>
 <script src="training-signin.js"></script>
 <script src="troubleshooting.js"></script>
 <script src="pulse-check.js"></script>
