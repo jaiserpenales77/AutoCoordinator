@@ -678,7 +678,8 @@
     <div class="panel-head">
       <h2>Rotation Schedule</h2>
       <div class="actions br-actions">
-        <button type="button" id="rotClearBtn">Clear</button>
+        <button type="button" id="rotUndoBtn" disabled title="Undo the last change to the sheet">Undo</button>
+        <button type="button" id="rotClearBtn" title="Clear the whole form">Clear</button>
         <button type="button" id="rotPrintBtn" class="primary">Print Rotation Schedule</button>
       </div>
     </div>
@@ -716,7 +717,10 @@
         <label class="rot-auto-extras">Extra people (take turns coming in)
           <textarea id="rotExtras" rows="3" placeholder="One name per line"></textarea>
         </label>
-        <button type="button" id="rotAutoBtn" class="primary">Fill in the rotations</button>
+        <div class="rot-auto-buttons">
+          <button type="button" id="rotAutoBtn" class="primary">Fill in the rotations</button>
+          <button type="button" id="rotClearRotBtn" title="Empty the 2nd to 8th rotations and the times">Clear rotations</button>
+        </div>
         <p id="rotAutoMsg" class="form-msg"></p>
         <ul id="rotWarnings" class="rot-warnings"></ul>
       </aside>

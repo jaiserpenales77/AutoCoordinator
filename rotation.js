@@ -328,12 +328,46 @@ const Rotation = (() => {
   // "5", "Line 5", "L05", "VPKL05" -> "5".
   const lineKey = t => { const m = String(t).match(/(\d+)/); return m ? String(Number(m[1])) : ""; };
 
+  // ---- Undo: the sheet as it was before each change (a fill, a clear, a
+  // box marked, a Stays put or Extra people change, or typing in one box,
+  // which counts as one change until another box is typed in).
+  const history = [];
+  const HISTORY_MAX = 50;
+  let typingIn = null;
+  const snapshot = () => ({ values: { ...state.values }, checks: [...state.checks], stays: [...stays], extras: el("rotExtras").value });
+  const updateUndo = () => { el("rotUndoBtn").disabled = history.length === 0; };
+  function remember(typing = null) {
+    if (typing && typing === typingIn) return;
+    typingIn = typing;
+    history.push(snapshot());
+    if (history.length > HISTORY_MAX) history.shift();
+    updateUndo();
+  }
+  function undo() {
+    const s = history.pop();
+    if (!s) return;
+    typingIn = null;
+    sheet.querySelectorAll(".rot-input").forEach(i => { i.value = s.values[i.dataset.field] ?? ""; });
+    state.values = { ...s.values };
+    state.checks = new Set(s.checks);
+    stays.clear();
+    s.stays.forEach(r => stays.add(r));
+    el("rotExtras").value = s.extras;
+    renderStays();
+    renderSkills();
+    render();
+    el("rotWarnings").innerHTML = "";
+    showMsg("rotAutoMsg", "Undone.");
+    updateUndo();
+  }
+
   function fillPositions(line, { ask = true } = {}) {
     const list = LINE_POSITIONS[line];
     if (!list) return false;
     const typed = Array.from({ length: ROWS }, (_, i) => value(`pos${i + 1}`));
     const same = typed.every((t, i) => t === (list[i] ?? ""));
     if (ask && !same && typed.some(Boolean) && !confirm(`Replace the positions on the sheet with Line ${line}'s?`)) return false;
+    remember();
     typed.forEach((_, i) => setValue(`pos${i + 1}`, list[i] ?? ""));
     el("rotPreset").value = line;
     render();
@@ -380,6 +414,7 @@ const Rotation = (() => {
     // Names typed in the later rotations would be replaced: ask first.
     const typed = used.some(r => Array.from({ length: COLS - 1 }, (_, c) => value(`r${r}c${c + 2}`)).some(Boolean));
     if (typed && !confirm("Replace the names already in the 2nd to 8th rotations?")) return;
+    remember();
     for (let c = 1; c <= COLS; c++) {
       setValue(`time${c}`, start && c <= count ? timeLabel(start, (c - 1) * every) : (c <= count ? value(`time${c}`) : ""));
       for (let r = 1; r <= ROWS; r++) {
@@ -402,6 +437,7 @@ const Rotation = (() => {
     if (e.target.id === "rotExtras") { renderSkills(); return; }
     const id = e.target.dataset.field;
     if (!id) return;
+    remember(id);
     state.values[id] = e.target.value;
     render();
     if (/^pos\d$/.test(id)) renderStays();
@@ -421,12 +457,14 @@ const Rotation = (() => {
     const box = e.target.closest("[data-check]");
     if (!box) return;
     const id = box.dataset.check;
+    remember();
     if (state.checks.has(id)) state.checks.delete(id); else state.checks.add(id);
     render();
   });
   // An empty Date starts with today's date.
   tab.addEventListener("focusin", e => {
     if (e.target.dataset.field === "date" && !e.target.value) {
+      remember();
       setValue("date", formatDateMMDDYY(todayISO()));
       render();
       e.target.select();
@@ -435,6 +473,7 @@ const Rotation = (() => {
   el("rotStays").addEventListener("change", e => {
     const r = Number(e.target.dataset.stay);
     if (!r) return;
+    remember();
     if (e.target.checked) stays.add(r); else stays.delete(r);
     renderSkills();
   });
@@ -443,8 +482,26 @@ const Rotation = (() => {
     if (box) setTrained(box.dataset.skillPerson, Number(box.dataset.skillRow), box.checked);
   });
   el("rotAutoBtn").addEventListener("click", autoRotate);
+  // Extra people: one change per visit to the box.
+  el("rotExtras").addEventListener("beforeinput", () => remember("rotExtras"));
+  el("rotUndoBtn").addEventListener("click", undo);
+
+  // Clear rotations: the 2nd to 8th rotations and the times, keeping the
+  // positions, the 1st rotation and the rest of the sheet.
+  el("rotClearRotBtn").addEventListener("click", () => {
+    const ids = [...Array.from({ length: COLS }, (_, c) => `time${c + 1}`),
+      ...Array.from({ length: ROWS * (COLS - 1) }, (_, i) => `r${Math.floor(i / (COLS - 1)) + 1}c${(i % (COLS - 1)) + 2}`)];
+    if (!ids.some(id => value(id))) { showMsg("rotAutoMsg", "The rotations are already empty."); return; }
+    remember();
+    ids.forEach(id => setValue(id, ""));
+    render();
+    el("rotWarnings").innerHTML = "";
+    showMsg("rotAutoMsg", "Cleared the 2nd to 8th rotations and the times (Undo puts them back).");
+  });
 
   el("rotClearBtn").addEventListener("click", () => {
+    const s = snapshot();
+    if (Object.values(s.values).some(v => String(v).trim()) || s.checks.length || s.stays.length || s.extras.trim()) remember();
     sheet.querySelectorAll(".rot-input").forEach(i => { i.value = ""; });
     state.values = {};
     state.checks.clear();
@@ -453,9 +510,10 @@ const Rotation = (() => {
     renderStays();
     renderSkills();
     render();
-    el("rotAutoMsg").textContent = "";
+    el("rotAutoMsg").textContent = history.length ? "Cleared (Undo puts it back)." : "";
     el("rotWarnings").innerHTML = "";
   });
+  updateUndo();
 
   el("rotPrintBtn").addEventListener("click", () => window.print());
 

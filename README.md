@@ -248,6 +248,13 @@ printed, so nothing runs past the box. Each form's own layout details follow.
   The times fill in at the same interval, past midnight too. It asks before
   replacing names already in the later rotations, and clears the rotations
   past the number chosen.
+  **Clear rotations** (in the panel) empties the 2nd to 8th rotations and
+  the times, keeping the positions, the 1st rotation and the rest of the
+  sheet, to try again. **Undo** (beside Clear) steps back through the
+  sheet's changes one at a time: Fill in the rotations, Fill positions
+  (including from typing the line), Clear rotations, Clear, a box marked,
+  Stays put and Extra people, and typing in a box (a box's typing is one
+  change). The Skills grid isn't part of it: those are settings.
   Printing is logged with the line, shift and date.
 - **Bulk Calculator** — turns weighed bulk containers into thousand-piece
   units (TH), with the Bulk Weighing Calculator v2.5 formulas: net kg = bulk

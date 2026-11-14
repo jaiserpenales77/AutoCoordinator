@@ -656,7 +656,8 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 .rot-auto .rot-stay input { width: auto; }
 .rot-auto-extras { display: block; margin: 8px 0 10px; }
 .rot-auto-extras textarea { margin-top: 2px; resize: vertical; }
-.rot-auto #rotAutoBtn { width: 100%; }
+.rot-auto-buttons { display: flex; flex-direction: column; gap: 6px; }
+.rot-auto-buttons button { width: 100%; }
 .rot-preset { display: block; margin-bottom: 10px; }
 .rot-preset-row { display: flex; gap: 6px; margin-top: 2px; }
 .rot-preset-row select { flex: 1 1 auto; min-width: 0; }
