@@ -31,6 +31,7 @@
     <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab" title="Forms">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
       <span class="lbl" data-short="Forms">Forms</span></button>
+    <button type="button" class="side-sub hidden" id="sideOpenForm"></button>
     <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab" title="Stored Data">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
       <span class="lbl" data-short="Data">Stored Data</span></button>
@@ -590,61 +591,107 @@
 </div>
 
 <div class="layout single-layout hidden" id="formsTab">
-  <section class="panel">
-    <h2>Forms</h2>
-    <p class="muted">Pick a form to fill in and print. Each form keeps what you typed while you switch between forms and tabs.</p>
-    <div class="forms-menu">
-      <button type="button" class="form-card" data-form="unplannedTab">
-        <span class="form-card-name">Unplanned Issue</span>
-        <span class="form-card-code">PK007B</span>
-        <span class="form-card-desc">Unplanned Issue Request Form</span>
-      </button>
-      <button type="button" class="form-card" data-form="bulkReturnTab">
-        <span class="form-card-name">Bulk Return</span>
-        <span class="form-card-code">PK120A · QS106A</span>
-        <span class="form-card-desc">Packaging - Bulk Return form</span>
-      </button>
-      <button type="button" class="form-card" data-form="holdTab">
-        <span class="form-card-name">HOLD TAG</span>
-        <span class="form-card-code">QA263C</span>
-        <span class="form-card-desc">QA Hold Tag</span>
-      </button>
-      <button type="button" class="form-card" data-form="swTab">
-        <span class="form-card-name">Standard Work</span>
-        <span class="form-card-code">Front &amp; back</span>
-        <span class="form-card-desc">Team Lead Standard Work and Steady State Tasks &amp; Habits</span>
-      </button>
-      <button type="button" class="form-card" data-form="ctTab">
-        <span class="form-card-name">Component Transfer</span>
-        <span class="form-card-code">Transfer notice</span>
-        <span class="form-card-desc">Components moved between work orders and lines, with the reason and the lead's and supervisor's names</span>
-      </button>
-      <button type="button" class="form-card" data-form="trainingTab">
-        <span class="form-card-name">Training Sign-in Sheet</span>
-        <span class="form-card-code">TR002B · QS016A</span>
-        <span class="form-card-desc">[CA] Training Sign-in Sheet for the Employee Training Program: course, delivery method, training type, instructor and employee sign-in (2 pages)</span>
-      </button>
-      <button type="button" class="form-card" data-form="tsTab">
-        <span class="form-card-name">Trouble Shooting Template</span>
-        <span class="form-card-code">Equipment failure</span>
-        <span class="form-card-desc">Trouble Shooting Template: the problem, line, equipment and downtime, what the SME or mechanic checked and whether it fixed it, and the corrective action</span>
-      </button>
-      <button type="button" class="form-card" data-form="pcTab">
-        <span class="form-card-name">Pulse Check Conversation</span>
-        <span class="form-card-code">Conversation prep</span>
-        <span class="form-card-desc">Prepare for Your Pulse Check Conversation: an accomplishment, goal progress, a skill you're building, and the support and communication that would help</span>
-      </button>
-      <button type="button" class="form-card" data-form="rotTab">
-        <span class="form-card-name">Rotation Schedule</span>
-        <span class="form-card-code">For the MDI board</span>
-        <span class="form-card-desc">Who's on each position every rotation, with the times; Auto rotation fills it in from the 1st rotation</span>
-      </button>
-      <button type="button" class="form-card" data-form="bulkCalcTab">
-        <span class="form-card-name">Bulk Calculator</span>
-        <span class="form-card-code">Bulk Weighing Calculator v2.5</span>
-        <span class="form-card-desc">Weighed bulk containers to thousand-piece units (TH), with a printable report</span>
-      </button>
+  <section class="forms-page">
+    <div class="page-head">
+      <h2>Forms</h2>
+      <p class="muted">Pick a form to fill in and print. What you type stays while you switch between forms and sections.</p>
     </div>
+    <div class="forms-recent hidden" id="formsRecent"></div>
+    <section class="forms-group" data-group="production">
+      <h3 class="forms-group-title">Production</h3>
+      <div class="forms-menu">
+        <button type="button" class="form-card" data-form="unplannedTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Unplanned Issue</span>
+            <span class="form-card-code">PK007B</span>
+            <span class="form-card-desc">Request components or bulk that weren't planned</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="bulkReturnTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Bulk Return</span>
+            <span class="form-card-code">PK120A · QS106A</span>
+            <span class="form-card-desc">Return or reject bulk, with the reason circled</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="ctTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h13M16 3l4 4-4 4M17 17H4M8 21l-4-4 4-4"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Component Transfer</span>
+            <span class="form-card-code">Transfer notice</span>
+            <span class="form-card-desc">Components moved between work orders and lines</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="bulkCalcTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Bulk Calculator</span>
+            <span class="form-card-code">Bulk Weighing v2.5</span>
+            <span class="form-card-desc">Weighed bulk containers to TH, with a report</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="rotTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Rotation Schedule</span>
+            <span class="form-card-code">For the MDI board</span>
+            <span class="form-card-desc">Who's on each position every rotation, auto-filled</span>
+          </span>
+        </button>
+      </div>
+    </section>
+    <section class="forms-group" data-group="quality">
+      <h3 class="forms-group-title">Quality &amp; problems</h3>
+      <div class="forms-menu">
+        <button type="button" class="form-card" data-form="holdTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">HOLD TAG</span>
+            <span class="form-card-code">QA263C</span>
+            <span class="form-card-desc">Put product on hold, printed on the red tag</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="tsTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Trouble Shooting Template</span>
+            <span class="form-card-code">Equipment failure</span>
+            <span class="form-card-desc">The problem, what was checked and the fix</span>
+          </span>
+        </button>
+      </div>
+    </section>
+    <section class="forms-group" data-group="people">
+      <h3 class="forms-group-title">People</h3>
+      <div class="forms-menu">
+        <button type="button" class="form-card" data-form="swTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Standard Work</span>
+            <span class="form-card-code">Front &amp; back</span>
+            <span class="form-card-desc">Team lead standard work and steady-state habits</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="trainingTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Training Sign-in Sheet</span>
+            <span class="form-card-code">TR002B · QS016A</span>
+            <span class="form-card-desc">Course, instructor and employee sign-in (2 pages)</span>
+          </span>
+        </button>
+        <button type="button" class="form-card" data-form="pcTab">
+          <span class="form-card-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg></span>
+          <span class="form-card-text">
+            <span class="form-card-name">Pulse Check Conversation</span>
+            <span class="form-card-code">Conversation prep</span>
+            <span class="form-card-desc">Accomplishments, goals and support to talk about</span>
+          </span>
+        </button>
+      </div>
+    </section>
   </section>
 </div>
 

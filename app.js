@@ -922,7 +922,12 @@ window.addEventListener("drop", e => e.preventDefault());
 // of the forms listed there. Exactly one view is visible at a time, so a
 // form's print listener only fires while that form is open.
 const FORM_VIEWS = [...document.querySelectorAll("#formsTab [data-form]")]
-  .map(card => ({ id: card.dataset.form, name: card.querySelector(".form-card-name").textContent }));
+  .map(card => ({
+    id: card.dataset.form,
+    name: card.querySelector(".form-card-name").textContent,
+    code: card.querySelector(".form-card-code").textContent,
+    icon: card.querySelector(".form-card-icon").innerHTML
+  }));
 const VIEWS = [...[...document.querySelectorAll(".tab")].map(t => t.dataset.tab), ...FORM_VIEWS.map(f => f.id)];
 
 function showView(id) {
@@ -935,7 +940,8 @@ function showView(id) {
     t.setAttribute("aria-selected", String(active));
   });
   VIEWS.forEach(v => el(v).classList.toggle("hidden", v !== id));
-  document.querySelectorAll(".form-nav [data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === id));
+  if (FORM_VIEWS.some(f => f.id === id)) rememberRecentForm(id);
+  renderOpenForm(id);
   renderCrumbs(id);
   if (id === "sheetTab") fillFromStoredData();
   if (id === "adminTab") lineupNetwork();
@@ -961,23 +967,87 @@ function onViewShown(id, fn) {
   window.addEventListener("viewshown", e => { if (e.detail === id) fn(); });
 }
 
-// Every form starts with a bar back to the Forms menu and to the other forms.
-FORM_VIEWS.forEach(({ id }) => {
-  const nav = document.createElement("nav");
-  nav.className = "form-nav";
-  nav.setAttribute("aria-label", "Forms");
-  nav.innerHTML = `<button type="button" class="form-back" data-view="formsTab">← All Forms</button>
-    <span class="form-nav-links">${FORM_VIEWS.map(f =>
-      `<button type="button" class="form-link" data-view="${f.id}">${escapeHtml(f.name)}</button>`).join("")}</span>`;
-  el(id).querySelector(".panel").prepend(nav);
+// The forms opened last on this computer, newest first, shown as chips above
+// the Forms list.
+const RECENT_FORMS_KEY = "pk030_recent_forms";
+function recentForms() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(RECENT_FORMS_KEY) || "[]");
+    return Array.isArray(ids) ? ids.filter(id => FORM_VIEWS.some(f => f.id === id)) : [];
+  } catch {
+    return [];
+  }
+}
+function rememberRecentForm(id) {
+  const ids = [id, ...recentForms().filter(r => r !== id)].slice(0, 4);
+  try { localStorage.setItem(RECENT_FORMS_KEY, JSON.stringify(ids)); } catch { /* chips just won't update */ }
+  renderRecentForms();
+}
+function renderRecentForms() {
+  const forms = recentForms().filter(id => !(role || localOnly) || canOpen(id)).map(id => FORM_VIEWS.find(f => f.id === id));
+  el("formsRecent").classList.toggle("hidden", !forms.length);
+  el("formsRecent").innerHTML = forms.length ? `<span class="forms-recent-label">Recent</span>${forms.map(f =>
+    `<button type="button" class="recent-chip" data-recent="${f.id}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${f.icon}</svg>${escapeHtml(f.name)}</button>`).join("")}` : "";
+}
+el("formsRecent").addEventListener("click", e => {
+  const b = e.target.closest("[data-recent]");
+  if (b) showView(b.dataset.recent);
+});
+
+// Under Forms in the sidebar: the form opened last, to get back to it from
+// anywhere.
+let lastForm = null;
+function renderOpenForm(id) {
+  if (FORM_VIEWS.some(f => f.id === id)) lastForm = id;
+  if (lastForm && (role || localOnly) && !canOpen(lastForm)) lastForm = null;
+  const form = FORM_VIEWS.find(f => f.id === lastForm);
+  el("sideOpenForm").classList.toggle("hidden", !form);
+  el("sideOpenForm").classList.toggle("active", !!form && id === form.id);
+  if (form) {
+    el("sideOpenForm").textContent = form.name;
+    el("sideOpenForm").title = `Back to ${form.name}`;
+  }
+}
+el("sideOpenForm").addEventListener("click", () => {
+  if (lastForm) showView(lastForm);
+});
+
+// Each form's top line: name, form code, an ⓘ that shows the instructions,
+// and the form's buttons. It stays in view while the form scrolls.
+FORM_VIEWS.forEach(({ id, code }) => {
+  const panel = el(id).querySelector(".panel");
+  el(id).classList.add("form-view");
+  let head = panel.querySelector(".panel-head");
+  const h2 = panel.querySelector("h2");
+  if (!head) {
+    head = document.createElement("div");
+    head.className = "panel-head";
+    h2.before(head);
+    head.append(h2);
+  }
+  head.classList.add("form-toolbar");
+  const title = document.createElement("div");
+  title.className = "form-title";
+  h2.before(title);
+  title.append(h2);
+  title.insertAdjacentHTML("beforeend", `<span class="form-code">${escapeHtml(code)}</span>`);
+  const help = head.nextElementSibling;
+  if (help?.matches("p.muted")) {
+    help.classList.add("form-help", "hidden");
+    help.id = `${id}Help`;
+    title.insertAdjacentHTML("beforeend", `<button type="button" class="help-btn" aria-expanded="false" aria-controls="${id}Help" title="How to fill it in">i</button>`);
+    title.querySelector(".help-btn").addEventListener("click", e => {
+      const open = help.classList.toggle("hidden") === false;
+      e.currentTarget.setAttribute("aria-expanded", String(open));
+      e.currentTarget.classList.toggle("active", open);
+    });
+  }
 });
 
 document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => showView(tab.dataset.tab)));
 document.querySelectorAll("#formsTab [data-form]").forEach(card =>
-  card.addEventListener("click", () => showView(card.dataset.form)));
-document.querySelectorAll(".form-nav [data-view]").forEach(b =>
-  b.addEventListener("click", () => {
-    showView(b.dataset.view);
+  card.addEventListener("click", () => {
+    showView(card.dataset.form);
     window.scrollTo(0, 0);
   }));
 
@@ -1485,8 +1555,11 @@ function canChangeStoredItems() {
 function renderAccess() {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("hidden", !canOpen(t.dataset.tab)));
   el("adminGroup").classList.toggle("hidden", !ADMIN_VIEWS.some(canOpen));
-  document.querySelectorAll("#formsTab [data-form], .form-nav [data-view]").forEach(b =>
-    b.classList.toggle("hidden", !canOpen(b.dataset.form ?? b.dataset.view)));
+  document.querySelectorAll("#formsTab [data-form]").forEach(b => b.classList.toggle("hidden", !canOpen(b.dataset.form)));
+  document.querySelectorAll(".forms-group").forEach(g =>
+    g.classList.toggle("hidden", !g.querySelector(".form-card:not(.hidden)")));
+  renderRecentForms();
+  renderOpenForm(VIEWS.find(v => !el(v).classList.contains("hidden")));
   // Filling a form from the yield sheet needs the yield sheet.
   ["upFillBtn", "brFillBtn", "holdFillBtn", "swFillBtn", "ctFillBtn"].forEach(id => el(id).classList.toggle("hidden", !hasDatabaseAccess()));
   if (typeof BulkCalc !== "undefined") BulkCalc.refreshItemList();

@@ -57,6 +57,7 @@ and **Stored Data**, then, for Admins and Owners, an **Admin** group with
 the sync status, who is signed in (name, initials and account type), **Sign
 out** and the theme button. A slim **top bar** says where you are, e.g.
 "Forms / Bulk Return"; clicking **Forms** there goes back to the list of forms.
+The form opened last is listed under Forms in the sidebar.
 Each account only sees the sections it can open.
 
 On tablets (up to 1100 px wide) the sidebar keeps just its icons. On phones
@@ -88,11 +89,22 @@ type, ready to copy onto the card:
 
 ## Forms tab
 
-The **Forms** tab shows a button for each paper form and the Bulk Calculator;
-click one to open it. Each open form has a bar at the top: **← All Forms** goes back to the
-buttons, and the form names switch straight to another form. What's typed in
-a form stays there while switching between forms and tabs (until the page is
-reloaded).
+**Forms** lists the paper forms and the Bulk Calculator as cards in three
+groups: **Production** (Unplanned Issue, Bulk Return, Component Transfer, Bulk
+Calculator, Rotation Schedule), **Quality & problems** (HOLD TAG, Trouble
+Shooting Template) and **People** (Standard Work, Training Sign-in Sheet,
+Pulse Check Conversation). Each card has an icon, the form's code and one line
+on what it's for; an account only sees the forms it can open, and a group with
+none of them is left out. **Recent** above the groups lists the last four
+forms opened on that computer.
+
+An open form starts with one toolbar line: its name, its code, an **ⓘ** that
+shows or hides how to fill it in, and its buttons (Fill from Yield Sheet,
+Clear, Print, ...). On computers and tablets the toolbar stays in view while
+the form scrolls. The form opened last is listed under **Forms** in the
+sidebar, to get back to it from anywhere, and the top bar's **Forms** goes
+back to the list. What's typed in a form stays there while switching between
+forms and sections (until the page is reloaded).
 
 On every paper form, an entry too long for its box shrinks to fit, the same
 way on screen and on the printout (down to 5 pt on the Unplanned Issue form,
