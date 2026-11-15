@@ -6,6 +6,8 @@ const HIGH_YIELD_THRESHOLD = 1.024999;
 const form = document.getElementById("yieldForm");
 const editingBadge = document.getElementById("editingBadge");
 let editingId = null;
+// True once the open sheet has changes that aren't saved (see confirmLeaveSheet).
+let sheetDirty = false;
 // The signed-in username (null when not signed in), and whether someone chose
 // in the Created By dropdown on this sheet (see applyDefaultCreatedBy).
 let currentUser = null;
@@ -158,11 +160,80 @@ function statusClass(r) {
   return r.outOfRange ? "yield-warn" : "yield-ok";
 }
 
+// Animations are skipped when the computer asks for reduced motion.
+const reducedMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+
+// Counts a number up (or down) to its new value over a moment.
+const countUps = new WeakMap();
+function countUp(node, to, format) {
+  cancelAnimationFrame(countUps.get(node)?.frame);
+  const from = countUps.get(node)?.value;
+  if (reducedMotion.matches || from === undefined || from === null || to === null || from === to) {
+    node.textContent = to === null ? "—" : format(to);
+    countUps.set(node, { value: to });
+    return;
+  }
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / 350);
+    const v = from + (to - from) * (1 - (1 - t) ** 3);
+    node.textContent = format(t === 1 ? to : v);
+    countUps.set(node, { value: t === 1 ? to : v, frame: t === 1 ? undefined : requestAnimationFrame(step) });
+  };
+  countUps.set(node, { value: from, frame: requestAnimationFrame(step) });
+}
+
+// The gauge's scale: 90% at the left end, 107% at the right.
+const GAUGE_MIN = 0.90;
+const GAUGE_MAX = 1.07;
+const gaugePos = ratio => `${Math.min(100, Math.max(0, (ratio - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN) * 100))}%`;
+
+function renderGauge(r) {
+  const state = r.error ? "na" : r.outOfRange ? "warn" : "ok";
+  el("ysGauge").dataset.state = state;
+  countUp(el("rFinalYield"), r.error ? null : excelRound(r.finalYieldRatio * 100, 2), v => `${v.toFixed(2)}%`);
+  el("ysMarker").style.left = r.error ? "50%" : gaugePos(r.finalYieldRatio);
+  el("ysMarker").title = r.error ? "" : fmtYield(r, 2);
+  const pill = el("ysPill");
+  pill.hidden = !!r.error;
+  pill.className = `ys-pill ${state}`;
+  pill.textContent = r.error ? "" : `${fmtYield(r, 2)} · ${r.highYield ? "high" : r.lowYield ? "low" : "in range"}`;
+}
+
+// Where the issued bulk went: packaged, scrapped, rejected/returned, and
+// what's left over (or how much more than issued was counted).
+function renderBalance(r) {
+  const issued = r.bulkIssued;
+  const scrapped = r.scrapDivError ? 0 : r.scrapPiecesSum;
+  const rest = issued - r.bulkPackagedTH - scrapped - r.bulkRejected;
+  const over = rest < -0.005;
+  const parts = { packaged: r.bulkPackagedTH, scrapped, rejected: r.bulkRejected, missing: over ? 0 : Math.max(0, rest) };
+  const total = Math.max(issued, r.bulkPackagedTH + scrapped + r.bulkRejected) || 0;
+  Object.entries(parts).forEach(([k, v]) => {
+    const seg = el("ysBar").querySelector(`.seg-${k}`);
+    seg.style.flexGrow = total > 0 ? Math.max(0, v) / total : 0;
+    const pct = total > 0 ? v / total * 100 : 0;
+    seg.textContent = k === "packaged" && pct >= 25 ? `Packaged ${fmtFixed(pct, 2)}%` : k === "missing" && pct >= 4 ? `${fmtFixed(pct, 2)}%` : "";
+  });
+  el("ysBar").classList.toggle("empty", !(total > 0));
+  el("ysBalanceOf").textContent = issued > 0 ? `of ${fmtFixed(issued, 2)} TH issued` : "";
+  el("ysRejected").textContent = fmtFixed(r.bulkRejected, 2) + " TH";
+  el("ysMissingLabel").textContent = over ? "Counted beyond what was issued" : "Not accounted for";
+  el("ysMissing").textContent = issued > 0 ? `${over ? "+" : ""}${fmtFixed(Math.abs(rest), 2)} TH` : "—";
+  el("ysMissing").classList.toggle("yield-warn", over);
+}
+
 function renderResults(r, data) {
   el("rBulkIssuedNet").textContent = fmtFixed(r.bulkIssuedNet, 2) + " TH";
   el("rBulkPackaged").textContent = fmtFixed(r.bulkPackagedTH, 2) + " TH";
   el("rBulkScrapped").textContent = r.scrapDivError ? "—" : fmtFixed(r.scrapPiecesSum, 2) + " TH";
-  el("rFinalYield").textContent = fmtYield(r, 2);
+  renderGauge(r);
+  renderBalance(r);
+  const bottles = data.totalPackaged;
+  el("ysTotalText").textContent = bottles === "" ? "—" : `${Number(bottles).toLocaleString("en-US")} bottle${Number(bottles) === 1 ? "" : "s"}`;
+  const wo = data.woNumber.trim();
+  const fg = data.fgItem.trim();
+  el("ysChip").textContent = wo || fg ? [wo && `WO ${wo}`, fg && `FG ${fg}`].filter(Boolean).join(" · ") : "New sheet";
 
   document.querySelectorAll(".out-of-range-only")
     .forEach(section => section.classList.toggle("hidden", !r.outOfRange));
@@ -221,7 +292,57 @@ function recalc() {
   renderResults(r, data);
   updatePrintReports();
   markMissing();
+  saveDraft();
 }
+
+// The steps above the sheet: each turns ✓ once its required fields are in,
+// and says what's left; a click goes to the first field still empty.
+const YS_STEPS = [
+  { key: "import", label: "Reports", fields: [] },
+  { key: "wo", label: "Work order", fields: ["fgItem", "woNumber", "bulkItem"] },
+  { key: "bottles", label: "Bottles", fields: ["qtyCompleted", "retains", "donations"] },
+  { key: "bulk", label: "Bulk", fields: ["fillRate", "bulkIssued"] },
+  { key: "scrap", label: "Scrap", fields: ["pieceWt", "scrap1"] }
+];
+const requiredLabel = id => REQUIRED_FOR_PRINT.find(([f]) => f === id)[1];
+let stepsDone = null;
+function renderSteps() {
+  const missing = new Set(missingForPrint().map(([id]) => id));
+  const done = new Set();
+  el("ysSteps").innerHTML = YS_STEPS.map((step, i) => {
+    const left = step.fields.filter(id => missing.has(id));
+    const isDone = step.key === "import" ? el("importBox").classList.contains("done") : left.length === 0;
+    if (isDone) done.add(step.key);
+    const pop = isDone && stepsDone && !stepsDone.has(step.key) ? " pop" : "";
+    let cls = isDone ? "done" : step.key === "import" ? "optional" : printChecked ? "todo" : "";
+    let text = escapeHtml(step.label);
+    if (!isDone && step.key === "import") text += ' <small>optional</small>';
+    else if (!isDone && printChecked) text += `: ${escapeHtml(left.map(requiredLabel).join(", "))}`;
+    else if (!isDone) text += ` <small>${left.length} left</small>`;
+    return `<li><button type="button" class="ys-step ${cls}${pop}" data-step="${step.key}"><i aria-hidden="true">${isDone ? "✓" : printChecked && step.key !== "import" ? "!" : i + 1}</i>${text}</button></li>`;
+  }).join("");
+  stepsDone = done;
+  el("ysLeft").textContent = missing.size ? `${missing.size} left before it can print` : "✓ Ready to print";
+  el("ysLeft").classList.toggle("ready", !missing.size);
+}
+el("ysSteps").addEventListener("click", e => {
+  const b = e.target.closest("[data-step]");
+  if (!b) return;
+  const step = YS_STEPS.find(s => s.key === b.dataset.step);
+  const first = step.fields.find(id => el(id).value.trim() === "") ?? step.fields[0];
+  const target = first ? el(first) : el("importBox");
+  target.scrollIntoView({ block: "center", behavior: reducedMotion.matches ? "auto" : "smooth" });
+  if (first) target.focus({ preventScroll: true });
+});
+
+// Live Results: Pink card, Scrap table or Summary lines.
+document.querySelectorAll("[data-ys-tab]").forEach(tab => tab.addEventListener("click", () => {
+  document.querySelectorAll("[data-ys-tab]").forEach(t => {
+    t.classList.toggle("active", t === tab);
+    t.setAttribute("aria-selected", String(t === tab));
+  });
+  document.querySelectorAll("[data-ys-panel]").forEach(p => p.classList.toggle("hidden", p.dataset.ysPanel !== tab.dataset.ysTab));
+}));
 
 fields.forEach(id => {
   el(id).addEventListener("input", recalc);
@@ -279,6 +400,8 @@ function applyFormData(record) {
     else el(id).value = data[id] ?? el(id).defaultValue;
   });
   resetAutoFills();
+  document.querySelectorAll("#yieldForm .from-import").forEach(l => l.classList.remove("from-import"));
+  sheetDirty = false;
   recalc();
 }
 
@@ -310,7 +433,8 @@ function applyAutoFill(fill) {
     if (input.value === value && input.dataset.fromItem === hit.item) return false;
     input.value = value;
     input.dataset.fromItem = hit.item;
-    el(fill.hint).textContent = `Filled from Stored Data (${hit.item}).`;
+    el(fill.hint).textContent = "Stored Data";
+    el(fill.hint).title = `Filled from Stored Data (${hit.item})`;
     return true;
   }
   if (!autoFilled) return false;
@@ -347,44 +471,131 @@ function clearForm() {
   createdByPicked = false;
   applyDefaultCreatedBy();
   printChecked = false;
+  document.querySelectorAll("#yieldForm .from-import").forEach(l => l.classList.remove("from-import"));
+  el("draftNote").classList.add("hidden");
+  sheetDirty = false;
   recalc();
 }
+
+// Before replacing a sheet that has unsaved changes, ask.
+function confirmLeaveSheet() {
+  const blank = REQUIRED_FOR_PRINT.every(([id]) => el(id).value.trim() === "");
+  return !sheetDirty || blank || confirm("This yield sheet has changes that aren't saved. Leave it anyway?");
+}
+
+// The sheet being worked on is kept on this computer as it's typed, so a
+// reload or a closed tab doesn't lose it (sign-out removes it).
+const DRAFT_KEY = "pk030_yield_draft";
+function saveDraft() {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: collectFormData(), editingId, dirty: sheetDirty })); } catch { /* not kept */ }
+}
+function readDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    return d && d.data && REQUIRED_FOR_PRINT.some(([id]) => String(d.data[id] ?? "").trim() !== "") ? d : null;
+  } catch {
+    return null;
+  }
+}
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* nothing kept */ }
+}
+function restoreDraft(d) {
+  if (!d) return;
+  applyFormData(d.data);
+  if (d.editingId && loadRecords().some(r => r.id === d.editingId)) {
+    editingId = d.editingId;
+    editingBadge.classList.remove("hidden");
+  }
+  sheetDirty = !!d.dirty;
+  el("draftNote").classList.remove("hidden");
+  saveDraft();
+}
+el("draftDiscardBtn").addEventListener("click", clearForm);
+
+form.addEventListener("input", e => {
+  sheetDirty = true;
+  e.target.closest("label")?.classList.remove("from-import");
+});
+
+// Enter moves to the next box instead of saving the sheet.
+form.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !e.target.matches("input, select")) return;
+  e.preventDefault();
+  const boxes = [...form.querySelectorAll("input:not([type=hidden]):not([type=file]):not([readonly]), select")]
+    .filter(b => b.offsetParent !== null && !b.disabled);
+  const next = boxes[boxes.indexOf(e.target) + 1];
+  if (next) next.focus();
+  else e.target.blur();
+});
+// Phones and tablets show the number keypad.
+form.querySelectorAll("input[type=number]").forEach(i => {
+  i.inputMode = i.step === "1" ? "numeric" : "decimal";
+});
+
+// Saved yield sheets, in the side panel: search, filters (all, out of range,
+// this week, the signed-in lead's) and a row per sheet with its yield.
+let savedFilter = "all";
+const myLeadName = () => (currentUser && (StoredData.leadForUser(currentUser) ?? accountName)) || "";
+const SAVED_FILTERS = {
+  all: () => true,
+  out: rec => computeResults(rec).outOfRange,
+  week: rec => (rec.dateCreated || "") >= todayISO(new Date(Date.now() - 6 * 864e5)),
+  mine: rec => !!myLeadName() && rec.createdBy === myLeadName()
+};
 
 function renderRecordsTable() {
   const search = el("searchBox").value.trim().toLowerCase();
   const records = loadRecords();
   const tbody = el("recordsTableBody");
-  tbody.innerHTML = "";
-
-  const filtered = records.filter(rec => {
-    if (!search) return true;
-    return [rec.woNumber, rec.fgItem, rec.bulkItem]
-      .some(v => (v || "").toLowerCase().includes(search));
+  el("savedCount").textContent = records.length || "";
+  document.querySelectorAll("#savedFilters [data-filter]").forEach(b => {
+    b.querySelector("span").textContent = records.filter(SAVED_FILTERS[b.dataset.filter]).length;
+    b.classList.toggle("active", b.dataset.filter === savedFilter);
+    if (b.dataset.filter === "mine") b.classList.toggle("hidden", !myLeadName());
   });
 
+  const filtered = records.filter(rec => SAVED_FILTERS[savedFilter](rec) && (!search
+    || [rec.woNumber, rec.fgItem, rec.bulkItem].some(v => (v || "").toLowerCase().includes(search))));
+
+  el("noRecordsMsg").textContent = records.length ? "No saved yield sheets match." : "No saved yield sheets yet.";
   el("noRecordsMsg").classList.toggle("hidden", filtered.length > 0);
 
-  filtered
+  tbody.innerHTML = filtered
     .slice()
     .sort((a, b) => (b.dateCreated || "").localeCompare(a.dateCreated || ""))
-    .forEach(rec => {
+    .map(rec => {
       const results = computeResults(rec);
-      const tr = document.createElement("tr");
-      const cls = statusClass(results);
-      tr.innerHTML = `
-        <td>${escapeHtml(rec.woNumber)}</td>
-        <td>${escapeHtml(rec.fgItem)}</td>
-        <td>${escapeHtml(rec.bulkItem)}</td>
-        <td class="${cls}">${fmtYield(results, 2)}</td>
-        <td class="${cls}">${results.statusLabel}</td>
-        <td>${escapeHtml(rec.dateCreated)}</td>
-        <td class="row-actions">
-          <button type="button" data-action="load" data-id="${escapeHtml(rec.id)}">Load</button>
-          <button type="button" data-action="delete" data-id="${escapeHtml(rec.id)}">Delete</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
+      const cls = results.error ? "na" : results.outOfRange ? "warn" : "ok";
+      const sub = [rec.fgItem && `FG ${rec.fgItem}`, rec.bulkItem, formatDateMMDDYY(rec.dateCreated), rec.createdBy].filter(Boolean).join(" · ");
+      return `<li class="ys-rec${rec.id === editingId ? " current" : ""}">
+        <button type="button" class="ys-rec-open" data-action="load" data-id="${escapeHtml(rec.id)}">
+          <strong>WO ${escapeHtml(rec.woNumber || "—")}</strong><small>${escapeHtml(sub)}</small></button>
+        <span class="ys-pill ${cls}" title="${escapeHtml(results.statusLabel)}">${fmtYield(results, 2)}</span>
+        <button type="button" class="ys-rec-del" data-action="delete" data-id="${escapeHtml(rec.id)}" title="Delete" aria-label="Delete WO ${escapeHtml(rec.woNumber || "")}">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+      </li>`;
+    }).join("");
 }
+
+el("savedFilters").addEventListener("click", e => {
+  const b = e.target.closest("[data-filter]");
+  if (!b) return;
+  savedFilter = b.dataset.filter;
+  renderRecordsTable();
+});
+function openSaved() {
+  renderRecordsTable();
+  if (!el("savedDrawer").open) el("savedDrawer").showModal();
+}
+el("savedBtn").addEventListener("click", () => {
+  openSaved();
+  el("searchBox").focus();
+});
+el("savedCloseBtn").addEventListener("click", () => el("savedDrawer").close());
+el("savedDrawer").addEventListener("click", e => {
+  if (e.target === el("savedDrawer")) el("savedDrawer").close();
+});
 
 form.addEventListener("submit", e => {
   e.preventDefault();
@@ -399,10 +610,24 @@ form.addEventListener("submit", e => {
   logActivity(idx >= 0 ? "Updated a yield sheet" : "Saved a yield sheet", sheetLabel(record));
   editingId = id;
   editingBadge.classList.remove("hidden");
+  sheetDirty = false;
+  el("draftNote").classList.add("hidden");
+  saveDraft();
   renderRecordsTable();
+  // The Save button says it worked for a moment.
+  const btn = el("saveBtn");
+  clearTimeout(btn.savedTimer);
+  btn.classList.add("saved");
+  btn.textContent = "✓ Saved";
+  btn.savedTimer = setTimeout(() => {
+    btn.classList.remove("saved");
+    btn.textContent = "Save";
+  }, 1600);
 });
 
-el("newBtn").addEventListener("click", clearForm);
+el("newBtn").addEventListener("click", () => {
+  if (confirmLeaveSheet()) clearForm();
+});
 
 el("searchBox").addEventListener("input", renderRecordsTable);
 
@@ -413,11 +638,13 @@ el("recordsTableBody").addEventListener("click", e => {
   const records = loadRecords();
   if (btn.dataset.action === "load") {
     const rec = records.find(r => r.id === id);
-    if (rec) {
+    if (rec && (id === editingId && !sheetDirty || confirmLeaveSheet())) {
       editingId = id;
       editingBadge.classList.remove("hidden");
+      el("draftNote").classList.add("hidden");
       applyFormData(rec);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      el("savedDrawer").close();
+      window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
     }
   } else if (btn.dataset.action === "delete") {
     if (confirm("Delete this saved yield sheet?")) {
@@ -686,6 +913,7 @@ function markMissing() {
   const msg = el("printMissingMsg");
   msg.textContent = missing.length ? `Can't print yet. Fill in: ${missing.map(([, label]) => label).join(", ")}.` : "";
   msg.classList.toggle("hidden", !missing.length);
+  renderSteps();
   return missing;
 }
 
@@ -813,6 +1041,7 @@ function renderImportPreview(preview) {
   el("importBox").classList.remove("show-details");
   el("importDetailsBtn").setAttribute("aria-expanded", "false");
   el("importDetailsBtn").textContent = "Show what was imported";
+  renderSteps();
   if (done) {
     const n = preview.rows.length;
     el("importDone").textContent = `✓ ${n} report${n === 1 ? "" : "s"} imported for WO ${preview.woNumber ?? "?"}. Drop more here, or`;
@@ -878,7 +1107,9 @@ async function importPdfs(fileList) {
     found.forEach(id => {
       el(id).value = String(values[id]);
       flashField(el(id));
+      el(id).closest("label").classList.add("from-import");
     });
+    sheetDirty = true;
     recalc();
     fillFromStoredData();
     const fromStore = id => el(id).dataset.fromItem;
@@ -1106,8 +1337,8 @@ function searchEntries() {
         go: () => {
           showView("sheetTab");
           el("searchBox").value = r.woNumber;
-          renderRecordsTable();
-          document.querySelector(".records-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+          savedFilter = "all";
+          openSaved();
         }
       });
     });
@@ -1645,7 +1876,9 @@ el("importStoredInput").addEventListener("change", async e => {
 });
 
 renderStoredData();
+const startDraft = readDraft();
 clearForm();
+restoreDraft(startDraft);
 renderRecordsTable();
 
 function showSyncStatus({ state, text }) {
@@ -1709,6 +1942,7 @@ el("signOutBtn").addEventListener("click", async () => {
     "Some changes haven't reached the database yet, and signing out removes them from this computer. Sign out anyway?")) return;
   await CloudSync.signOut(() => {
     saveRecords([]);
+    clearDraft();
     StoredData.replaceAll({ leads: [], bulkItems: [], fgItems: [] });
     location.reload();
   });
@@ -2224,6 +2458,8 @@ CloudSync.start({
     // Below Lead there's no access to the shared data, so none stays here.
     if (!hasDatabaseAccess()) {
       saveRecords([]);
+      clearForm();
+      clearDraft();
       StoredData.replaceAll({ leads: [], bulkItems: [], fgItems: [] });
       renderRecordsTable();
     }

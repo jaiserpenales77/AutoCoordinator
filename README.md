@@ -41,13 +41,54 @@ multiple work orders, alongside fillable, printable copies of the paper forms
   configuration blank reads e.g. "5 Layers + 2 Boxes".
 - **Required before printing:** FG Item, WO #, Bulk Item, Quantity Completed,
   Retains, Donations, Count, Issued Bulk, Bulk Piece Wt and Packaging Scrap #1
-  (0 counts as filled in). With any of them blank, **Print Yield Sheet**
-  doesn't print. It highlights the blank fields in red, lists them under the
-  buttons and jumps to the first one. The highlights clear as each field is
-  filled in, and **New / Clear** removes them. Ctrl+P and the browser's
+  (0 counts as filled in). With any of them blank, **Print** doesn't print.
+  It highlights the blank fields in red, names them in the steps and under
+  them, and jumps to the first one. The highlights clear as each field is
+  filled in, and **New** removes them. Ctrl+P and the browser's
   print menu can't be stopped, so they print a page listing the missing
   fields instead of the sheet. A blocked print isn't recorded in the
   Activity Log.
+
+## The Yield Sheet page
+
+- **Toolbar** (stays in view while scrolling): the sheet's WO # and FG item
+  (or "New sheet"), "Saved sheet" once it's saved, the Final Yield as a green
+  or red pill, and **Saved sheets** (with how many), **New**, **Save** (which
+  shows "✓ Saved" for a moment) and **Print**.
+- **Steps** under the toolbar: Reports (optional), Work order, Bottles, Bulk
+  and Scrap. Each turns ✓ once its required fields are in, and shows how many
+  are left; after a Print attempt the unfinished ones turn amber and name the
+  missing fields. Clicking a step goes to its first empty field. On the right:
+  how many fields are left before it can print, or "✓ Ready to print".
+- **The form** is cards with short labels and the unit inside each box (btl,
+  TH, kg, mg): Import from JDE Reports, Work order, Bottles (with the Total
+  produced worked out below), Bulk (Count, Issued, Rejected, Returned) and
+  Scrap (Piece Wt and the four scrap weights). A small **Stored Data** tag
+  marks a Count or Piece Wt filled from Stored Data, and **JDE** a value filled
+  by an import, until it's changed by hand. When the yield is out of range an
+  **Out of range** card asks for the VideoJet Count and the partial pallet.
+- **Enter** moves to the next box (it no longer saves the sheet), and phones
+  and tablets show the number keypad for number boxes.
+- **Results** on the right: the **Final Yield** in large green or red figures
+  with a bar showing where it lands against 94.5% – 102.5% (on a 90% – 107%
+  scale), and the status line; **Where the bulk went**, a bar and list
+  splitting the issued bulk into packaged, scrapped, rejected/returned and not
+  accounted for (or how much more than issued was counted), with the net bulk
+  issued; and tabs for the **Pink card**, the **Scrap table** and the
+  **Summary lines**.
+- **Saved sheets** opens a panel from the right: search by WO #, FG item or
+  bulk item, filters (All, Out of range, This week, and Mine for the signed-in
+  lead's sheets) with counts, and a row per sheet with its yield in green or
+  red. Clicking one opens it; the sheet on screen asks first if it has unsaved
+  changes, and so does **New**. **Export CSV** is at the top of the panel.
+- **Draft:** the sheet being typed is kept on that computer, so a reload or a
+  closed tab picks up where it left off ("Start a new sheet instead" drops
+  it). Imported report pages aren't kept, so import them again before
+  printing them. Signing out removes the draft.
+- **Animations:** the yield counts up to its new value, the range marker and
+  the bulk bar slide, a step's ✓ pops in, the saved-sheets panel slides in
+  and the result tabs fade. A computer or tablet set to reduce motion gets
+  none of them.
 
 ## Layout
 
@@ -64,7 +105,7 @@ Each account only sees the sections it can open.
 forms (by name, code or what they're for), stored FG and bulk items, and
 saved yield sheets (by WO #, FG item or bulk item). Arrow keys and Enter pick
 a result, Esc closes it. A form opens; an FG or bulk item opens its Stored
-Data list filtered to it; a saved sheet shows the Saved Yield Sheets list
+Data list filtered to it; a saved sheet opens the Saved sheets panel
 filtered to its WO. Only what the account can open is listed.
 
 On tablets (up to 1100 px wide) the sidebar keeps just its icons. On phones
@@ -81,7 +122,7 @@ setting. Printouts are always black on white.
 
 ## Card Preview
 
-The Live Results panel shows the pink paper card's table, filled in as you
+The **Pink card** tab of the results shows the paper card's table, filled in as you
 type, ready to copy onto the card:
 
 | Card row | From the form |
@@ -486,12 +527,12 @@ and key values, and says whether all reports are for the same work order.
 Reports for different work orders are refused: nothing is filled in and the
 odd work order is shown in red.
 
-**Printing the reports:** Print Yield Sheet (or Ctrl+P) prints the imported
+**Printing the reports:** Print on the Yield Sheet (or Ctrl+P) prints the imported
 reports after the yield sheet's two pages: Close-out, then Pallet Transfers,
 then Charge Reports, one page each at actual size (the report pages print
 without the yield sheet's margins, so they keep the PDFs' own margins).
 Reports dropped in separate imports for the same work order are all kept;
-importing another work order or **New / Clear** drops them. They only print
+importing another work order or **New** drops them. They only print
 while the sheet's WO # matches their work order, and the checkbox under the
 buttons turns them off. The PDFs stay in the browser tab, not in the saved
 sheet, so a sheet loaded later prints without them unless they're imported
@@ -547,7 +588,7 @@ browser's `localStorage` stays the working copy, so the app keeps working
 either way. The first time a browser connects, sheets and Stored Data it had
 saved before the database existed are uploaded.
 
-**Export CSV** on the records panel still exports the saved sheets.
+**Export CSV** in the Saved sheets panel still exports the saved sheets.
 
 ## Sign-in
 

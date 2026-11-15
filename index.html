@@ -112,226 +112,236 @@
   </form>
 </section>
 
-<main class="layout" id="sheetTab">
-  <div class="sheet-columns">
-  <section class="panel form-panel">
-    <div class="panel-head">
+<main class="layout ys-layout" id="sheetTab">
+  <div class="ys-toolbar">
+    <div class="ys-title">
       <h2>Yield Sheet</h2>
-      <span id="editingBadge" class="badge hidden">Editing saved record</span>
+      <span class="form-code" id="ysChip">New sheet</span>
+      <span id="editingBadge" class="badge ys-editing hidden">Saved sheet</span>
+      <span class="ys-pill" id="ysPill" hidden></span>
     </div>
-    <form id="yieldForm" autocomplete="off">
-      <fieldset id="importBox">
-        <legend>Import from JDE Reports</legend>
-        <div id="dropZone" class="drop-zone">
-          <p class="import-done" id="importDone"></p>
-          <p class="import-ask">Drop the <strong>WO Close-out</strong> (R5504801), <strong>Packaging Pallet Transfers</strong> (R593111FG) and <strong>Charge Report</strong> (R593111CV) PDFs here</p>
-          <label class="file-btn">Choose PDFs
-            <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
-          </label>
-        </div>
-        <button type="button" class="link-btn import-details-btn" id="importDetailsBtn" aria-expanded="false">Show what was imported</button>
-        <div id="importPreview" class="import-preview hidden"></div>
-        <ul id="importLog" class="import-log"></ul>
-      </fieldset>
-
-      <fieldset>
-        <legend>Work Order Information</legend>
-        <div class="field-grid">
-          <label>FG Item
-            <input type="text" id="fgItem" required>
-          </label>
-          <label>WO #
-            <input type="text" id="woNumber" required>
-          </label>
-          <label>Bulk Item
-            <input type="text" id="bulkItem" required>
-          </label>
-          <label>Date Created
-            <input type="date" id="dateCreated">
-          </label>
-          <label>Yield Sheet Created By
-            <select id="createdBy"></select>
-          </label>
-          <label id="createdByOtherWrap" class="hidden">Lead name
-            <input type="text" id="createdByOther" placeholder="Type the lead's name">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Bulk Reconciliation</legend>
-        <div class="field-grid">
-          <label>Quantity Completed (Bottles)
-            <input type="number" id="qtyCompleted" step="any" min="0">
-            <small>From the WO Close-out.</small>
-          </label>
-          <label>Retains (Bottles)
-            <input type="number" id="retains" step="any" min="0">
-          </label>
-          <label>Donations (Bottles)
-            <input type="number" id="donations" step="any" min="0">
-          </label>
-          <label>Stability (Bottles)
-            <input type="number" id="stability" step="any" min="0" value="0">
-          </label>
-          <label>Total Bottles Produced
-            <input type="number" id="totalPackaged" readonly tabindex="-1">
-            <small>Quantity Completed + Retains + Donations + Stability.</small>
-          </label>
-          <label>Count (Fill Rate)
-            <input type="number" id="fillRate" step="any" min="0">
-            <small>Tablets/softgels per bottle, e.g. 180. Printed as "Fill Rate" on the sheet.</small>
-            <small id="fillRateHint" class="hint-ok"></small>
-          </label>
-          <label>Bulk Rejected (TH)
-            <input type="number" id="bulkRejected" step="any" min="0" value="0">
-          </label>
-          <label>Bulk Returned (TH)
-            <input type="number" id="bulkReturned" step="any" min="0" value="0">
-            <small>Rejected + Returned is the sheet's Bulk Rejected/Returned.</small>
-          </label>
-          <label>Issued Bulk (TH)
-            <input type="number" id="bulkIssued" step="any" min="0">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Scrap Calculations</legend>
-        <div class="field-grid">
-          <label>Bulk Piece Wt (mg)
-            <input type="number" id="pieceWt" step="any" min="0">
-            <small>Needed whenever a scrap weight is entered.</small>
-            <small id="pieceWtHint" class="hint-ok"></small>
-          </label>
-        </div>
-        <input type="hidden" id="tareWeight" value="6">
-        <div class="field-grid scrap-grid">
-          <label>Packaging Scrap #1 (Kg, gross)
-            <input type="number" id="scrap1" step="any" min="0">
-          </label>
-          <label>Packaging Scrap #2 (Kg, gross)
-            <input type="number" id="scrap2" step="any" min="0" value="0">
-          </label>
-          <label>Packaging Scrap #3 (Kg, gross)
-            <input type="number" id="scrap3" step="any" min="0" value="0">
-          </label>
-          <label>Manufacturing Scrap (Kg, gross)
-            <input type="number" id="mfgScrap" step="any" min="0" value="0">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset class="out-of-range-only hidden">
-        <legend>VideoJet Count</legend>
-        <div class="field-grid">
-          <label>VideoJet Count
-            <input type="number" id="videoJetCount" step="any" min="0">
-            <small>Required when Final Yield is outside 94.5% – 102.4999%.</small>
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset class="out-of-range-only hidden">
-        <legend>Partial Pallet Configuration</legend>
-        <div class="field-grid">
-          <label>Layers
-            <input type="number" id="palletLayers" step="1" min="0">
-          </label>
-          <label>Boxes
-            <input type="number" id="palletBoxes" step="1" min="0">
-          </label>
-        </div>
-        <small class="fieldset-note">With both filled in, prints as e.g. "5 Layers + 2 Boxes" when Final Yield is outside 94.5% – 102.4999%.</small>
-      </fieldset>
-
-      <div class="actions">
-        <button type="submit" class="primary">Save Yield Sheet</button>
-        <button type="button" id="newBtn">New / Clear</button>
-        <button type="button" id="printBtn">Print Yield Sheet</button>
-      </div>
-      <p id="printMissingMsg" class="form-msg hint-err hidden" role="alert"></p>
-      <label id="printReportsWrap" class="check-inline hidden">
-        <input type="checkbox" id="printReports" checked>
-        <span>Print the imported reports after the yield sheet (<span id="printReportsCount"></span>)</span>
-      </label>
-      <label id="printTwoSidedWrap" class="check-inline hidden">
-        <input type="checkbox" id="printTwoSided" checked>
-        <span>Printing on both sides: start each report on a new sheet<span id="printBlankCount"></span></span>
-      </label>
-    </form>
-  </section>
-
-  <section class="panel results-panel">
-    <h2>Live Results</h2>
-    <div class="results-grid">
-      <div class="result-card">
-        <span class="label">Net Bulk Issued (TH)</span>
-        <span class="value" id="rBulkIssuedNet">0</span>
-      </div>
-      <div class="result-card">
-        <span class="label">Bulk Packaged (TH)</span>
-        <span class="value" id="rBulkPackaged">0</span>
-      </div>
-      <div class="result-card">
-        <span class="label">Bulk Scrapped (TH)</span>
-        <span class="value" id="rBulkScrapped">0</span>
-      </div>
-      <div class="result-card highlight">
-        <span class="label">Final Yield</span>
-        <span class="value" id="rFinalYield">0%</span>
-      </div>
+    <div class="actions ys-actions">
+      <button type="button" id="savedBtn">Saved sheets<span class="ys-count" id="savedCount"></span></button>
+      <button type="button" id="newBtn">New</button>
+      <button type="submit" form="yieldForm" id="saveBtn">Save</button>
+      <button type="button" id="printBtn" class="primary">Print</button>
     </div>
-
-    <div id="statusBanner" class="status-banner ok">Within range (94.5% – 102.4999%)</div>
-
-    <h3 class="card-heading">Card Preview</h3>
-    <table class="card-preview">
-      <tbody>
-        <tr><th>Total Packed</th><td id="cardTotalPacked"></td><td class="unit">EA</td></tr>
-        <tr><th>Packaging Scrap</th><td id="cardPkgScrap"></td><td class="unit">KG</td></tr>
-        <tr><th>Manufacturing Scrap</th><td id="cardMfgScrap"></td><td class="unit">KG</td></tr>
-        <tr><th>Bulk Piece Weight (if applicable)</th><td id="cardPieceWt"></td><td class="unit">mg</td></tr>
-        <tr><th>Bulk Issued</th><td id="cardBulkIssued"></td><td class="unit">TH</td></tr>
-        <tr><th>Bulk Rejected</th><td id="cardBulkRejected"></td><td class="unit">TH</td></tr>
-        <tr><th>Bulk Returned</th><td id="cardBulkReturned"></td><td class="unit">TH</td></tr>
-        <tr><th>Total Bottles Yielded</th><td id="cardTotalYielded"></td><td class="unit">EA</td></tr>
-      </tbody>
-    </table>
-
-    <table class="scrap-table">
-      <thead>
-        <tr><th>Scrap Source</th><th>Gross (Kg)</th><th>Net (Kg)</th><th>Pieces (TH)</th></tr>
-      </thead>
-      <tbody id="scrapTableBody"></tbody>
-    </table>
-
-    <div class="summary-lines">
-      <p id="summaryLine1"></p>
-      <p id="summaryLine2"></p>
-    </div>
-  </section>
-
   </div>
 
-  <section class="panel records-panel">
-    <div class="panel-head">
-      <h2>Saved Yield Sheets</h2>
-      <button type="button" id="exportCsvBtn">Export CSV</button>
+  <div class="ys-steps-row">
+    <ol class="ys-steps" id="ysSteps" aria-label="What's left before printing"></ol>
+    <span class="ys-left" id="ysLeft"></span>
+  </div>
+  <p id="draftNote" class="ys-draft hidden" role="status">Picked up where you left off (saved on this computer). <button type="button" class="link-btn" id="draftDiscardBtn">Start a new sheet instead</button></p>
+  <p id="printMissingMsg" class="form-msg hint-err hidden" role="alert"></p>
+  <div class="ys-print-opts">
+    <label id="printReportsWrap" class="check-inline hidden">
+      <input type="checkbox" id="printReports" checked>
+      <span>Print the imported reports after the yield sheet (<span id="printReportsCount"></span>)</span>
+    </label>
+    <label id="printTwoSidedWrap" class="check-inline hidden">
+      <input type="checkbox" id="printTwoSided" checked>
+      <span>Printing on both sides: start each report on a new sheet<span id="printBlankCount"></span></span>
+    </label>
+  </div>
+
+  <div class="sheet-columns ys-columns">
+  <form id="yieldForm" class="ys-form" autocomplete="off">
+    <fieldset id="importBox" class="ys-card" data-step="import">
+      <legend>Import from JDE Reports</legend>
+      <div id="dropZone" class="drop-zone">
+        <p class="import-done" id="importDone"></p>
+        <p class="import-ask">Drop the <strong>WO Close-out</strong> (R5504801), <strong>Packaging Pallet Transfers</strong> (R593111FG) and <strong>Charge Report</strong> (R593111CV) PDFs here</p>
+        <label class="file-btn">Choose PDFs
+          <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
+        </label>
+      </div>
+      <button type="button" class="link-btn import-details-btn" id="importDetailsBtn" aria-expanded="false">Show what was imported</button>
+      <div id="importPreview" class="import-preview hidden"></div>
+      <ul id="importLog" class="import-log"></ul>
+    </fieldset>
+
+    <fieldset class="ys-card" data-step="wo">
+      <legend>Work order</legend>
+      <div class="ys-grid ys-g3">
+        <label>FG Item
+          <input type="text" id="fgItem" required>
+        </label>
+        <label>WO #
+          <input type="text" id="woNumber" required>
+        </label>
+        <label>Bulk Item
+          <input type="text" id="bulkItem" required>
+        </label>
+        <label>Date
+          <input type="date" id="dateCreated">
+        </label>
+        <label class="ys-span2">Created By
+          <select id="createdBy"></select>
+        </label>
+        <label id="createdByOtherWrap" class="ys-span3 hidden">Lead name
+          <input type="text" id="createdByOther" placeholder="Type the lead's name">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="ys-card" data-step="bottles">
+      <legend>Bottles</legend>
+      <div class="ys-grid ys-g4">
+        <label>Qty Completed
+          <span class="unit-in" data-unit="btl"><input type="number" id="qtyCompleted" step="any" min="0"></span>
+        </label>
+        <label>Retains
+          <span class="unit-in" data-unit="btl"><input type="number" id="retains" step="any" min="0"></span>
+        </label>
+        <label>Donations
+          <span class="unit-in" data-unit="btl"><input type="number" id="donations" step="any" min="0"></span>
+        </label>
+        <label>Stability
+          <span class="unit-in" data-unit="btl"><input type="number" id="stability" step="any" min="0" value="0"></span>
+        </label>
+      </div>
+      <input type="number" id="totalPackaged" class="hidden" readonly tabindex="-1" aria-hidden="true">
+      <p class="ys-sum" title="Qty Completed + Retains + Donations + Stability">Total produced <strong id="ysTotalText">—</strong></p>
+    </fieldset>
+
+    <fieldset class="ys-card" data-step="bulk">
+      <legend>Bulk <span class="ys-note">Rejected + Returned print together as Bulk Rejected/Returned</span></legend>
+      <div class="ys-grid ys-g4">
+        <label>Count <small id="fillRateHint" class="src-tag"></small>
+          <span class="unit-in" data-unit="/btl"><input type="number" id="fillRate" step="any" min="0" title="Tablets or softgels per bottle; prints as Fill Rate"></span>
+        </label>
+        <label>Issued
+          <span class="unit-in" data-unit="TH"><input type="number" id="bulkIssued" step="any" min="0"></span>
+        </label>
+        <label>Rejected
+          <span class="unit-in" data-unit="TH"><input type="number" id="bulkRejected" step="any" min="0" value="0"></span>
+        </label>
+        <label>Returned
+          <span class="unit-in" data-unit="TH"><input type="number" id="bulkReturned" step="any" min="0" value="0"></span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="ys-card" data-step="scrap">
+      <legend>Scrap <span class="ys-note">gross kg; the 6 kg container tare is taken off</span></legend>
+      <div class="ys-grid ys-g5">
+        <label>Piece Wt <small id="pieceWtHint" class="src-tag"></small>
+          <span class="unit-in" data-unit="mg"><input type="number" id="pieceWt" step="any" min="0" title="Bulk piece weight; needed whenever a scrap weight is entered"></span>
+        </label>
+        <label>Pkg Scrap #1
+          <span class="unit-in" data-unit="kg"><input type="number" id="scrap1" step="any" min="0"></span>
+        </label>
+        <label>Pkg Scrap #2
+          <span class="unit-in" data-unit="kg"><input type="number" id="scrap2" step="any" min="0" value="0"></span>
+        </label>
+        <label>Pkg Scrap #3
+          <span class="unit-in" data-unit="kg"><input type="number" id="scrap3" step="any" min="0" value="0"></span>
+        </label>
+        <label>Mfg Scrap
+          <span class="unit-in" data-unit="kg"><input type="number" id="mfgScrap" step="any" min="0" value="0"></span>
+        </label>
+      </div>
+      <input type="hidden" id="tareWeight" value="6">
+    </fieldset>
+
+    <fieldset class="ys-card ys-out out-of-range-only hidden">
+      <legend>Out of range <span class="ys-note">needed when Final Yield is outside 94.5% – 102.4999%</span></legend>
+      <div class="ys-grid ys-g3">
+        <label>VideoJet Count
+          <input type="number" id="videoJetCount" step="any" min="0">
+        </label>
+        <label>Partial pallet: Layers
+          <input type="number" id="palletLayers" step="1" min="0">
+        </label>
+        <label>Boxes
+          <input type="number" id="palletBoxes" step="1" min="0">
+        </label>
+      </div>
+      <small class="fieldset-note">With Layers and Boxes filled in, the sheet prints e.g. "5 Layers + 2 Boxes".</small>
+    </fieldset>
+  </form>
+
+  <aside class="ys-results" aria-label="Live Results">
+    <section class="ys-card ys-gauge" id="ysGauge" data-state="na">
+      <div class="ys-big" id="rFinalYield">—</div>
+      <div class="ys-big-label">Final Yield</div>
+      <div class="ys-range" aria-hidden="true">
+        <div class="ys-band"></div>
+        <div class="ys-marker" id="ysMarker"></div>
+      </div>
+      <div class="ys-ticks" aria-hidden="true"><span>90%</span><span class="t-lo">94.5%</span><span class="t-hi">102.5%</span><span>107%</span></div>
+      <div id="statusBanner" class="status-banner info">Enter Issued Bulk (TH) to calculate the yield.</div>
+    </section>
+
+    <section class="ys-card ys-balance">
+      <h3>Where the bulk went <span id="ysBalanceOf"></span></h3>
+      <div class="ys-bar" id="ysBar" aria-hidden="true">
+        <div class="seg seg-packaged"></div><div class="seg seg-scrapped"></div><div class="seg seg-rejected"></div><div class="seg seg-missing"></div>
+      </div>
+      <dl class="ys-legend">
+        <dt><i class="seg-packaged"></i>Packaged</dt><dd id="rBulkPackaged">0</dd>
+        <dt><i class="seg-scrapped"></i>Scrapped</dt><dd id="rBulkScrapped">0</dd>
+        <dt><i class="seg-rejected"></i>Rejected / returned</dt><dd id="ysRejected">0</dd>
+        <dt><i class="seg-missing"></i><span id="ysMissingLabel">Not accounted for</span></dt><dd id="ysMissing">0</dd>
+        <dt class="ys-net">Net bulk issued</dt><dd class="ys-net" id="rBulkIssuedNet">0</dd>
+      </dl>
+    </section>
+
+    <section class="ys-card ys-preview">
+      <div class="seg-tabs" role="tablist" aria-label="Preview">
+        <button type="button" role="tab" class="active" aria-selected="true" data-ys-tab="card">Pink card</button>
+        <button type="button" role="tab" aria-selected="false" data-ys-tab="scrap">Scrap table</button>
+        <button type="button" role="tab" aria-selected="false" data-ys-tab="summary">Summary lines</button>
+      </div>
+      <div class="ys-tab" data-ys-panel="card">
+        <table class="card-preview">
+          <tbody>
+            <tr><th>Total Packed</th><td id="cardTotalPacked"></td><td class="unit">EA</td></tr>
+            <tr><th>Packaging Scrap</th><td id="cardPkgScrap"></td><td class="unit">KG</td></tr>
+            <tr><th>Manufacturing Scrap</th><td id="cardMfgScrap"></td><td class="unit">KG</td></tr>
+            <tr><th>Bulk Piece Weight (if applicable)</th><td id="cardPieceWt"></td><td class="unit">mg</td></tr>
+            <tr><th>Bulk Issued</th><td id="cardBulkIssued"></td><td class="unit">TH</td></tr>
+            <tr><th>Bulk Rejected</th><td id="cardBulkRejected"></td><td class="unit">TH</td></tr>
+            <tr><th>Bulk Returned</th><td id="cardBulkReturned"></td><td class="unit">TH</td></tr>
+            <tr><th>Total Bottles Yielded</th><td id="cardTotalYielded"></td><td class="unit">EA</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ys-tab hidden" data-ys-panel="scrap">
+        <table class="scrap-table">
+          <thead>
+            <tr><th>Scrap Source</th><th>Gross (Kg)</th><th>Net (Kg)</th><th>Pieces (TH)</th></tr>
+          </thead>
+          <tbody id="scrapTableBody"></tbody>
+        </table>
+      </div>
+      <div class="ys-tab hidden summary-lines" data-ys-panel="summary">
+        <p id="summaryLine1"></p>
+        <p id="summaryLine2"></p>
+      </div>
+    </section>
+  </aside>
+  </div>
+
+  <dialog id="savedDrawer" class="ys-drawer" aria-label="Saved yield sheets">
+    <div class="ys-drawer-head">
+      <h2>Saved yield sheets</h2>
+      <div class="actions">
+        <button type="button" id="exportCsvBtn">Export CSV</button>
+        <button type="button" class="icon-close" id="savedCloseBtn" aria-label="Close">✕</button>
+      </div>
     </div>
-    <input type="search" id="searchBox" placeholder="Search by WO#, FG Item, or Bulk Item...">
-    <div class="table-scroll">
-      <table class="records-table">
-        <thead>
-          <tr>
-            <th>WO #</th><th>FG Item</th><th>Bulk Item</th><th>Final Yield</th><th>Status</th><th>Date</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="recordsTableBody"></tbody>
-      </table>
+    <input type="search" id="searchBox" placeholder="Search WO #, FG item or bulk item…" aria-label="Search saved yield sheets">
+    <div class="ys-filters" id="savedFilters">
+      <button type="button" class="active" data-filter="all">All<span></span></button>
+      <button type="button" data-filter="out">Out of range<span></span></button>
+      <button type="button" data-filter="week">This week<span></span></button>
+      <button type="button" data-filter="mine">Mine<span></span></button>
     </div>
+    <ul id="recordsTableBody" class="ys-records"></ul>
     <p id="noRecordsMsg" class="muted hidden">No saved yield sheets yet.</p>
-  </section>
+  </dialog>
 </main>
 
 <div class="layout single-layout hidden" id="storedTab">
