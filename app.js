@@ -936,10 +936,25 @@ function showView(id) {
   });
   VIEWS.forEach(v => el(v).classList.toggle("hidden", v !== id));
   document.querySelectorAll(".form-nav [data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === id));
+  renderCrumbs(id);
   if (id === "sheetTab") fillFromStoredData();
   if (id === "adminTab") lineupNetwork();
   window.dispatchEvent(new CustomEvent("viewshown", { detail: id }));
 }
+
+// The top bar says where you are: the section, and the form inside Forms.
+function renderCrumbs(id) {
+  const form = FORM_VIEWS.find(f => f.id === id);
+  const section = document.querySelector(`.tab[data-tab="${form ? "formsTab" : id}"] .lbl`)?.textContent ?? "";
+  el("crumbs").innerHTML = form
+    ? `<button type="button" data-crumb="formsTab">${escapeHtml(section)}</button><span class="crumb-sep">/</span><span class="crumb-here">${escapeHtml(form.name)}</span>`
+    : `<span class="crumb-here">${escapeHtml(section)}</span>`;
+}
+el("crumbs").addEventListener("click", e => {
+  const b = e.target.closest("[data-crumb]");
+  if (b) showView(b.dataset.crumb);
+});
+renderCrumbs("sheetTab");
 
 // Runs fn each time the view with this id is shown.
 function onViewShown(id, fn) {
@@ -1420,7 +1435,10 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const dark = theme === "dark";
   const btn = el("themeToggle");
-  btn.textContent = dark ? "☀️ Light theme" : "🌙 Dark theme";
+  btn.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${dark
+    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'
+    : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'}</svg><span class="lbl">${dark ? "Light theme" : "Dark theme"}</span>`;
+  btn.setAttribute("aria-label", dark ? "Light theme" : "Dark theme");
   btn.title = dark ? "Switch to the light theme" : "Switch to the dark theme";
 }
 
@@ -1466,6 +1484,7 @@ function canChangeStoredItems() {
 // Shows only the tabs, forms and buttons this account type can use.
 function renderAccess() {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("hidden", !canOpen(t.dataset.tab)));
+  el("adminGroup").classList.toggle("hidden", !ADMIN_VIEWS.some(canOpen));
   document.querySelectorAll("#formsTab [data-form], .form-nav [data-view]").forEach(b =>
     b.classList.toggle("hidden", !canOpen(b.dataset.form ?? b.dataset.view)));
   // Filling a form from the yield sheet needs the yield sheet.
@@ -1875,6 +1894,9 @@ function showSignedInName() {
   el("userName").textContent = lead ?? (accountName || currentUser);
   el("userName").title = `Username: ${currentUser}`;
   el("userRole").textContent = role ? ROLE_LABELS[role] : "";
+  const words = el("userName").textContent.trim().split(/\s+/);
+  el("userAvatar").textContent = (words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2)).toUpperCase();
+  el("userAvatar").title = el("userName").textContent;
 }
 
 // A new sheet's Created By starts as the signed-in user's lead, unless someone

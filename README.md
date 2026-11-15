@@ -49,9 +49,24 @@ multiple work orders, alongside fillable, printable copies of the paper forms
   fields instead of the sheet. A blocked print isn't recorded in the
   Activity Log.
 
+## Layout
+
+A dark **sidebar** on the left holds the sections: **Yield Sheet**, **Forms**
+and **Stored Data**, then, for Admins and Owners, an **Admin** group with
+**Accounts & Leads** (the Admin tab) and **Activity Log**. Its bottom shows
+the sync status, who is signed in (name, initials and account type), **Sign
+out** and the theme button. A slim **top bar** says where you are, e.g.
+"Forms / Bulk Return"; clicking **Forms** there goes back to the list of forms.
+Each account only sees the sections it can open.
+
+On tablets (up to 1100 px wide) the sidebar keeps just its icons. On phones
+(up to 760 px) the sections become a **bottom bar** (Yield, Forms, Data,
+Accounts, Activity) and the sync dot, sign-out and theme buttons move to the
+top bar. Printouts never show any of it.
+
 ## Light and dark theme
 
-The **🌙 Dark theme / ☀️ Light theme** button in the header switches the app's
+The **Dark theme / Light theme** button at the bottom of the sidebar switches the app's
 colors. The choice is remembered on that computer (it survives sign-out);
 until someone picks one, the app follows the computer's own light/dark
 setting. Printouts are always black on white.
@@ -294,7 +309,7 @@ does).
   chosen name prints on the "Yield Sheet Created By:" line; with none chosen,
   the line prints blank as on the paper form.
   Each lead can be **linked to a sign-in username** (the box next to their
-  name). When that person is signed in, the header shows their name instead
+  name). When that person is signed in, the sidebar shows their name instead
   of the username, and new sheets start with them as Created By; anyone can
   still pick someone else in the dropdown, and saved sheets keep their own.
   A username links to one lead at a time. Leads without an account can be

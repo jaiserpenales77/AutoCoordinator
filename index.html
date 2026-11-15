@@ -19,20 +19,51 @@
 </script>
 </head>
 <body data-auth="pending">
-<header class="app-header">
-  <h1>Packaging Lead Hub</h1>
-  <p class="subtitle">Yield sheets, forms and calculators for the packaging floor</p>
-  <div class="header-status">
+<aside class="sidebar" aria-label="Packaging Lead Hub">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">PK</span>
+    <span class="brand-text"><strong>Packaging Lead Hub</strong><small>PK030 packaging line</small></span>
+  </div>
+  <nav class="side-nav" role="tablist" aria-label="Sections">
+    <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab" title="Yield Sheet">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg>
+      <span class="lbl" data-short="Yield">Yield Sheet</span></button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab" title="Forms">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="lbl" data-short="Forms">Forms</span></button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab" title="Stored Data">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+      <span class="lbl" data-short="Data">Stored Data</span></button>
+    <div class="side-group hidden" id="adminGroup">
+      <span class="side-group-label">Admin</span>
+      <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="adminTab" id="adminTabBtn" title="Accounts &amp; Leads">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="lbl" data-short="Accounts">Accounts &amp; Leads</span></button>
+      <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="activityTab" id="activityTabBtn" title="Activity Log">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span class="lbl" data-short="Activity">Activity Log</span></button>
+    </div>
+  </nav>
+  <div class="side-foot">
     <span id="syncStatus" class="sync-status" role="status"></span>
-    <span class="user-bar">Signed in as <strong id="userName"></strong><span id="userRole" class="role-badge"></span>
-      <button type="button" id="signOutBtn">Sign out</button></span>
+    <div class="user-bar">
+      <span class="avatar" id="userAvatar" aria-hidden="true"></span>
+      <span class="user-text"><strong id="userName"></strong><span id="userRole" class="role-badge"></span></span>
+      <button type="button" id="signOutBtn" class="icon-btn" title="Sign out" aria-label="Sign out">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></button>
+    </div>
     <button type="button" id="themeToggle" class="theme-toggle"></button>
   </div>
+</aside>
+
+<header class="topbar">
+  <nav class="crumbs" id="crumbs" aria-label="You are here"></nav>
 </header>
 
 <section id="signInScreen" class="signin">
   <form id="signInForm" class="panel signin-panel">
     <h2>Sign in</h2>
+    <p class="muted signin-sub">Yield sheets, forms and calculators for the packaging floor</p>
     <label>Username
       <input type="text" id="signInUser" autocomplete="username" autocapitalize="none" spellcheck="false" required>
     </label>
@@ -65,14 +96,6 @@
     <p class="muted">Already have an account? <button type="button" class="link-btn" id="showSignInBtn">Sign in</button></p>
   </form>
 </section>
-
-<nav class="tabs" role="tablist">
-  <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="sheetTab">Yield Sheet</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="storedTab">Stored Data</button>
-  <button type="button" class="tab" role="tab" aria-selected="false" data-tab="formsTab">Forms</button>
-  <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="adminTab" id="adminTabBtn">Admin</button>
-  <button type="button" class="tab hidden" role="tab" aria-selected="false" data-tab="activityTab" id="activityTabBtn">Activity Log</button>
-</nav>
 
 <main class="layout" id="sheetTab">
   <div class="sheet-columns">
