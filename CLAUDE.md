@@ -40,7 +40,7 @@ for each, and reads the data back to confirm.
 If `PK030_USERNAME` / `PK030_PASSWORD` aren't set, or sign-in or the network
 fails, say so and what to do (they're environment variables in the cloud
 environment's settings; a new session picks them up), and offer the same JSON
-as a file instead: the app's Stored Data tab → **Import Stored Data** takes
+as a file instead: the app's Stored Data page → **Import** takes
 it. Never ask for or print the password, and never write to the database any
 other way.
 

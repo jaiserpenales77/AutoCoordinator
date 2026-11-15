@@ -1056,6 +1056,74 @@ function showMsg(id, text, ok = true) {
   el(id).className = `form-msg ${ok ? "hint-ok" : "hint-err"}`;
 }
 
+// Stored Data shows one list at a time, picked from the tabs (remembered on
+// this computer). Each list has one line on top: its name, an ⓘ for the
+// explanation, the search and "+ Add", which opens the add form.
+const STORED_TAB_KEY = "pk030_stored_tab";
+const STORED_COUNTS = {
+  bulkItems: () => StoredData.bulkItems.all().length,
+  fgItems: () => StoredData.fgItems.all().length,
+  lineRates: () => StoredData.lineRates.all().length,
+  cotton: () => StoredData.cotton.all().length,
+  desiccant: () => StoredData.desiccant.all().length,
+  allergen: () => StoredData.allergen.all().length
+};
+function renderStoredCounts() {
+  document.querySelectorAll(".stored-count").forEach(c => { c.textContent = STORED_COUNTS[c.dataset.count](); });
+}
+function showStoredList(id) {
+  if (!el(id)?.classList.contains("stored-panel")) return;
+  document.querySelectorAll(".stored-tab").forEach(t => {
+    const on = t.dataset.stored === id;
+    t.classList.toggle("active", on);
+    t.setAttribute("aria-selected", String(on));
+  });
+  document.querySelectorAll(".stored-panel").forEach(p => p.classList.toggle("hidden", p.id !== id));
+  try { localStorage.setItem(STORED_TAB_KEY, id); } catch { /* starts on the first list next time */ }
+}
+document.querySelectorAll(".stored-tab").forEach(t => t.addEventListener("click", () => showStoredList(t.dataset.stored)));
+try { showStoredList(localStorage.getItem(STORED_TAB_KEY)); } catch { /* the first list */ }
+
+function setAdding(panel, on) {
+  panel.classList.toggle("adding", on);
+  const btn = panel.querySelector(".add-toggle");
+  btn.textContent = on ? "Close" : "+ Add";
+  btn.classList.toggle("primary", !on);
+  btn.setAttribute("aria-expanded", String(on));
+}
+document.querySelectorAll(".stored-panel").forEach(panel => {
+  const h2 = panel.querySelector("h2");
+  const help = h2.nextElementSibling;
+  const search = panel.querySelector(".stored-search");
+  const form = panel.querySelector("form");
+  form.classList.add("stored-add");
+  const head = document.createElement("div");
+  head.className = "stored-panel-head";
+  head.innerHTML = `<div class="form-title"></div><div class="stored-tools"></div>`;
+  panel.prepend(head);
+  head.firstChild.append(h2);
+  help.classList.add("form-help", "hidden");
+  help.id = `${panel.id}Help`;
+  head.firstChild.insertAdjacentHTML("beforeend",
+    `<button type="button" class="help-btn" aria-expanded="false" aria-controls="${help.id}" title="What this list is for">i</button>`);
+  head.querySelector(".help-btn").addEventListener("click", e => {
+    const open = help.classList.toggle("hidden") === false;
+    e.currentTarget.setAttribute("aria-expanded", String(open));
+    e.currentTarget.classList.toggle("active", open);
+  });
+  head.after(help);
+  head.lastChild.append(search);
+  head.lastChild.insertAdjacentHTML("beforeend", `<button type="button" class="add-toggle primary" aria-controls="${form.id}">+ Add</button>`);
+  head.querySelector(".add-toggle").addEventListener("click", () => {
+    setAdding(panel, !panel.classList.contains("adding"));
+    if (panel.classList.contains("adding")) form.querySelector("input")?.focus();
+  });
+  // Edit fills the add form, so it opens it.
+  panel.addEventListener("click", e => {
+    if (e.target.closest("[data-edit], [data-action=edit]")) setAdding(panel, true);
+  }, true);
+});
+
 function renderStoredData() {
   const leads = StoredData.leads();
   // A live update mustn't wipe a username someone is typing.
@@ -1079,6 +1147,7 @@ function renderStoredData() {
   ITEM_PANELS.forEach(renderItemPanel);
   renderLineRates();
   FLAG_PANELS.forEach(renderFlagPanel);
+  renderStoredCounts();
 
   populateLeads();
   // The Bulk Calculator's item suggestions (bulk-calc.js loads after this file).

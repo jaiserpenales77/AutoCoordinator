@@ -393,6 +393,14 @@ people do through the app; it isn't a tamper-proof audit trail.
 
 ## Stored Data tab
 
+Stored Data shows one list at a time: the tabs along the top (Bulk Items, FG
+Items, Line Rates, Cotton, Desiccant, Allergen) show how many entries each
+has, and the one picked last is remembered on that computer. Each list has
+one line on top: its name, an **ⓘ** that explains what it's for, a search box
+and **+ Add**, which opens the add form (**Close** folds it away; **Edit** on a
+row opens it with that entry filled in). Accounts that can't add to a list
+(Leads, for Cotton, Desiccant and Allergen) don't get **+ Add** there.
+
 - **Bulk Items & Piece Weights** — when a stored Bulk Item is typed or
   imported on the yield sheet, Bulk Piece Wt fills in.
 - **FG Items & Counts** — when a stored FG Item is typed or imported, Count
@@ -427,8 +435,8 @@ own values.
 can't be saved again with other values, and there are no Edit or Remove
 buttons (the database refuses it too). **Admins and Owners** can add, edit and remove.
 
-Stored Data is shared through the database (see below). **Export Stored Data**
-saves a JSON backup; **Import Stored Data** adds a backup's entries back
+Stored Data is shared through the database (see below). **Export** (top
+right of the page) saves a JSON backup; **Import** adds a backup's entries back
 (its leads, usernames, cotton, desiccant and allergen only for admins; for Leads, items already
 stored keep their values).
 

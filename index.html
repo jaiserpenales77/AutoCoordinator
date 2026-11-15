@@ -318,8 +318,29 @@
   </section>
 </main>
 
-<div class="layout stored-layout hidden" id="storedTab">
-  <section class="panel">
+<div class="layout single-layout hidden" id="storedTab">
+  <div class="page-head stored-head">
+    <div>
+      <h2>Stored Data</h2>
+      <p class="muted">Fills in the yield sheet automatically and is shared with LineUp. Export a file as a backup; importing one adds its entries back.</p>
+    </div>
+    <div class="actions">
+      <button type="button" id="exportStoredBtn">Export</button>
+      <label class="file-btn">Import
+        <input type="file" id="importStoredInput" accept=".json,application/json" hidden>
+      </label>
+    </div>
+  </div>
+  <p id="storedImportMsg" class="form-msg"></p>
+  <div class="stored-tabs" role="tablist" aria-label="Stored Data lists">
+    <button type="button" class="stored-tab active" role="tab" data-stored="bulkPanel">Bulk Items<span class="stored-count" data-count="bulkItems"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-stored="fgPanel">FG Items<span class="stored-count" data-count="fgItems"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-stored="lineRatesPanel">Line Rates<span class="stored-count" data-count="lineRates"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-stored="cottonPanel">Cotton<span class="stored-count" data-count="cotton"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-stored="desiccantPanel">Desiccant<span class="stored-count" data-count="desiccant"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-stored="allergenPanel">Allergen<span class="stored-count" data-count="allergen"></span></button>
+  </div>
+  <section class="panel stored-panel" id="bulkPanel" role="tabpanel">
     <h2>Bulk Items &amp; Piece Weights</h2>
     <p class="muted">When a stored Bulk Item is entered or imported on the yield sheet, its Bulk Piece Wt fills in automatically.</p>
     <p id="bulkItemAddOnlyNote" class="muted hidden">You can add new bulk items; only an admin can change or remove a stored one.</p>
@@ -339,7 +360,7 @@
     <p id="noBulkItemsMsg" class="muted">No bulk items yet.</p>
   </section>
 
-  <section class="panel">
+  <section class="panel stored-panel hidden" id="fgPanel" role="tabpanel">
     <h2>FG Items &amp; Counts</h2>
     <p class="muted">When a stored FG Item is entered or imported on the yield sheet, its Count (Fill Rate) fills in automatically.</p>
     <p id="fgItemAddOnlyNote" class="muted hidden">You can add new FG items; only an admin can change or remove a stored one.</p>
@@ -359,7 +380,7 @@
     <p id="noFgItemsMsg" class="muted">No FG items yet.</p>
   </section>
 
-  <section class="panel line-rates-panel">
+  <section class="panel stored-panel line-rates-panel hidden" id="lineRatesPanel" role="tabpanel">
     <h2>Line Rates</h2>
     <p class="muted">Full Hour, Lunch and Break for each line and FG item. Leave Lunch or Break empty for a line that runs through them.</p>
     <p id="lineRateAddOnlyNote" class="muted hidden">You can add new line rates; only an admin can change or remove a stored one.</p>
@@ -394,7 +415,7 @@
     <p id="noLineRatesMsg" class="muted">No line rates yet.</p>
   </section>
 
-  <section class="panel cotton-panel">
+  <section class="panel stored-panel cotton-panel hidden" id="cottonPanel" role="tabpanel">
     <h2>Cotton <span id="cottonCount" class="panel-count"></span></h2>
     <p class="muted">The FG items that take cotton, and which. LineUp (JDE Sched) uses this list for its changeover notes: Add Cotton, Change Cotton and Remove Cotton. Leave Cotton empty for "Yes", or type the cotton it takes. Several FG items can go in at once, with commas between them.</p>
     <p id="cottonViewOnlyNote" class="muted hidden">Only an admin can add, change or remove cotton.</p>
@@ -419,7 +440,7 @@
     <p id="cottonNone" class="muted">No cotton yet.</p>
   </section>
 
-  <section class="panel desiccant-panel">
+  <section class="panel stored-panel desiccant-panel hidden" id="desiccantPanel" role="tabpanel">
     <h2>Desiccant <span id="desiccantCount" class="panel-count"></span></h2>
     <p class="muted">The FG items that take desiccant, and which. LineUp (JDE Sched) uses this list when a work order's DES box is empty: for its changeover notes (Add Desiccant, Change Desiccant, Remove Desiccant) and its QA sheets. Leave Desiccant empty for "Yes", or type the desiccant it takes. Several FG items can go in at once, with commas between them.</p>
     <p id="desiccantViewOnlyNote" class="muted hidden">Only an admin can add, change or remove desiccant.</p>
@@ -444,7 +465,7 @@
     <p id="desiccantNone" class="muted">No desiccant yet.</p>
   </section>
 
-  <section class="panel allergen-panel">
+  <section class="panel stored-panel allergen-panel hidden" id="allergenPanel" role="tabpanel">
     <h2>Allergen <span id="allergenCount" class="panel-count"></span></h2>
     <p class="muted">The FG items with an allergen, and its code, as the schedule's Allergen column has it (for example M, S or C). LineUp (JDE Sched) uses this list when a work order's Allergen box is empty: for the allergen highlight, the Washroom Prep List and the QA allergen test. Leave an item off the list for no allergen. Several FG items can go in at once, with commas between them.</p>
     <p id="allergenViewOnlyNote" class="muted hidden">Only an admin can add, change or remove allergens.</p>
@@ -469,17 +490,6 @@
     <p id="allergenNone" class="muted">No allergens yet.</p>
   </section>
 
-  <section class="panel">
-    <h2>Back Up / Share</h2>
-    <p class="muted">Stored Data and saved yield sheets are shared with every computer through the database. Export Stored Data to a file as a backup; importing a file adds its entries back.</p>
-    <div class="actions">
-      <button type="button" id="exportStoredBtn">Export Stored Data</button>
-      <label class="file-btn">Import Stored Data
-        <input type="file" id="importStoredInput" accept=".json,application/json" hidden>
-      </label>
-    </div>
-    <p id="storedImportMsg" class="form-msg"></p>
-  </section>
 </div>
 
 <div class="layout admin-layout hidden" id="adminTab">

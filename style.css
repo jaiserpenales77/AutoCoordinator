@@ -662,7 +662,69 @@ table.card-preview td.unit {
 }
 .stored-table tbody tr:last-child td { border-bottom: none; }
 
-.stored-layout { grid-template-columns: 1fr 1fr; align-items: start; }
+/* Stored Data: a page head with Export/Import, a tab per list with its count,
+   and the chosen list: name, ⓘ, search and + Add on one line, then the table. */
+.stored-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.stored-head .actions { margin-top: 0; }
+#storedImportMsg:empty { margin: 0; min-height: 0; }
+.stored-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 20px 0 16px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--tab-bg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stored-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stored-tab:hover { color: var(--text); filter: none; }
+.stored-tab.active { background: var(--panel-bg); color: var(--text); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.stored-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--subtle-bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+.stored-tab.active .stored-count { background: var(--accent-soft); border-color: var(--accent-soft-border); color: var(--accent); }
+.stored-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.stored-panel-head h2 { margin: 0; font-size: 1.15rem; }
+.stored-panel-head .panel-count { display: none; }
+.stored-tools { display: flex; align-items: center; gap: 8px; flex: 0 1 420px; min-width: 0; }
+.stored-tools .stored-search { flex: 1 1 auto; width: auto; min-width: 0; margin: 0; }
+.add-toggle { flex: 0 0 auto; }
+.stored-panel:has(form.hidden) .add-toggle { display: none; }
+.stored-panel:not(.adding) .stored-add { display: none; }
+.stored-add {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--accent-soft-border);
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+.stored-panel .stored-table { max-height: max(300px, calc(100vh - var(--top-h) - 300px)); margin-top: 14px; }
+.stored-panel > p.muted:not(.form-help) { margin: 12px 0 0; font-size: 0.88rem; }
+.stored-panel .form-msg:empty { margin: 0; min-height: 0; }
+@media (max-width: 760px) {
+  .stored-tools { flex: 1 1 100%; }
+  .stored-panel .stored-table { max-height: 60vh; }
+}
 .admin-layout { grid-template-columns: 1.4fr 1fr; align-items: start; }
 .single-layout { grid-template-columns: 1fr; }
 
@@ -1051,7 +1113,6 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
 
 /* Line Rates: full width, a labelled field each for Line, FG Item and the
    three figures. */
-.line-rates-panel { grid-column: 1 / -1; }
 .line-rate-form {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
@@ -1094,7 +1155,7 @@ table.calc-steps tr.final th, table.calc-steps tr.final td {
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
-.stored-list button, .stored-layout .row-actions button { padding: 4px 10px; font-size: 0.78rem; }
+.stored-list button, #storedTab .row-actions button { padding: 4px 10px; font-size: 0.78rem; }
 .stored-list .lead-name { flex: 1 1 auto; min-width: 0; }
 .stored-list input.lead-user { flex: 0 1 150px; min-width: 0; padding: 4px 8px; font-size: 0.82rem; }
 .accounts-panel { grid-column: 1 / -1; }
