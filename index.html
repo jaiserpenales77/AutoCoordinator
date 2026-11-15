@@ -59,7 +59,21 @@
 
 <header class="topbar">
   <nav class="crumbs" id="crumbs" aria-label="You are here"></nav>
+  <button type="button" class="search-btn" id="searchBtn" title="Search (Ctrl+K)" aria-label="Search">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span class="search-btn-text">Search forms, items, WOs…</span><kbd>Ctrl K</kbd>
+  </button>
 </header>
+
+<dialog id="searchDialog" class="search-dialog" aria-label="Search">
+  <div class="search-field">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="search" id="searchInput" placeholder="Search forms, FG items, bulk items, WOs…" autocomplete="off" spellcheck="false"
+      role="combobox" aria-expanded="true" aria-controls="searchResults" aria-autocomplete="list">
+    <kbd>Esc</kbd>
+  </div>
+  <ul id="searchResults" class="search-results" role="listbox" aria-label="Results"></ul>
+</dialog>
 
 <section id="signInScreen" class="signin">
   <form id="signInForm" class="panel signin-panel">
@@ -106,14 +120,16 @@
       <span id="editingBadge" class="badge hidden">Editing saved record</span>
     </div>
     <form id="yieldForm" autocomplete="off">
-      <fieldset>
+      <fieldset id="importBox">
         <legend>Import from JDE Reports</legend>
         <div id="dropZone" class="drop-zone">
-          <p>Drop the <strong>WO Close-out</strong> (R5504801), <strong>Packaging Pallet Transfers</strong> (R593111FG) and <strong>Charge Report</strong> (R593111CV) PDFs here</p>
+          <p class="import-done" id="importDone"></p>
+          <p class="import-ask">Drop the <strong>WO Close-out</strong> (R5504801), <strong>Packaging Pallet Transfers</strong> (R593111FG) and <strong>Charge Report</strong> (R593111CV) PDFs here</p>
           <label class="file-btn">Choose PDFs
             <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
           </label>
         </div>
+        <button type="button" class="link-btn import-details-btn" id="importDetailsBtn" aria-expanded="false">Show what was imported</button>
         <div id="importPreview" class="import-preview hidden"></div>
         <ul id="importLog" class="import-log"></ul>
       </fieldset>
@@ -492,8 +508,17 @@
 
 </div>
 
-<div class="layout admin-layout hidden" id="adminTab">
-  <section class="panel accounts-panel">
+<div class="layout single-layout hidden" id="adminTab">
+  <div class="page-head">
+    <h2>Accounts &amp; Leads</h2>
+    <p class="muted">Who can sign in and what they can open, the Created By leads, and where LineUp opens from.</p>
+  </div>
+  <div class="stored-tabs admin-tabs" role="tablist" aria-label="Admin">
+    <button type="button" class="stored-tab active" role="tab" data-admin-tab="accounts">Accounts<span class="stored-count" id="accountsCount"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-admin-tab="leads">Leads<span class="stored-count" id="leadsCount"></span></button>
+    <button type="button" class="stored-tab" role="tab" data-admin-tab="network">LineUp network</button>
+  </div>
+  <section class="panel accounts-panel" data-admin-panel="accounts">
     <h2>Accounts</h2>
     <p class="muted">Change an account type to promote or demote someone. Making someone a Lead or Admin adds them to the Created By leads list and links their username; making them PLT or MLT takes them off it.</p>
     <input type="search" id="accountSearch" class="stored-search" placeholder="Search accounts…" aria-label="Search accounts">
@@ -508,7 +533,7 @@
     <p id="adminLocalMsg" class="muted hidden">The database isn't connected on this computer, so there are no accounts: whoever uses this copy can use everything and manage its leads.</p>
   </section>
 
-  <section class="panel">
+  <section class="panel tab-off" data-admin-panel="leads">
     <h2>Leads &amp; Usernames</h2>
     <p class="muted">Leads are listed in the "Yield Sheet Created By" dropdown. Type a lead's sign-in username next to their name to link them: the app then shows their name when they're signed in and fills them in as Created By on new sheets. Only admins can change this list.</p>
     <form id="leadForm" class="inline-form" autocomplete="off">
@@ -520,7 +545,7 @@
     <p id="noLeadsMsg" class="muted">No leads yet.</p>
   </section>
 
-  <section class="panel lineup-network-panel hidden" id="lineupNetworkPanel">
+  <section class="panel lineup-network-panel hidden tab-off" id="lineupNetworkPanel" data-admin-panel="network">
     <h2>LineUp: Network Access</h2>
     <p class="muted">LineUp only opens from the company's network and the networks allowed here (when the check is on). When LineUp says your home network isn't on the list, press <strong>Allow LineUp from this network</strong> from home: it's allowed for 30 days, and pressing it again replaces your last one. Networks allowed from the Activity Log, and those set in the Firebase console, are listed here too: each can be made temporary (30 days) or permanent, or removed. Only Owners see this.</p>
     <p id="lnStatus" class="ln-status" role="status">Checking this network…</p>
@@ -539,7 +564,7 @@
     <p id="lnNone" class="muted">No networks on the list yet.</p>
   </section>
 
-  <section class="panel">
+  <section class="panel account-types-panel" data-admin-panel="accounts">
     <h2>Account Types</h2>
     <ul class="role-list">
       <li><strong>PLT</strong> — Unplanned Issue, Bulk Return and the Bulk Calculator. Everyone who signs up starts here.</li>

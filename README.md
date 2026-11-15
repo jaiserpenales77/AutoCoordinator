@@ -60,6 +60,13 @@ out** and the theme button. A slim **top bar** says where you are, e.g.
 The form opened last is listed under Forms in the sidebar.
 Each account only sees the sections it can open.
 
+**Search** in the top bar (or **Ctrl+K**, ⌘K on a Mac) finds sections and
+forms (by name, code or what they're for), stored FG and bulk items, and
+saved yield sheets (by WO #, FG item or bulk item). Arrow keys and Enter pick
+a result, Esc closes it. A form opens; an FG or bulk item opens its Stored
+Data list filtered to it; a saved sheet shows the Saved Yield Sheets list
+filtered to its WO. Only what the account can open is listed.
+
 On tablets (up to 1100 px wide) the sidebar keeps just its icons. On phones
 (up to 760 px) the sections become a **bottom bar** (Yield, Forms, Data,
 Accounts, Activity) and the sync dot, sign-out and theme buttons move to the
@@ -308,7 +315,10 @@ printed, so nothing runs past the box. Each form's own layout details follow.
 
 Only Admins and Owners see this tab (see **Account types** below; with no
 database, as when `index.html` is opened from disk, whoever uses that copy
-does).
+does). It's **Accounts & Leads** in the sidebar, and shows one part at a time
+from its tabs: **Accounts** (the account list, with the account types
+explained under it), **Leads** (Leads & Usernames) and, for Owners only,
+**LineUp network**. The tab picked last is remembered on that computer.
 
 - **Accounts** — everyone who has signed in, with their account type. Change
   the type to promote or demote someone (new sign-ups are PLT and marked
@@ -444,6 +454,9 @@ stored keep their values).
 
 Drop the work order's report PDFs on **Import from JDE Reports** (or use
 **Choose PDFs**). The app reads them in the browser, so nothing is uploaded.
+Once they're in, the box folds to one green line ("✓ 3 reports imported for
+WO ..."), with **Choose PDFs** to add more and **Show what was imported** for
+the table of reports and the notes; warnings stay in view.
 
 | Yield sheet field | Taken from |
 |---|---|

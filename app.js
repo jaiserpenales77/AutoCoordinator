@@ -806,6 +806,17 @@ function renderImportLog(log) {
 // A small table of the imported reports, with the same-work-order check.
 function renderImportPreview(preview) {
   const box = el("importPreview");
+  // Once the reports are in, the import box folds to one line; the table and
+  // the notes open with "Show what was imported" (warnings stay in view).
+  const done = !!preview?.rows.length && preview.sameWo;
+  el("importBox").classList.toggle("done", done);
+  el("importBox").classList.remove("show-details");
+  el("importDetailsBtn").setAttribute("aria-expanded", "false");
+  el("importDetailsBtn").textContent = "Show what was imported";
+  if (done) {
+    const n = preview.rows.length;
+    el("importDone").textContent = `✓ ${n} report${n === 1 ? "" : "s"} imported for WO ${preview.woNumber ?? "?"}. Drop more here, or`;
+  }
   if (!preview || !preview.rows.length) {
     box.innerHTML = "";
     box.classList.add("hidden");
@@ -895,6 +906,12 @@ async function importPdfs(fileList) {
     renderImportLog(log);
   }
 }
+
+el("importDetailsBtn").addEventListener("click", e => {
+  const open = el("importBox").classList.toggle("show-details");
+  e.currentTarget.setAttribute("aria-expanded", String(open));
+  e.currentTarget.textContent = open ? "Hide what was imported" : "Show what was imported";
+});
 
 el("pdfInput").addEventListener("change", e => {
   importPdfs(e.target.files);
@@ -1056,6 +1073,123 @@ function showMsg(id, text, ok = true) {
   el(id).className = `form-msg ${ok ? "hint-ok" : "hint-err"}`;
 }
 
+// Search (the top bar's box, or Ctrl+K): jumps to a section or form, a stored
+// FG or bulk item (Stored Data, filtered to it) or a saved yield sheet (the
+// saved list, filtered to its WO). Only what this account can open is listed.
+function searchEntries() {
+  const entries = [];
+  document.querySelectorAll(".tab").forEach(t => {
+    if (!canOpen(t.dataset.tab)) return;
+    entries.push({ kind: "Section", label: t.querySelector(".lbl").textContent, words: "", go: () => showView(t.dataset.tab) });
+  });
+  FORM_VIEWS.forEach(f => {
+    if (!canOpen(f.id)) return;
+    const desc = document.querySelector(`[data-form="${f.id}"] .form-card-desc`)?.textContent ?? "";
+    entries.push({ kind: "Form", label: f.name, sub: f.code, words: `${f.code} ${desc}`, icon: f.icon, go: () => showView(f.id) });
+  });
+  if (canOpen("storedTab")) {
+    const toList = (panel, search, value) => () => {
+      showView("storedTab");
+      showStoredList(panel);
+      el(search).value = value;
+      el(search).dispatchEvent(new Event("input"));
+    };
+    StoredData.fgItems.all().forEach(i => entries.push({ kind: "FG item", label: i.item, sub: `Count ${i.count}`, words: "fg", go: toList("fgPanel", "fgItemSearch", i.item) }));
+    StoredData.bulkItems.all().forEach(i => entries.push({ kind: "Bulk item", label: i.item, sub: `${i.pieceWt} mg`, words: "bulk", go: toList("bulkPanel", "bulkItemSearch", i.item) }));
+  }
+  if (canOpen("sheetTab")) {
+    loadRecords().forEach(r => {
+      if (!r.woNumber) return;
+      entries.push({
+        kind: "Saved sheet", label: `WO ${r.woNumber}`, sub: [r.fgItem && `FG ${r.fgItem}`, r.bulkItem].filter(Boolean).join(" · "),
+        words: `${r.fgItem ?? ""} ${r.bulkItem ?? ""}`,
+        go: () => {
+          showView("sheetTab");
+          el("searchBox").value = r.woNumber;
+          renderRecordsTable();
+          document.querySelector(".records-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
+  }
+  return entries;
+}
+
+let searchHits = [];
+let searchPick = 0;
+function renderSearch() {
+  const q = el("searchInput").value.trim().toLowerCase();
+  const all = searchEntries();
+  if (!q) {
+    searchHits = all.filter(e => e.kind === "Section" || e.kind === "Form");
+  } else {
+    const terms = q.split(/\s+/);
+    const score = e => {
+      const label = e.label.toLowerCase();
+      const hay = `${label} ${(e.sub ?? "").toLowerCase()} ${e.words.toLowerCase()} ${e.kind.toLowerCase()}`;
+      if (!terms.every(t => hay.includes(t))) return -1;
+      return (label === q ? 0 : label.startsWith(q) ? 1 : label.includes(q) ? 2 : 3);
+    };
+    searchHits = all.map(e => [score(e), e]).filter(([sc]) => sc >= 0).sort((a, b) => a[0] - b[0]).map(([, e]) => e).slice(0, 30);
+  }
+  searchPick = Math.min(searchPick, Math.max(searchHits.length - 1, 0));
+  el("searchResults").innerHTML = searchHits.length ? searchHits.map((e, i) => `
+    <li role="option" id="searchHit${i}" class="search-hit${i === searchPick ? " active" : ""}" data-hit="${i}" aria-selected="${i === searchPick}">
+      <span class="search-kind">${escapeHtml(e.kind)}</span>
+      <span class="search-label">${escapeHtml(e.label)}</span>
+      ${e.sub ? `<span class="search-sub">${escapeHtml(e.sub)}</span>` : ""}
+    </li>`).join("") : `<li class="search-none">Nothing found for "${escapeHtml(el("searchInput").value.trim())}".</li>`;
+  el("searchInput").setAttribute("aria-activedescendant", searchHits.length ? `searchHit${searchPick}` : "");
+  el(`searchHit${searchPick}`)?.scrollIntoView({ block: "nearest" });
+}
+function openSearch() {
+  if (!(role || localOnly) || el("searchDialog").open) return;
+  el("searchInput").value = "";
+  searchPick = 0;
+  renderSearch();
+  el("searchDialog").showModal();
+  el("searchInput").focus();
+}
+function pickSearch(i) {
+  const hit = searchHits[i];
+  if (!hit) return;
+  el("searchDialog").close();
+  hit.go();
+}
+el("searchBtn").addEventListener("click", openSearch);
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    openSearch();
+  }
+});
+el("searchInput").addEventListener("input", () => {
+  searchPick = 0;
+  renderSearch();
+});
+el("searchInput").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (!searchHits.length) return;
+    searchPick = (searchPick + (e.key === "ArrowDown" ? 1 : -1) + searchHits.length) % searchHits.length;
+    renderSearch();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    pickSearch(searchPick);
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    el("searchDialog").close();
+  }
+});
+el("searchResults").addEventListener("click", e => {
+  const hit = e.target.closest("[data-hit]");
+  if (hit) pickSearch(Number(hit.dataset.hit));
+});
+// A click on the dimmed page around the box closes it.
+el("searchDialog").addEventListener("click", e => {
+  if (e.target === el("searchDialog")) el("searchDialog").close();
+});
+
 // Stored Data shows one list at a time, picked from the tabs (remembered on
 // this computer). Each list has one line on top: its name, an ⓘ for the
 // explanation, the search and "+ Add", which opens the add form.
@@ -1069,7 +1203,7 @@ const STORED_COUNTS = {
   allergen: () => StoredData.allergen.all().length
 };
 function renderStoredCounts() {
-  document.querySelectorAll(".stored-count").forEach(c => { c.textContent = STORED_COUNTS[c.dataset.count](); });
+  document.querySelectorAll(".stored-count[data-count]").forEach(c => { c.textContent = STORED_COUNTS[c.dataset.count](); });
 }
 function showStoredList(id) {
   if (!el(id)?.classList.contains("stored-panel")) return;
@@ -1123,6 +1257,30 @@ document.querySelectorAll(".stored-panel").forEach(panel => {
     if (e.target.closest("[data-edit], [data-action=edit]")) setAdding(panel, true);
   }, true);
 });
+
+// Accounts & Leads shows one part at a time: Accounts (with the account
+// types), Leads, or LineUp network (Owners only; its tab shows with its panel).
+const ADMIN_TAB_KEY = "pk030_admin_tab";
+function showAdminPart(part) {
+  if (!document.querySelector(`[data-admin-tab="${part}"]`)) return;
+  document.querySelectorAll("[data-admin-tab]").forEach(t => {
+    const on = t.dataset.adminTab === part;
+    t.classList.toggle("active", on);
+    t.setAttribute("aria-selected", String(on));
+  });
+  document.querySelectorAll("[data-admin-panel]").forEach(p => p.classList.toggle("tab-off", p.dataset.adminPanel !== part));
+  try { localStorage.setItem(ADMIN_TAB_KEY, part); } catch { /* starts on Accounts next time */ }
+}
+document.querySelectorAll("[data-admin-tab]").forEach(t => t.addEventListener("click", () => showAdminPart(t.dataset.adminTab)));
+try { showAdminPart(localStorage.getItem(ADMIN_TAB_KEY)); } catch { /* Accounts */ }
+// The LineUp network tab only for those who see its panel (Owners).
+new MutationObserver(() => {
+  const owner = !el("lineupNetworkPanel").classList.contains("hidden");
+  document.querySelector('[data-admin-tab="network"]').classList.toggle("hidden", !owner);
+  if (!owner && !el("lineupNetworkPanel").classList.contains("tab-off")) showAdminPart("accounts");
+}).observe(el("lineupNetworkPanel"), { attributes: true, attributeFilter: ["class"] });
+document.querySelector('[data-admin-tab="network"]').classList.add("hidden");
+if (!el("lineupNetworkPanel").classList.contains("tab-off")) showAdminPart("accounts");
 
 function renderStoredData() {
   const leads = StoredData.leads();
@@ -1641,6 +1799,8 @@ const accountDisplayName = a => a.name || StoredData.leadForUser(a.username) || 
 // The Admin tab's account list: everyone's account type, changeable by
 // admins (only owners change an admin's; nobody changes an owner's or their own).
 function renderAccounts() {
+  el("accountsCount").textContent = accounts.length || "";
+  el("leadsCount").textContent = StoredData.leads().length || "";
   el("adminLocalMsg").classList.toggle("hidden", !localOnly);
   el("accountSearch").classList.toggle("hidden", localOnly || accounts.length === 0);
   const query = el("accountSearch").value.trim().toLowerCase();
