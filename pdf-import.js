@@ -243,8 +243,9 @@ const PdfImport = (() => {
 
   const fmtNum = n => (n === null || n === undefined ? "?" : n.toLocaleString("en-US", { maximumFractionDigits: 3 }));
 
-  // Returns { values, log, preview, accepted }; values only holds fields that
-  // were found, accepted the reports used (none when work orders differ).
+  // Returns { values, log, preview, accepted, facts }; values only holds
+  // fields that were found, accepted the reports used (none when work orders
+  // differ), facts what each report says (for the quality check).
   async function readReports(files) {
     const log = [];
     const reports = [];
@@ -368,7 +369,19 @@ const PdfImport = (() => {
     }
 
     const accepted = reports.map(r => ({ file: r.file, type: r.type }));
-    return { values, log, preview, accepted };
+    // What each report says, for the quality check before printing.
+    const facts = {
+      woNumber: wos[0] ?? null,
+      fgItems: fgs,
+      pallet: pallet ? { file: pallet.file.name, fgItem: pallet.fgItem ?? null, totalPackaged: pallet.totalPackaged } : null,
+      closeout: closeout ? {
+        file: closeout.file.name, fgItem: closeout.fgItem ?? null, bulkItem: closeout.bulkItem ?? null,
+        otherBulkItems: closeout.otherBulkItems ?? [], bulkIssued: closeout.bulkIssued ?? null,
+        bulkReturned: closeout.bulkReturned ?? null, completed: closeout.completed ?? null
+      } : null,
+      charge: chargedBulk ? { files: charges.map(c => c.file.name), bulkItem: chargedBulk, total: chargedTotal } : null
+    };
+    return { values, log, preview, accepted, facts };
   }
 
   return { readReports, renderPages };

@@ -48,7 +48,8 @@ other way.
 
 - Files: `index.html`, `style.css`, `app.js` (yield sheet, tabs, access, Stored
   Data UI, Activity Log), `stored-data.js`, `cloud-sync.js` (sign-in, account
-  types, sync), `pdf-import.js`, and one file per form (`bulk-return.js`,
+  types, sync), `pdf-import.js`, `quality-check.js` (the yield sheet's quality
+  check before printing), and one file per form (`bulk-return.js`,
   `unplanned-issue.js`, `hold-tag.js`, `standard-work.js`,
   `component-transfer.js`, `training-signin.js`, `troubleshooting.js`,
   `pulse-check.js`, `rotation.js`, `bulk-calc.js`).

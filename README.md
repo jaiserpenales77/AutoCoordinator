@@ -76,6 +76,34 @@ multiple work orders, alongside fillable, printable copies of the paper forms
   accounted for (or how much more than issued was counted), with the net bulk
   issued; and tabs for the **Pink card**, the **Scrap table** and the
   **Summary lines**.
+- **Quality check** before printing. Built-in rules that run on the computer
+  (nothing is sent anywhere) compare the sheet with:
+  - **the imported JDE reports**: WO #, FG item and bulk item (red when they
+    don't match), Qty Completed, Issued and Returned, and whether the reports
+    agree with each other (Close-out vs Pallet Transfers bottles, Close-out
+    issued vs Charge Report charged, FG and bulk named the same). Reports
+    imported one after another for the same WO add up, and what they say is
+    kept with the draft;
+  - **Stored Data**: Count and Piece Wt against the stored ones;
+  - **common sense**: bottles in whole numbers, Retains/Donations/Stability
+    unusually high, Count or Piece Wt unusual, scrap at or under the 6 kg tare
+    or very heavy, a yield far off (under 80% or over 120%) or out of range,
+    the VideoJet Count and partial pallet when out of range, an empty Created
+    By, a date in the future, a WO # that isn't 6–8 digits, a WO that already
+    has a saved sheet, and an unsaved sheet. When the yield is out of range it
+    also tries ×10 and ÷10 on each entry not confirmed by a report or Stored
+    Data, and suggests the ones that would bring it into range ("Possible typo
+    in Count: with 180 instead of 1,800 the yield would be 98.94%").
+
+  A summary next to the steps says "✓ No problems found", or how many
+  problems (red) and things to check (yellow) there are; it waits until the
+  required fields are in, and clicking it opens the list. **Print** opens the
+  list first when there's anything red or yellow: each finding says what's
+  wrong, with **Use …** to apply the correction when the right value is known
+  and **Go to …** to jump to the field. **Print anyway** prints as it is, and
+  the Activity Log entry then says how many findings were left open. With
+  nothing red or yellow, Print prints straight away. (Ctrl+P and the browser's
+  menu print without the check.)
 - **Saved sheets** opens a panel from the right: search by WO #, FG item or
   bulk item, filters (All, Out of range, This week, and Mine for the signed-in
   lead's sheets) with counts, and a row per sheet with its yield in green or

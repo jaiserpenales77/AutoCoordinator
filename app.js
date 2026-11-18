@@ -37,6 +37,9 @@ let redrawingLeads = false;
 // Imported report PDFs as page images (see addImportedReports).
 const REPORT_ORDER = { closeout: 0, pallet: 1, charge: 2 };
 let importedReports = [];
+// What the imported reports say (pdf-import.js `facts`), for the quality check;
+// null until reports for this sheet's work order are imported.
+let reportFacts = null;
 // Bumped by every import and by New / Clear, so a slower earlier import can
 // tell it was superseded and stop.
 let importGen = 0;
@@ -292,6 +295,7 @@ function recalc() {
   renderResults(r, data);
   updatePrintReports();
   markMissing();
+  renderQualityButton();
   saveDraft();
 }
 
@@ -467,6 +471,7 @@ function clearForm() {
   renderImportPreview(null);
   importGen++;
   clearImportedReports();
+  reportFacts = null;
   resetAutoFills();
   createdByPicked = false;
   applyDefaultCreatedBy();
@@ -487,7 +492,7 @@ function confirmLeaveSheet() {
 // reload or a closed tab doesn't lose it (sign-out removes it).
 const DRAFT_KEY = "pk030_yield_draft";
 function saveDraft() {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: collectFormData(), editingId, dirty: sheetDirty })); } catch { /* not kept */ }
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: collectFormData(), editingId, dirty: sheetDirty, facts: reportFacts })); } catch { /* not kept */ }
 }
 function readDraft() {
   try {
@@ -508,8 +513,9 @@ function restoreDraft(d) {
     editingBadge.classList.remove("hidden");
   }
   sheetDirty = !!d.dirty;
+  reportFacts = d.facts ?? null;
   el("draftNote").classList.remove("hidden");
-  saveDraft();
+  recalc();
 }
 el("draftDiscardBtn").addEventListener("click", clearForm);
 
@@ -935,7 +941,7 @@ window.addEventListener("beforeprint", () => {
 });
 window.addEventListener("afterprint", () => delete document.body.dataset.print);
 
-el("printBtn").addEventListener("click", async () => {
+el("printBtn").addEventListener("click", () => {
   printChecked = true;
   const missing = markMissing();
   if (missing.length) {
@@ -943,9 +949,123 @@ el("printBtn").addEventListener("click", async () => {
     el(missing[0][0]).scrollIntoView({ block: "center", behavior: "smooth" });
     return;
   }
+  // Problems found by the quality check are shown first; it can still print.
+  const found = runQualityCheck();
+  if (found.some(f => f.level !== "info")) openQualityCheck(true);
+  else printSheet();
+});
+
+// Set while printing past quality-check findings, for the Activity Log.
+let qcPrintNote = "";
+async function printSheet(note = "") {
   buildPrintSheet();
   await Promise.all([...document.querySelectorAll("#reportPages img")].map(img => img.decode().catch(() => {})));
+  qcPrintNote = note;
   window.print();
+  qcPrintNote = "";
+}
+
+// Quality check (quality-check.js): the sheet against the imported reports,
+// Stored Data and common sense. A summary sits next to the steps; Print
+// shows the findings first, each with a one-click correction where the right
+// value is known, and can still print ("Print anyway").
+function runQualityCheck() {
+  const data = collectFormData();
+  return QualityCheck.run({
+    data,
+    results: computeResults(data),
+    facts: reportFacts,
+    storedCount: item => StoredData.fgItems.find(item)?.count ?? null,
+    storedPieceWt: item => StoredData.bulkItems.find(item)?.pieceWt ?? null,
+    saved: loadRecords().map(r => ({ id: r.id, woNumber: r.woNumber, dateCreated: r.dateCreated })),
+    editingId,
+    dirty: sheetDirty,
+    today: todayISO(),
+    compute: computeResults
+  });
+}
+
+const qcCount = (found, level) => found.filter(f => f.level === level).length;
+function qcSummaryText(found) {
+  const errors = qcCount(found, "error");
+  const warns = qcCount(found, "warn");
+  if (!errors && !warns) return "✓ No problems found";
+  return [errors && `${errors} problem${errors === 1 ? "" : "s"}`, warns && `${warns} to check`].filter(Boolean).join(" · ");
+}
+function renderQualityButton() {
+  const b = el("qcBtn");
+  // Until the required fields are in, there's nothing much to check.
+  if (missingForPrint().length) {
+    b.textContent = "Quality check: after the required fields";
+    b.className = "qc-btn idle";
+    return;
+  }
+  const found = runQualityCheck();
+  b.textContent = `Quality check: ${qcSummaryText(found)}`;
+  b.className = `qc-btn ${qcCount(found, "error") ? "error" : qcCount(found, "warn") ? "warn" : "ok"}`;
+}
+
+let qcForPrint = false;
+function renderQualityDialog() {
+  const found = runQualityCheck();
+  const serious = found.some(f => f.level !== "info");
+  el("qcSummary").textContent = qcSummaryText(found) + (qcForPrint && serious ? ". Fix them, or print anyway." : ".");
+  el("qcList").innerHTML = found.map((f, i) => `
+    <li class="qc-item ${f.level}">
+      <span class="qc-icon" aria-hidden="true">${f.level === "error" ? "!" : f.level === "warn" ? "?" : "i"}</span>
+      <div class="qc-body">
+        <strong>${escapeHtml(f.title)}</strong>
+        <p>${escapeHtml(f.text)}</p>
+        <div class="qc-actions">
+          ${f.fix ? `<button type="button" class="qc-fix" data-qc-fix="${i}">${escapeHtml(f.fix.label)}</button>` : ""}
+          ${f.field ? `<button type="button" class="link-btn" data-qc-go="${escapeHtml(f.field)}">Go to ${escapeHtml(QualityCheck.LABELS[f.field] ?? "it")}</button>` : ""}
+        </div>
+      </div>
+    </li>`).join("");
+  el("qcPrintBtn").textContent = serious ? "Print anyway" : "Print";
+  el("qcPrintBtn").classList.toggle("primary", !serious);
+  el("qcPrintBtn").dataset.findings = found.filter(f => f.level !== "info").length;
+  el("qcDialog").qcFound = found;
+}
+function openQualityCheck(forPrint) {
+  qcForPrint = forPrint;
+  renderQualityDialog();
+  if (!el("qcDialog").open) el("qcDialog").showModal();
+}
+el("qcBtn").addEventListener("click", () => openQualityCheck(false));
+el("qcList").addEventListener("click", e => {
+  const fix = e.target.closest("[data-qc-fix]");
+  const go = e.target.closest("[data-qc-go]");
+  if (fix) {
+    const f = el("qcDialog").qcFound[Number(fix.dataset.qcFix)].fix;
+    const input = el(f.field);
+    input.value = f.value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    flashField(input);
+    renderQualityDialog();
+  } else if (go) {
+    el("qcDialog").close();
+    const input = el(go.dataset.qcGo);
+    if (input.closest(".hidden")) return;
+    input.scrollIntoView({ block: "center", behavior: reducedMotion.matches ? "auto" : "smooth" });
+    input.focus({ preventScroll: true });
+  }
+});
+el("qcCloseBtn").addEventListener("click", () => el("qcDialog").close());
+el("qcBackBtn").addEventListener("click", () => el("qcDialog").close());
+el("qcDialog").addEventListener("click", e => {
+  if (e.target === el("qcDialog")) el("qcDialog").close();
+});
+el("qcPrintBtn").addEventListener("click", () => {
+  const n = Number(el("qcPrintBtn").dataset.findings);
+  el("qcDialog").close();
+  printChecked = true;
+  const missing = markMissing();
+  if (missing.length) {
+    el(missing[0][0]).focus();
+    return;
+  }
+  printSheet(n ? `printed with ${n} quality check finding${n === 1 ? "" : "s"} open` : "");
 });
 
 // Imported report PDFs, rendered to page images at import time so they're
@@ -1120,6 +1240,22 @@ function renderReportPages() {
   updatePrintReports();
 }
 
+// Reports imported one after another for the same work order add up; another
+// work order starts over.
+function mergeReportFacts(facts) {
+  if (!reportFacts || reportFacts.woNumber !== facts.woNumber) {
+    reportFacts = facts;
+    return;
+  }
+  reportFacts = {
+    woNumber: facts.woNumber,
+    fgItems: [...new Set([...reportFacts.fgItems, ...facts.fgItems])],
+    pallet: facts.pallet ?? reportFacts.pallet,
+    closeout: facts.closeout ?? reportFacts.closeout,
+    charge: facts.charge ?? reportFacts.charge
+  };
+}
+
 function clearImportedReports() {
   importedReports.forEach(r => r.urls.forEach(url => URL.revokeObjectURL(url)));
   importedReports = [];
@@ -1219,7 +1355,7 @@ async function importPdfs(fileList) {
   }
 
   if (gen !== importGen) return;
-  const { values, log, preview, accepted } = result;
+  const { values, log, preview, accepted, facts } = result;
   logActivity("Imported JDE reports", [`${files.length} PDF(s)`, values.woNumber && `WO ${values.woNumber}`].filter(Boolean).join(", "));
   const found = IMPORT_FIELDS.filter(id => values[id] !== undefined && values[id] !== null);
   if (found.length) {
@@ -1244,8 +1380,10 @@ async function importPdfs(fileList) {
       ...(el("pieceWt").value === "" ? ["Bulk Piece Wt"] : [])];
     log.push({ level: "info", text: `Still to enter by hand: ${todo.join(", ")} and the scrap weights.` });
   }
+  if (facts && preview.sameWo && facts.woNumber) mergeReportFacts(facts);
   renderImportLog(log);
   renderImportPreview(preview);
+  recalc();
   gen = importGen; // this import's own New Sheet (clearForm) doesn't count
   const isCurrent = () => gen === importGen;
   if (accepted.length && preview.woNumber) {
@@ -2322,7 +2460,7 @@ window.addEventListener("beforeprint", () => {
     logActivity(PRINT_ACTIONS[open], item);
   } else if (document.body.dataset.print !== "blocked") {
     // Every other tab prints the yield sheet.
-    logActivity("Printed a yield sheet", sheetLabel({ woNumber: el("woNumber").value.trim(), fgItem: el("fgItem").value.trim() }));
+    logActivity("Printed a yield sheet", [sheetLabel({ woNumber: el("woNumber").value.trim(), fgItem: el("fgItem").value.trim() }), qcPrintNote].filter(Boolean).join("; "));
   }
 });
 

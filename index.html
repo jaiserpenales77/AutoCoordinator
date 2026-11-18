@@ -131,6 +131,7 @@
   <div class="ys-steps-row">
     <ol class="ys-steps" id="ysSteps" aria-label="What's left before printing"></ol>
     <span class="ys-left" id="ysLeft"></span>
+    <button type="button" class="qc-btn" id="qcBtn" title="Quality check: the sheet against the JDE reports, Stored Data and common sense"></button>
   </div>
   <p id="draftNote" class="ys-draft hidden" role="status">Picked up where you left off (saved on this computer). <button type="button" class="link-btn" id="draftDiscardBtn">Start a new sheet instead</button></p>
   <p id="printMissingMsg" class="form-msg hint-err hidden" role="alert"></p>
@@ -327,6 +328,24 @@
     </section>
   </aside>
   </div>
+
+  <dialog id="qcDialog" class="qc-dialog" aria-labelledby="qcTitle">
+    <div class="qc-head">
+      <div>
+        <h2 id="qcTitle">Quality check</h2>
+        <p class="muted" id="qcSummary"></p>
+      </div>
+      <button type="button" class="icon-close" id="qcCloseBtn" aria-label="Close">✕</button>
+    </div>
+    <ul class="qc-list" id="qcList"></ul>
+    <div class="qc-foot">
+      <span class="muted qc-note">Checked against the imported JDE reports, Stored Data and common-sense limits, on this computer.</span>
+      <div class="actions">
+        <button type="button" id="qcBackBtn">Back to the sheet</button>
+        <button type="button" class="primary" id="qcPrintBtn">Print</button>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="reportViewer" class="report-viewer" aria-label="Imported PDFs">
     <div class="rv-head">
@@ -1062,6 +1081,7 @@
 <script src="stored-data.js"></script>
 <script src="cloud-sync.js"></script>
 <script src="pdf-import.js"></script>
+<script src="quality-check.js"></script>
 <script src="app.js"></script>
 <script src="bulk-calc.js"></script>
 <script src="bulk-return.js"></script>
