@@ -464,7 +464,11 @@ legend {
 #importBox.done .import-ask { display: none; }
 #importBox.done .import-done { display: block; margin: 0; color: var(--ok-text); font-weight: 600; }
 #importBox.done label.file-btn { padding: 4px 12px; font-size: 0.85rem; }
-#importBox.done .import-details-btn { display: inline-block; margin: 8px 0 0; font-size: 0.85rem; }
+#importBox.done .import-details-btn { display: inline-block; font-size: 0.85rem; }
+.import-links { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+#importBox.done .import-links, .import-links:has(.preview-btn:not(.hidden)) { margin-top: 8px; }
+.preview-btn { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 0.85rem; }
+.preview-btn .ico { width: 16px; height: 16px; }
 #importBox.done:not(.show-details) .import-preview,
 #importBox.done:not(.show-details) .import-log li:not(.log-warn):not(.log-error) { display: none; }
 
@@ -1915,4 +1919,34 @@ label.from-import::after { content: "JDE"; position: absolute; top: 0; right: 0;
 /* Movement off for those who asked their computer for less of it. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after, *::backdrop { animation: none !important; transition: none !important; }
+}
+
+/* Preview of the imported PDFs: one PDF at a time, its pages one under another. */
+.report-viewer {
+  width: min(980px, calc(100vw - 32px));
+  height: calc(100vh - 48px);
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-bg);
+  color: var(--text);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+.report-viewer[open] { display: flex; flex-direction: column; animation: ys-fade 0.22s ease-out; }
+.report-viewer::backdrop { background: rgba(15, 23, 42, 0.55); }
+.rv-head .icon-close { flex: 0 0 auto; }
+.rv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--border); }
+.rv-tabs { display: flex; gap: 4px; min-width: 0; overflow-x: auto; padding: 3px; border-radius: 8px; background: var(--tab-bg); }
+.rv-tabs button { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px; border: none; border-radius: 6px; background: transparent; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.rv-tabs button span { font-size: 0.75rem; font-weight: 400; }
+.rv-tabs button.active { background: var(--panel-bg); color: var(--text); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15); }
+.rv-body { flex: 1; overflow: auto; padding: 16px; background: var(--subtle-bg); }
+.rv-file { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; text-align: center; }
+.rv-page { margin: 0 auto 18px; max-width: 900px; }
+.rv-page img { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2); }
+.rv-page figcaption { margin-top: 6px; color: var(--muted); font-size: 0.78rem; text-align: center; }
+@media (max-width: 760px) {
+  .report-viewer { width: 100vw; max-width: 100vw; height: 100%; border-radius: 0; }
+  .rv-body { padding: 8px; }
 }

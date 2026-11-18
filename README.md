@@ -498,6 +498,9 @@ Drop the work order's report PDFs on **Import from JDE Reports** (or use
 Once they're in, the box folds to one green line ("✓ 3 reports imported for
 WO ..."), with **Choose PDFs** to add more and **Show what was imported** for
 the table of reports and the notes; warnings stay in view.
+**Preview the PDFs** (shown once any are imported) opens the imported PDFs
+in a window, one per tab (WO Close-out, Pallet Transfers, Charge Report,
+with their page counts), each page as it will print; Esc or ✕ closes it.
 
 | Yield sheet field | Taken from |
 |---|---|

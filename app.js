@@ -990,7 +990,40 @@ function updatePrintReports() {
   el("printBlankCount").textContent = blanks ? ` (adds ${blanks} blank page${blanks === 1 ? "" : "s"})` : "";
 }
 
+// Preview: the imported PDFs' pages, one PDF at a time (tabs), as they'll print.
+const REPORT_NAMES = { closeout: "WO Close-out", pallet: "Pallet Transfers", charge: "Charge Report" };
+let rvOpen = 0;
+function renderReportViewer() {
+  if (!importedReports.length) return;
+  rvOpen = Math.min(rvOpen, importedReports.length - 1);
+  el("rvTabs").innerHTML = importedReports.map((r, i) => `
+    <button type="button" role="tab" class="${i === rvOpen ? "active" : ""}" aria-selected="${i === rvOpen}" data-rv="${i}" title="${escapeHtml(r.name)}">
+      ${escapeHtml(REPORT_NAMES[r.type] ?? r.name)}<span>${r.urls.length} page${r.urls.length === 1 ? "" : "s"}</span></button>`).join("");
+  const r = importedReports[rvOpen];
+  el("rvBody").innerHTML = `<p class="rv-file">${escapeHtml(r.name)} · WO ${escapeHtml(r.woNumber ?? "?")}</p>` + r.urls.map((url, n) =>
+    `<figure class="rv-page"><img src="${url}" alt="${escapeHtml(`${r.name} page ${n + 1}`)}"><figcaption>Page ${n + 1} of ${r.urls.length}</figcaption></figure>`).join("");
+  el("rvBody").scrollTop = 0;
+}
+el("previewReportsBtn").addEventListener("click", () => {
+  rvOpen = 0;
+  renderReportViewer();
+  el("reportViewer").showModal();
+});
+el("rvTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-rv]");
+  if (!b) return;
+  rvOpen = Number(b.dataset.rv);
+  renderReportViewer();
+});
+el("rvCloseBtn").addEventListener("click", () => el("reportViewer").close());
+el("reportViewer").addEventListener("click", e => {
+  if (e.target === el("reportViewer")) el("reportViewer").close();
+});
+
 function renderReportPages() {
+  el("previewReportsBtn").classList.toggle("hidden", !importedReports.length);
+  el("previewReportsBtn").lastChild.textContent = importedReports.length === 1 ? "Preview the PDF" : "Preview the PDFs";
+  if (!importedReports.length && el("reportViewer").open) el("reportViewer").close();
   el("reportPages").innerHTML = importedReports.flatMap((r, i) => r.urls.map((url, n) =>
     `<div class="report-page" data-report="${i}"><img src="${url}" alt="${escapeHtml(`${r.name} page ${n + 1}`)}"></div>`)).join("");
   updatePrintReports();

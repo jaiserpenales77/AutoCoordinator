@@ -156,7 +156,11 @@
           <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
         </label>
       </div>
-      <button type="button" class="link-btn import-details-btn" id="importDetailsBtn" aria-expanded="false">Show what was imported</button>
+      <div class="import-links">
+        <button type="button" class="link-btn import-details-btn" id="importDetailsBtn" aria-expanded="false">Show what was imported</button>
+        <button type="button" class="link-btn preview-btn hidden" id="previewReportsBtn">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Preview the PDFs</button>
+      </div>
       <div id="importPreview" class="import-preview hidden"></div>
       <ul id="importLog" class="import-log"></ul>
     </fieldset>
@@ -323,6 +327,14 @@
     </section>
   </aside>
   </div>
+
+  <dialog id="reportViewer" class="report-viewer" aria-label="Imported PDFs">
+    <div class="rv-head">
+      <div class="rv-tabs" id="rvTabs" role="tablist" aria-label="Imported PDFs"></div>
+      <button type="button" class="icon-close" id="rvCloseBtn" aria-label="Close">✕</button>
+    </div>
+    <div class="rv-body" id="rvBody"></div>
+  </dialog>
 
   <dialog id="savedDrawer" class="ys-drawer" aria-label="Saved yield sheets">
     <div class="ys-drawer-head">
