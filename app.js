@@ -950,9 +950,19 @@ el("printBtn").addEventListener("click", () => {
     return;
   }
   // Problems found by the quality check are shown first; it can still print.
-  const found = runQualityCheck();
-  if (found.some(f => f.level !== "info")) openQualityCheck(true);
-  else printSheet();
+  // "Checking…" shows for a moment first (not with reduced motion).
+  const btn = el("printBtn");
+  if (btn.classList.contains("checking")) return;
+  btn.classList.add("checking");
+  btn.innerHTML = '<span class="qc-spin" aria-hidden="true"></span>Checking…';
+  setTimeout(() => {
+    btn.classList.remove("checking");
+    btn.textContent = "Print";
+    const found = runQualityCheck();
+    renderQualityButton();
+    if (found.some(f => f.level !== "info")) openQualityCheck(true);
+    else printSheet();
+  }, reducedMotion.matches ? 0 : 450);
 });
 
 // Set while printing past quality-check findings, for the Activity Log.
@@ -992,26 +1002,40 @@ function qcSummaryText(found) {
   if (!errors && !warns) return "✓ No problems found";
   return [errors && `${errors} problem${errors === 1 ? "" : "s"}`, warns && `${warns} to check`].filter(Boolean).join(" · ");
 }
+// A tick that draws itself (see .qc-tick in style.css).
+const QC_TICK = '<svg class="qc-tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+let qcLastState = null;
 function renderQualityButton() {
   const b = el("qcBtn");
+  let state;
   // Until the required fields are in, there's nothing much to check.
   if (missingForPrint().length) {
     b.textContent = "Quality check: after the required fields";
-    b.className = "qc-btn idle";
-    return;
+    state = "idle";
+  } else {
+    const found = runQualityCheck();
+    state = qcCount(found, "error") ? "error" : qcCount(found, "warn") ? "warn" : "ok";
+    b.innerHTML = state === "ok" ? `Quality check: ${QC_TICK}No problems found` : `Quality check: ${escapeHtml(qcSummaryText(found))}`;
   }
-  const found = runQualityCheck();
-  b.textContent = `Quality check: ${qcSummaryText(found)}`;
-  b.className = `qc-btn ${qcCount(found, "error") ? "error" : qcCount(found, "warn") ? "warn" : "ok"}`;
+  b.className = `qc-btn ${state}`;
+  // A little pop when the result changes (a new tick draws itself).
+  const key = `${state}|${b.textContent}`;
+  if (qcLastState !== null && key !== qcLastState && state !== "idle") {
+    void b.offsetWidth;
+    b.classList.add("bump");
+  }
+  qcLastState = key;
 }
 
 let qcForPrint = false;
-function renderQualityDialog() {
+// `intro`: the findings slide in one after another (when the window opens).
+function renderQualityDialog(intro = false) {
   const found = runQualityCheck();
   const serious = found.some(f => f.level !== "info");
   el("qcSummary").textContent = qcSummaryText(found) + (qcForPrint && serious ? ". Fix them, or print anyway." : ".");
-  el("qcList").innerHTML = found.map((f, i) => `
-    <li class="qc-item ${f.level}">
+  const clear = serious ? "" : `<li class="qc-clear${intro ? "" : " fresh"}">${QC_TICK.replace("qc-tick", "qc-tick big")}<div><strong>All clear</strong><p>Nothing red or yellow: ready to print.</p></div></li>`;
+  el("qcList").innerHTML = clear + found.map((f, i) => `
+    <li class="qc-item ${f.level}${intro ? " intro" : ""}" style="--i:${Math.min(i, 8)}">
       <span class="qc-icon" aria-hidden="true">${f.level === "error" ? "!" : f.level === "warn" ? "?" : "i"}</span>
       <div class="qc-body">
         <strong>${escapeHtml(f.title)}</strong>
@@ -1029,7 +1053,7 @@ function renderQualityDialog() {
 }
 function openQualityCheck(forPrint) {
   qcForPrint = forPrint;
-  renderQualityDialog();
+  renderQualityDialog(true);
   if (!el("qcDialog").open) el("qcDialog").showModal();
 }
 el("qcBtn").addEventListener("click", () => openQualityCheck(false));
@@ -1042,7 +1066,13 @@ el("qcList").addEventListener("click", e => {
     input.value = f.value;
     input.dispatchEvent(new Event("input", { bubbles: true }));
     flashField(input);
-    renderQualityDialog();
+    // The fixed finding ticks and folds away, then the list is checked again.
+    const item = fix.closest(".qc-item");
+    fix.innerHTML = `${QC_TICK}Fixed`;
+    fix.disabled = true;
+    item.classList.add("leaving");
+    el("qcList").querySelectorAll("button").forEach(b => { b.disabled = true; });
+    setTimeout(() => renderQualityDialog(), reducedMotion.matches ? 0 : 420);
   } else if (go) {
     el("qcDialog").close();
     const input = el(go.dataset.qcGo);

@@ -115,8 +115,12 @@ multiple work orders, alongside fillable, printable copies of the paper forms
   printing them. Signing out removes the draft.
 - **Animations:** the yield counts up to its new value, the range marker and
   the bulk bar slide, a step's ✓ pops in, the saved-sheets panel slides in
-  and the result tabs fade. A computer or tablet set to reduce motion gets
-  none of them.
+  and the result tabs fade. The quality check has its own: Print shows
+  "Checking…" with a spinner for a moment, the findings slide in one after
+  another, a fixed one shows "✓ Fixed" and folds away, "All clear" draws its
+  tick, and the summary next to the steps pops when its result changes (with
+  a tick drawing itself at "No problems found"). A computer or tablet set to
+  reduce motion gets none of them, and no "Checking…" pause.
 
 ## Layout
 

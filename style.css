@@ -2023,3 +2023,61 @@ label.from-import::after { content: "JDE"; position: absolute; top: 0; right: 0;
   .qc-foot .actions { width: 100%; }
   .qc-foot .actions button { flex: 1; }
 }
+
+/* Quality check animations (all off with reduced motion, see above). */
+.qc-tick {
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 4px;
+  vertical-align: -0.18em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+}
+.qc-btn.bump { animation: qc-bump 0.42s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.qc-btn.bump .qc-tick, .qc-fix .qc-tick, .qc-clear .qc-tick { animation: qc-draw 0.45s ease-out 0.08s both; }
+@keyframes qc-bump { 0% { transform: scale(0.92); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes qc-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+
+.qc-item.intro { animation: qc-in 0.32s ease-out both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes qc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.qc-item.leaving { overflow: hidden; animation: qc-out 0.4s ease-in 0.12s forwards; }
+@keyframes qc-out {
+  0% { max-height: 240px; opacity: 1; transform: none; }
+  60% { opacity: 0; transform: translateX(16px); }
+  100% { max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom-width: 0; opacity: 0; transform: translateX(16px); }
+}
+.qc-fix:disabled { opacity: 1; cursor: default; }
+.qc-item.leaving .qc-fix { border-color: transparent; background: var(--ok-bg); color: var(--ok-text); }
+
+.qc-clear { display: flex; align-items: center; gap: 12px; padding: 14px 8px; border-bottom: 1px solid var(--border); }
+.qc-clear strong { color: var(--ok-text); font-size: 1.05rem; }
+.qc-clear p { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; }
+.qc-tick.big {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--ok-bg);
+  color: var(--ok-text);
+  stroke-width: 2.6;
+}
+.qc-clear .qc-tick.big { animation: qc-draw 0.5s ease-out 0.15s both, qc-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes qc-pop { from { transform: scale(0.5); } to { transform: scale(1); } }
+
+#printBtn.checking { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: progress; }
+.qc-spin {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: qc-spin 0.7s linear infinite;
+}
+@keyframes qc-spin { to { transform: rotate(360deg); } }
