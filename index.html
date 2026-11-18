@@ -331,6 +331,11 @@
   <dialog id="reportViewer" class="report-viewer" aria-label="Imported PDFs">
     <div class="rv-head">
       <div class="rv-tabs" id="rvTabs" role="tablist" aria-label="Imported PDFs"></div>
+      <div class="rv-zoom" role="group" aria-label="Zoom">
+        <button type="button" id="rvZoomOut" title="Zoom out (−)" aria-label="Zoom out">−</button>
+        <button type="button" id="rvZoomFit" title="Fit to width (0)" aria-label="Fit to width">100%</button>
+        <button type="button" id="rvZoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
+      </div>
       <button type="button" class="icon-close" id="rvCloseBtn" aria-label="Close">✕</button>
     </div>
     <div class="rv-body" id="rvBody"></div>

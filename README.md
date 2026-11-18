@@ -501,6 +501,11 @@ the table of reports and the notes; warnings stay in view.
 **Preview the PDFs** (shown once any are imported) opens the imported PDFs
 in a window, one per tab (WO Close-out, Pallet Transfers, Charge Report,
 with their page counts), each page as it will print; Esc or ✕ closes it.
+**Zoom** from 50% to 300% (100% fits the page to the window): the **−** and
+**+** buttons or keys, the % button or **0** to fit again, Ctrl/⌘ + mouse
+wheel, a two-finger pinch on a tablet or phone, or double-click a page (200%
+there, again to fit). Zooming keeps the spot you're looking at in place, and
+the zoom stays when switching PDFs.
 
 | Yield sheet field | Taken from |
 |---|---|

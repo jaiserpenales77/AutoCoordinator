@@ -1008,6 +1008,97 @@ el("previewReportsBtn").addEventListener("click", () => {
   rvOpen = 0;
   renderReportViewer();
   el("reportViewer").showModal();
+  setRvZoom(1);
+});
+
+// Zoom: 100% fits the page to the window's width (at most 900 px); −/+ step
+// through the levels, the % button goes back to fit. Also Ctrl/⌘ + mouse
+// wheel, two-finger pinch, double-click (200% there, or back to fit) and the
+// −, + and 0 keys. Up to 300% (the pages are rendered at about 216 dpi).
+const RV_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
+const RV_MIN = RV_LEVELS[0];
+const RV_MAX = RV_LEVELS[RV_LEVELS.length - 1];
+let rvZoom = 1;
+function rvFitWidth() {
+  const body = el("rvBody");
+  const pad = parseFloat(getComputedStyle(body).paddingLeft) * 2;
+  return Math.min(900, body.clientWidth - pad);
+}
+// Keeps the spot of the page at (x, y) inside the body (default: its middle)
+// where it is.
+function setRvZoom(z, x, y) {
+  const body = el("rvBody");
+  z = Math.min(RV_MAX, Math.max(RV_MIN, z));
+  const box = body.getBoundingClientRect();
+  const px = box.left + (x ?? body.clientWidth / 2);
+  const py = box.top + (y ?? body.clientHeight / 2);
+  const dist = r => (py < r.top ? r.top - py : py > r.bottom ? py - r.bottom : 0);
+  const anchor = [...body.querySelectorAll(".rv-page img")]
+    .map(img => [img, dist(img.getBoundingClientRect())]).sort((a, b) => a[1] - b[1])[0]?.[0];
+  let fx = 0;
+  let fy = 0;
+  if (anchor) {
+    const r = anchor.getBoundingClientRect();
+    fx = (px - r.left) / (r.width || 1);
+    fy = (py - r.top) / (r.height || 1);
+  }
+  rvZoom = z;
+  body.style.setProperty("--rv-page-w", `${Math.round(rvFitWidth() * z)}px`);
+  body.classList.toggle("zoomed", z > 1);
+  if (anchor) {
+    const r = anchor.getBoundingClientRect();
+    body.scrollLeft += r.left + fx * r.width - px;
+    body.scrollTop += r.top + fy * r.height - py;
+  }
+  el("rvZoomFit").textContent = `${Math.round(z * 100)}%`;
+  el("rvZoomOut").disabled = z <= RV_MIN + 1e-6;
+  el("rvZoomIn").disabled = z >= RV_MAX - 1e-6;
+}
+const rvStep = dir => dir > 0
+  ? RV_LEVELS.find(l => l > rvZoom + 1e-6) ?? RV_MAX
+  : [...RV_LEVELS].reverse().find(l => l < rvZoom - 1e-6) ?? RV_MIN;
+el("rvZoomIn").addEventListener("click", () => setRvZoom(rvStep(1)));
+el("rvZoomOut").addEventListener("click", () => setRvZoom(rvStep(-1)));
+el("rvZoomFit").addEventListener("click", () => setRvZoom(1));
+const rvPoint = (body, clientX, clientY) => {
+  const box = body.getBoundingClientRect();
+  return [clientX - box.left, clientY - box.top];
+};
+el("rvBody").addEventListener("wheel", e => {
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
+  setRvZoom(rvZoom * Math.exp(-e.deltaY * 0.0025), ...rvPoint(e.currentTarget, e.clientX, e.clientY));
+}, { passive: false });
+el("rvBody").addEventListener("dblclick", e => {
+  if (!e.target.closest(".rv-page img")) return;
+  setRvZoom(rvZoom > 1 ? 1 : 2, ...rvPoint(e.currentTarget, e.clientX, e.clientY));
+});
+let rvPinch = null;
+const touchGap = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+el("rvBody").addEventListener("touchstart", e => {
+  if (e.touches.length === 2) rvPinch = { gap: touchGap(e.touches), zoom: rvZoom };
+}, { passive: true });
+el("rvBody").addEventListener("touchmove", e => {
+  if (!rvPinch || e.touches.length !== 2) return;
+  e.preventDefault();
+  const [a, b] = e.touches;
+  setRvZoom(rvPinch.zoom * touchGap(e.touches) / rvPinch.gap,
+    ...rvPoint(e.currentTarget, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2));
+}, { passive: false });
+el("rvBody").addEventListener("touchend", e => {
+  if (e.touches.length < 2) rvPinch = null;
+});
+// On the document: a button greyed out at 50% or 300% drops the focus.
+document.addEventListener("keydown", e => {
+  if (!el("reportViewer").open || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setRvZoom(rvStep(1));
+  else if (e.key === "-" || e.key === "_") setRvZoom(rvStep(-1));
+  else if (e.key === "0") setRvZoom(1);
+  else return;
+  e.preventDefault();
+});
+window.addEventListener("resize", () => {
+  if (el("reportViewer").open) setRvZoom(rvZoom);
 });
 el("rvTabs").addEventListener("click", e => {
   const b = e.target.closest("[data-rv]");
